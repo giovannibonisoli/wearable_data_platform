@@ -3,6 +3,7 @@ from flask import Flask, logging, render_template, request, redirect, session, u
 from rich import _console
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url
 from db import DatabaseManager, get_daily_summaries, get_user_alerts, get_user_id_by_email
+
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
 import os
@@ -13,9 +14,11 @@ from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, gettext as _
 
 # Initialize Flask app
-app = Flask(__name__, 
+app = Flask(__name__,
            static_url_path='/livelyageing/static',  # Prefix for static files with livelyageing
            static_folder='static')  # Directory where static files are stored
+
+
 app.secret_key = os.getenv('SECRET_KEY')
 
 # Configuración básica de logging
@@ -30,15 +33,16 @@ logging.basicConfig(
 
 # Obtener el modo de ejecución
 FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # Por defecto, modo desarrollo
-USERNAME = os.getenv('log_USERNAME')  
+USERNAME = os.getenv('log_USERNAME')
 PASSWORD = os.getenv('PASSWORD')
+
 
 # Language settings
 LANGUAGES = {
     'es': 'Español',
     'en': 'English'
 }
-DEFAULT_LANGUAGE = 'es'
+DEFAULT_LANGUAGE = 'en'
 
 # Initialize Babel
 babel = Babel(app)
@@ -103,12 +107,10 @@ def login():
         return redirect(url_for('home'))  # Redirigir a home en lugar de index
 
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
-        print(username)
-        print(USERNAME)
-        print(password)
-        print(PASSWORD)
+
         if username == USERNAME and password == PASSWORD:
             user = User(username)
             login_user(user)
@@ -166,7 +168,7 @@ def preload_dashboard():
                 OR d.date IS NULL
                 ORDER BY d.date DESC NULLS LAST
             """)
-            
+
             # Get the latest intraday metrics for each user
             intraday_metrics = db.execute_query("""
                 SELECT u.name, u.email, i.type, i.value, i.time
@@ -176,7 +178,7 @@ def preload_dashboard():
                 OR i.time IS NULL
                 ORDER BY i.time DESC NULLS LAST
             """)
-            
+
             # Get the latest sleep logs for each user
             sleep_logs = db.execute_query("""
                 SELECT u.name, u.email, s.*
@@ -186,7 +188,7 @@ def preload_dashboard():
                 OR s.start_time IS NULL
                 ORDER BY s.start_time DESC NULLS LAST
             """)
-            
+
             # Transform intraday_metrics to new 4-column format for dashboard
             intraday_metrics_4col = []
             for metric in intraday_metrics:
@@ -199,11 +201,11 @@ def preload_dashboard():
                     metric_type,
                     value
                 ])
-            
+
             # Initialize empty filters_dict and alerts
             filters_dict = {}
             alerts = []
-            
+
             # Store the processed data in the session for later use
             session['dashboard_data'] = {
                 'daily_summaries': daily_summaries,
@@ -213,15 +215,15 @@ def preload_dashboard():
                 'alerts': alerts,
                 'timestamp': datetime.now(timezone.utc).isoformat()
             }
-            
+
             return jsonify({'success': True, 'timestamp': session['dashboard_data']['timestamp']})
-            
+
         except Exception as e:
             app.logger.error(f"Error fetching data for dashboard: {e}")
             return jsonify({'error': str(e)}), 500
         finally:
             db.close()
-    
+
     return jsonify({'error': 'Database connection error'}), 500
 
 @app.route('/livelyageing/check_dashboard_updates')
@@ -233,34 +235,34 @@ def check_dashboard_updates():
     last_timestamp = request.args.get('timestamp')
     if not last_timestamp:
         return jsonify({'error': 'No timestamp provided'}), 400
-        
+
     try:
         last_timestamp = datetime.fromisoformat(last_timestamp)
         current_time = datetime.now(timezone.utc)
-        
+
         # Check if we need to refresh (more than 5 minutes old)
         if (current_time - last_timestamp).total_seconds() > 300:
             return jsonify({'needs_refresh': True})
-            
+
         # Check for new alerts
         db = DatabaseManager()
         if db.connect():
             try:
                 new_alerts = db.execute_query("""
-                    SELECT COUNT(*) 
-                    FROM alerts 
+                    SELECT COUNT(*)
+                    FROM alerts
                     WHERE alert_time > %s
                 """, (last_timestamp,))
-                
+
                 if new_alerts and new_alerts[0][0] > 0:
                     return jsonify({'needs_refresh': True})
-                    
+
                 return jsonify({'needs_refresh': False})
             finally:
                 db.close()
-                
+
         return jsonify({'error': 'Database connection error'}), 500
-        
+
     except Exception as e:
         app.logger.error(f"Error checking dashboard updates: {e}")
         return jsonify({'error': str(e)}), 500
@@ -277,26 +279,26 @@ def home():
             # Get recent users with their latest activity (only users with names AND valid tokens)
             recent_users = db.execute_query("""
                 WITH LastUserInstance AS (
-                    SELECT 
+                    SELECT
                         email,
                         MAX(created_at) as last_created
                     FROM users
                     GROUP BY email
                 )
-                SELECT u.id, u.name, u.email, 
+                SELECT u.id, u.name, u.email,
                        MAX(d.date) as created_at
                 FROM users u
                 LEFT JOIN daily_summaries d ON u.id = d.user_id
-                INNER JOIN LastUserInstance lui ON u.email = lui.email 
+                INNER JOIN LastUserInstance lui ON u.email = lui.email
                     AND u.created_at = lui.last_created
-                WHERE u.name != '' 
-                    AND u.access_token IS NOT NULL 
+                WHERE u.name != ''
+                    AND u.access_token IS NOT NULL
                     AND u.refresh_token IS NOT NULL
                 GROUP BY u.id, u.name, u.email
                 ORDER BY created_at DESC NULLS LAST
                 LIMIT 10
             """)
-            
+
             # Convertir la fecha a datetime para evitar el error de tipo
             now = datetime.now()
             processed_users = []
@@ -306,15 +308,15 @@ def home():
                     # Convertir date a datetime usando datetime.combine
                     user_list[3] = datetime.combine(user_list[3], datetime.min.time())
                 processed_users.append(tuple(user_list))  # Volver a convertir a tupla
-            
+
             return render_template('home.html', recent_users=processed_users, now=now)
         except Exception as e:
             app.logger.error(f"Error fetching data for home page: {e}")
-            return "Error: No se pudieron obtener los datos para la página de inicio.", 500
+            return "Error! Error fetching data for home page.", 500
         finally:
             db.close()
     else:
-        return "Error: No se pudo conectar a la base de datos.", 500
+        return "Error! Unable to connect with the database", 500
 
 @app.route('/livelyageing/user_stats')
 @login_required
@@ -326,7 +328,7 @@ def user_stats():
     3. Historical Users: Previous instances with name and data
     """
     search = request.args.get('search', '').strip()
-    
+
     db = DatabaseManager()
     if db.connect():
         try:
@@ -334,7 +336,7 @@ def user_stats():
             if search:
                 users = db.execute_query("""
                     WITH UserInstances AS (
-                        SELECT 
+                        SELECT
                             u.id,
                             u.name,
                             u.email,
@@ -353,7 +355,7 @@ def user_stats():
             else:
                 users = db.execute_query("""
                     WITH UserInstances AS (
-                        SELECT 
+                        SELECT
                             u.id,
                             u.name,
                             u.email,
@@ -372,17 +374,17 @@ def user_stats():
             # Procesar los usuarios
             processed_users = []
             current_email = None
-            
+
             for user in users:
                 user_id, name, email, created_at, has_tokens, last_update, has_data, row_num = user
-                
+
                 # Es la instancia más reciente si row_num = 1
                 is_latest = (row_num == 1)
-                
+
                 # Si cambiamos de email o es el primer usuario
                 if email != current_email:
                     current_email = email
-                
+
                 # Determinar el estado del usuario
                 if is_latest:
                     if not name:
@@ -414,7 +416,7 @@ def user_stats():
                         'status': status
                     })
 
-            return render_template('user_stats.html', 
+            return render_template('user_stats.html',
                                 users=processed_users,
                                 search=search,
                                 now=datetime.now())
@@ -436,25 +438,29 @@ def link_device():
             flash('Please select an email.', 'danger')
             return redirect(url_for('link_device'))
 
-        # Verificar si el correo tiene un nombre asignado
+        # Check if the email has an assigned name.
         db = DatabaseManager()
         if db.connect():
             user = db.get_user_by_email(email)
-            if not user or not user[1]:  # Si no hay usuario o no tiene nombre asignado
+
+            # If there is no user or no name is assigned.
+            if not user or not user[1]:
                 session['pending_email'] = email
                 return redirect(url_for('assign_user'))
             else:
+
+            # Name already assigned
                 session['pending_email'] = email
-                session['new_user_name'] = user[1]  # Nombre ya asignado           
+                session['new_user_name'] = user[1]
                 return render_template('reassign_device.html', email=email, user_name=user[1])
         else:
-            flash('Error de conexión a la base de datos.', 'danger')
+            flash('Database connection error.', 'danger')
             return redirect(url_for('link_device'))
 
-    # GET request - mostrar formulario
+    # GET request - Show form
     db = DatabaseManager()
     if not db.connect():
-        flash('Error de conexión a la base de datos.', 'danger')
+        flash('Database connection error.', 'danger')
         return redirect(url_for('home'))
 
     try:
@@ -469,11 +475,6 @@ def link_device():
 @app.route('/livelyageing/assign', methods=['GET', 'POST'])
 @login_required
 def assign_user():
-    # Si viene el email por GET, lo guardamos en la sesión para preseleccionarlo
-    if request.method == 'GET':
-        email = request.args.get('email')
-        if email:
-            session['pending_email'] = email
     if request.method == 'POST':
         user_name = request.form.get('user_name')
         email = session.get('pending_email')  # Get email from session
@@ -481,18 +482,20 @@ def assign_user():
         if not user_name:
             flash(_('Error: Missing user name.'), 'danger')
             return redirect(url_for('assign_user'))
-            
+
         if not email:
             flash(_('Error: No email in session. Please start from device linking.'), 'danger')
             return redirect(url_for('link_device'))
 
-        # Generar state y almacenarlo en la sesión
+        # Generate state and store it in the session.
         session['state'] = generate_state()
         session['new_user_name'] = user_name
         session['code_verifier'] = generate_code_verifier()
 
         code_challenge = generate_code_challenge(session['code_verifier'])
         auth_url = generate_auth_url(code_challenge, session['state'])
+
+        print(auth_url)
 
         app.logger.info(f"Generated auth URL for {email}: {auth_url}")
         app.logger.info(f"Session state: {session['state']}")
@@ -512,12 +515,12 @@ def callback():
     app.logger.info("Callback route accessed")
     app.logger.info(f"Request args: {request.args}")
     app.logger.info(f"Request path: {request.path}")
-    
+
     try:
         code = request.args.get('code')
         returned_state = request.args.get('state')
         stored_state = session.get('state')
-        
+
         app.logger.info(f"Callback triggered with code: {code} and state: {returned_state}")
         app.logger.info(f"Stored state in session: {stored_state}")
 
@@ -525,11 +528,11 @@ def callback():
             app.logger.error("Invalid state parameter. Possible CSRF attack.")
             flash("Error: Invalid state parameter. Possible CSRF attack.", "danger")
             return redirect(url_for('link_device'))
-        
+
         email = session.get('pending_email')
         new_user_name = session.get('new_user_name')
         code_verifier = session.get('code_verifier')
-        
+
         if not all([email, new_user_name, code_verifier, code]):
             app.logger.error("Missing required session variables or authorization code")
             flash("Error: Missing required information. Please try again.", "danger")
@@ -663,6 +666,7 @@ def reassign_device():
             else:
                 app.logger.error(f"Email {email} is not in use.")
                 return "Error: The email is not in use.", 400
+
         except Exception as e:
             app.logger.error(f"Unexpected error during reassignment: {e}")
             return f"Error: {e}", 500
@@ -727,24 +731,24 @@ def change_language():
     lang = request.args.get('lang', DEFAULT_LANGUAGE)
     if lang in LANGUAGES:
         session['language'] = lang
-        
+
     # Get the referrer URL
     referrer = request.referrer
     if not referrer:
         return redirect(url_for('home'))
-        
+
     # Parse the referrer URL to preserve existing query parameters
     from urllib.parse import urlparse, parse_qs, urlencode
     parsed = urlparse(referrer)
     params = parse_qs(parsed.query)
-    
+
     # Update the lang parameter
     params['lang'] = [lang]
-    
+
     # Reconstruct the URL with updated parameters
     new_query = urlencode(params, doseq=True)
     path = parsed.path
-    
+
     return redirect(f"{path}?{new_query}")
 
 @app.route('/livelyageing/refresh_data', methods=['POST'])
@@ -758,7 +762,7 @@ def refresh_data():
         db = DatabaseManager()
         if not db.connect():
             return jsonify({'error': 'Database connection error'}), 500
-            
+
         try:
             emails = db.execute_query("SELECT DISTINCT email FROM users")
         finally:
@@ -766,13 +770,13 @@ def refresh_data():
 
         # Process each email to fetch new data
         from fitbit import process_emails
-        from fitbit_intraday import process_emails as process_intraday_emails
-        
+        # from fitbit_intraday import process_emails as process_intraday_emails
+
         # Process daily data
         process_emails(emails)
         # Process intraday data
-        process_intraday_emails(emails)
-        
+        # process_intraday_emails(emails)
+
         return jsonify({'success': True})
     except Exception as e:
         app.logger.error(f"Error refreshing data: {e}")
@@ -800,7 +804,7 @@ def get_daily_summary():
             return jsonify({'error': 'No hay datos disponibles'}), 404
 
         latest_summary = summaries[-1]
-        
+
         return jsonify({
             'steps': latest_summary[3],
             'heart_rate': latest_summary[4],
@@ -867,7 +871,7 @@ def alerts_dashboard():
             dashboard_data = session['dashboard_data']
             # Clear the session data after using it
             session.pop('dashboard_data', None)
-            return render_template('alerts_dashboard.html', 
+            return render_template('alerts_dashboard.html',
                                 daily_summaries=dashboard_data['daily_summaries'],
                                 intraday_metrics=dashboard_data['intraday_metrics'],
                                 sleep_logs=dashboard_data['sleep_logs'],
@@ -913,7 +917,7 @@ def alerts_dashboard():
 
         # Construir la consulta base
         query = """
-            SELECT 
+            SELECT
                 a.id,
                 a.alert_time,
                 a.user_id,
@@ -923,7 +927,7 @@ def alerts_dashboard():
                 a.threshold_value,
                 a.details,
                 a.acknowledged,
-                u.name AS user_name, 
+                u.name AS user_name,
                 u.email AS user_email
             FROM alerts a
             JOIN users u ON a.user_id = u.id
@@ -960,29 +964,11 @@ def alerts_dashboard():
         app.logger.info(f"Query: {query}")
         app.logger.info(f"Params: {params}")
 
-
         try:
             # Obtener el total de alertas para la paginación
             count_query = f"SELECT COUNT(*) FROM ({query}) AS count_query"
             total = db.execute_query(count_query, params)[0][0]
             app.logger.info(f"Total de alertas encontradas: {total}")
-
-            # Obtener el total de alertas por prioridad y no reconocidas (sin paginación)
-            count_priority_query = f"""
-                SELECT 
-                    SUM(CASE WHEN a.priority = 'high' THEN 1 ELSE 0 END) AS high,
-                    SUM(CASE WHEN a.priority = 'medium' THEN 1 ELSE 0 END) AS medium,
-                    SUM(CASE WHEN a.priority = 'low' THEN 1 ELSE 0 END) AS low,
-                    SUM(CASE WHEN a.acknowledged = FALSE THEN 1 ELSE 0 END) AS unacknowledged
-                FROM ({query}) AS a
-            """
-            alert_counts_result = db.execute_query(count_priority_query, params)[0]
-            alert_counts = {
-                'high': alert_counts_result[0] or 0,
-                'medium': alert_counts_result[1] or 0,
-                'low': alert_counts_result[2] or 0,
-                'unacknowledged': alert_counts_result[3] or 0
-            }
 
             # Aplicar paginación
             query += " LIMIT %s OFFSET %s"
@@ -994,15 +980,13 @@ def alerts_dashboard():
 
             if not alerts_data:
                 app.logger.warning("No se encontraron alertas con los filtros actuales")
-                return render_template('alerts_dashboard.html', 
-                                    alerts=[], 
+                return render_template('alerts_dashboard.html',
+                                    alerts=[],
                                     pagination=None,
                                     filters_dict=filters_dict,
-                                    now=datetime.now(timezone.utc),
-                                    alert_counts=alert_counts)
+                                    now=datetime.now(timezone.utc))
 
             # Convertir las tuplas en diccionarios con nombres de atributos
-            import json  # <--- Añadido para parsear JSON
             alerts = []
             for alert in alerts_data:
                 try:
@@ -1027,18 +1011,18 @@ def alerts_dashboard():
                     elif base_alert_type == 'intraday':
                         # Para alertas de intraday_activity_drop, siempre mostrar datos de pasos
                         intraday_metric_type = 'steps'
-                        app.logger.info(f"Alerta {alert[0]}: {alert_type}, se buscarán datos intradía de steps.")
+                        app.logger.info(f"Alerta {alert[0]}: {alertType}, se buscarán datos intradía de steps.")
 
                     if intraday_metric_type:
                         start_time = alert[1] - timedelta(hours=24)
                         end_time = alert[1]
                         app.logger.info(f"Alerta {alert[0]}: buscando datos intradía de {intraday_metric_type} para user_id={alert[2]} entre {start_time} y {end_time}")
                         intraday_metrics = db.execute_query("""
-                            SELECT time, value 
-                            FROM intraday_metrics 
-                            WHERE user_id = %s 
-                            AND type = %s 
-                            AND time BETWEEN %s AND %s 
+                            SELECT time, value
+                            FROM intraday_metrics
+                            WHERE user_id = %s
+                            AND type = %s
+                            AND time BETWEEN %s AND %s
                             ORDER BY time
                         """, (alert[2], intraday_metric_type, start_time, end_time))
                         app.logger.info(f"Alerta {alert[0]}: encontrados {len(intraday_metrics) if intraday_metrics else 0} datos intradía de {intraday_metric_type}")
@@ -1051,80 +1035,26 @@ def alerts_dashboard():
                         else:
                             app.logger.info(f"No se encontraron datos intradía para {intraday_metric_type}")
 
-                    # Construir el diccionario de la alerta
-                    alert_dict = {
+                    # Convertir el datetime a string formateado
+                    alert_time = alert[1].strftime('%Y-%m-%d %H:%M')
+
+                    alerts.append({
                         'id': alert[0],
-                        'alert_time': alert[1].strftime('%Y-%m-%d %H:%M'),
-                        'raw_alert_time': alert[1],
+                        'alert_time': alert_time,
                         'user_id': alert[2],
                         'alert_type': alert[3],
-                        'priority': alert[4],
+                        'priority': alert[4].lower(),
                         'triggering_value': alert[5],
                         'threshold_value': alert[6],
                         'details': alert[7],
                         'acknowledged': alert[8],
                         'user_name': alert[9],
                         'user_email': alert[10],
-                        'intraday_data': intraday_data
-                    }
-
-                    # Si es heart_rate_anomaly, calcular y añadir el rango anómalo
-                    if alert[3]:
-                        app.logger.info(f"DEBUG ALERT: id={alert[0]}, alert_type={alert[3]}")
-                        if str(alert[3]).strip().lower() == 'heart_rate_anomaly':
-                            app.logger.info(f"DEBUG: Procesando heart_rate_anomaly para alerta id={alert[0]}")
-                            import json, re
-                            mean = None
-                            std_dev = None
-                            threshold_de = None
-                            upper_bound = None
-                            lower_bound = None
-                            details_raw = alert[7]
-                            details_obj = None
-                            app.logger.info(f"DEBUG: details_raw={details_raw}")
-                            # 1. Intentar JSON
-                            if isinstance(details_raw, str):
-                                try:
-                                    details_obj = json.loads(details_raw)
-                                    app.logger.info(f"DEBUG: details_obj (parsed)={details_obj}")
-                                except Exception as e:
-                                    app.logger.warning(f"DEBUG: Error parseando details_raw: {e}")
-                                    details_obj = None
-                            elif isinstance(details_raw, dict):
-                                details_obj = details_raw
-                                app.logger.info(f"DEBUG: details_obj (dict)={details_obj}")
-                            # 2. Si es JSON válido, usarlo
-                            if details_obj and isinstance(details_obj, dict):
-                                mean = float(details_obj.get('mean', 0))
-                                std_dev = float(details_obj.get('std_dev', 0))
-                                threshold_de = float(details_obj.get('threshold', 0))
-                                app.logger.info(f"DEBUG: mean={mean}, std_dev={std_dev}, threshold_de={threshold_de}")
-                                if mean is not None and std_dev is not None and threshold_de is not None and std_dev != 0:
-                                    upper_bound = mean + threshold_de * std_dev
-                                    lower_bound = mean - threshold_de * std_dev
-                            # 3. Si no hay JSON, intentar extraer del string (>X o <Y)
-                            if (upper_bound is None or lower_bound is None) and isinstance(details_raw, str):
-                                match = re.search(r">\s*([\d\.]+)\s*o\s*<\s*([\d\.]+)", details_raw)
-                                if match:
-                                    upper_bound = float(match.group(1))
-                                    lower_bound = float(match.group(2))
-                                    app.logger.info(f"DEBUG: Extraído del string: upper_bound={upper_bound}, lower_bound={lower_bound}")
-                            if upper_bound is not None and lower_bound is not None:
-                                alert_dict['hr_upper_bound'] = upper_bound
-                                alert_dict['hr_lower_bound'] = lower_bound
-
-                    # --- Solución al problema de details ---
-                    if isinstance(alert_dict['details'], str):
-                        try:
-                            details_obj = json.loads(alert_dict['details'])
-                            if isinstance(details_obj, dict):
-                                alert_dict['details'] = details_obj
-                        except Exception:
-                            pass  # Si no es un JSON válido, lo dejamos como está
-
-                    alerts.append(alert_dict)
+                        'intraday_data': intraday_data,
+                        'raw_alert_time': alert[1]
+                    })
                 except Exception as e:
-                    app.logger.error(f"Error procesando alerta: {e}")
+                    app.logger.error(f"Error procesando alerta {alert[0]}: {e}")
                     continue
 
             app.logger.info(f"Alertas procesadas: {len(alerts)}")
@@ -1145,25 +1075,24 @@ def alerts_dashboard():
             # Asegurarse de que now sea timezone-aware
             now = datetime.now(timezone.utc)
 
-            return render_template('alerts_dashboard.html', 
-                                alerts=alerts, 
-                                pagination=pagination, 
+            return render_template('alerts_dashboard.html',
+                                alerts=alerts,
+                                pagination=pagination,
                                 filters_dict=filters_dict,
-                                now=now,
-                                alert_counts=alert_counts)
+                                now=now)
 
         except Exception as e:
             app.logger.error(f"Error en la consulta SQL: {e}")
-            return render_template('alerts_dashboard.html', 
-                                alerts=[], 
+            return render_template('alerts_dashboard.html',
+                                alerts=[],
                                 pagination=None,
                                 filters_dict=filters_dict,
                                 now=datetime.now(timezone.utc))
 
     except Exception as e:
         app.logger.error(f"Error al cargar el dashboard de alertas: {e}")
-        return render_template('alerts_dashboard.html', 
-                            alerts=[], 
+        return render_template('alerts_dashboard.html',
+                            alerts=[],
                             pagination=None,
                             filters_dict={},
                             now=datetime.now(timezone.utc))
@@ -1178,7 +1107,7 @@ def get_alert_details(alert_id):
 
         # Obtener detalles de la alerta
         query = """
-            SELECT 
+            SELECT
                 a.id,
                 a.alert_time,
                 a.user_id,
@@ -1188,14 +1117,14 @@ def get_alert_details(alert_id):
                 a.threshold_value,
                 a.details,
                 a.acknowledged,
-                u.name AS user_name, 
+                u.name AS user_name,
                 u.email AS user_email
             FROM alerts a
             JOIN users u ON a.user_id = u.id
             WHERE a.id = %s
         """
         result = db.execute_query(query, [alert_id])
-        
+
         if not result:
             return jsonify({'error': 'Alerta no encontrada'}), 404
 
@@ -1231,25 +1160,25 @@ def acknowledge_alert(alert_id):
             # Verificar si la alerta existe y no está reconocida
             check_query = "SELECT acknowledged FROM alerts WHERE id = %s"
             result = db.execute_query(check_query, [alert_id])
-            
+
             if not result:
                 return jsonify({'success': False, 'error': 'Alerta no encontrada'}), 404
-                
+
             if result[0][0]:
                 return jsonify({'success': False, 'error': 'La alerta ya está reconocida'}), 400
-                
+
             # Actualizar solo el campo acknowledged
             db.execute_query("""
-                UPDATE alerts 
+                UPDATE alerts
                 SET acknowledged = TRUE
                 WHERE id = %s
             """, [alert_id])
-                
+
             return jsonify({'success': True})
-            
+
         finally:
             db.close()
-            
+
     except Exception as e:
         app.logger.error(f"Error al reconocer alerta: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1268,16 +1197,16 @@ def user_detail(user_id):
         # Obtener datos básicos del usuario
         user_data = db.execute_query(
             """
-            SELECT id, name, email, created_at, 
+            SELECT id, name, email, created_at,
                    access_token, refresh_token,
                    EXTRACT(YEAR FROM AGE(CURRENT_DATE, created_at)) as age
-            FROM users 
+            FROM users
             WHERE id = %s
             """, (user_id,)
         )
         if not user_data:
             return "Usuario no encontrado", 404
-            
+
         # Convertir la tupla en un diccionario
         user = {
             'id': user_data[0][0],
@@ -1288,13 +1217,13 @@ def user_detail(user_id):
             'refresh_token': user_data[0][5],
             'age': int(user_data[0][6]) if user_data[0][6] else None
         }
-        
+
         # Obtener el último resumen diario para datos actuales
         latest_summary = db.execute_query(
             """
-            SELECT * FROM daily_summaries 
-            WHERE user_id = %s 
-            ORDER BY date DESC 
+            SELECT * FROM daily_summaries
+            WHERE user_id = %s
+            ORDER BY date DESC
             LIMIT 1
             """, (user_id,)
         )
@@ -1305,22 +1234,22 @@ def user_detail(user_id):
             last_update_datetime = datetime.combine(latest_summary['date'], time(23, 59))
         else:
             last_update_datetime = None
-        
+
         # Obtener alertas recientes no reconocidas
         recent_alerts = db.execute_query(
             """
-            SELECT * FROM alerts 
-            WHERE user_id = %s 
+            SELECT * FROM alerts
+            WHERE user_id = %s
             AND alert_time >= CURRENT_DATE - INTERVAL '7 days'
             ORDER BY alert_time DESC
             """, (user_id,)
         )
-        
+
         # Convertir las alertas en diccionarios
         if recent_alerts:
             alert_columns = [desc[0] for desc in db.cursor.description]
             recent_alerts = [dict(zip(alert_columns, alert)) for alert in recent_alerts]
-            
+
             # Procesar alertas activas para los indicadores visuales
             alerts = {
                 'activity_drop': False,
@@ -1328,7 +1257,7 @@ def user_detail(user_id):
                 'sleep_duration_change': False,
                 'sedentary_increase': False
             }
-            
+
             for alert in recent_alerts:
                 if not alert['acknowledged'] and alert['alert_time'].date() == datetime.now().date():
                     alert_type = alert['alert_type']
@@ -1341,8 +1270,8 @@ def user_detail(user_id):
                 'sleep_duration_change': False,
                 'sedentary_increase': False
             }
-        
-        return render_template('user_detail.html', 
+
+        return render_template('user_detail.html',
                              user=user,
                              latest_summary=latest_summary,
                              recent_alerts=recent_alerts,
@@ -1375,7 +1304,7 @@ def api_user_daily_summary(user_id):
     try:
         summary = db.execute_query(
             """
-            SELECT 
+            SELECT
                 date,
                 steps,
                 heart_rate,
@@ -1394,7 +1323,7 @@ def api_user_daily_summary(user_id):
                 oxygen_saturation,
                 respiratory_rate,
                 temperature
-            FROM daily_summaries 
+            FROM daily_summaries
             WHERE user_id = %s AND date = %s
             """, (user_id, date)
         )
@@ -1429,6 +1358,7 @@ def api_user_intraday(user_id):
             return jsonify({'error': 'Formato de fecha inválido'}), 400
     else:
         date = datetime.now().date()
+
     db = DatabaseManager()
     if not db.connect():
         return jsonify({'error': 'DB error'}), 500
@@ -1436,20 +1366,25 @@ def api_user_intraday(user_id):
         start_time = datetime.combine(date, datetime.min.time())
         end_time = datetime.combine(date, datetime.max.time())
         data = db.execute_query(
-            """
-            SELECT time, value 
-            FROM intraday_metrics 
-            WHERE user_id = %s 
-            AND type = %s 
-            AND time BETWEEN %s AND %s 
+            f"""
+            SELECT time, {metric_type}
+            FROM intraday_metrics
+            WHERE user_id = %s
+            AND time BETWEEN %s AND %s
             ORDER BY time
-            """, (user_id, metric_type, start_time, end_time)
+            """, (user_id, start_time, end_time)
         )
+
+        # for row in data:
+        #     print(row)
+        #     print(len(row))
+
+
         return jsonify({
             'intraday': [
                 {
                     'time': row[0].strftime('%H:%M'),
-                    'value': float(row[1])
+                    'value': float(row[1] if row[1] is not None else 0)
                 } for row in data
             ]
         })
@@ -1470,7 +1405,7 @@ def api_user_weekly_summary(user_id):
         start_date = end_date - timedelta(days=6)
         data = db.execute_query(
             """
-            SELECT 
+            SELECT
                 date,
                 steps,
                 heart_rate,
@@ -1489,9 +1424,9 @@ def api_user_weekly_summary(user_id):
                 oxygen_saturation,
                 respiratory_rate,
                 temperature
-            FROM daily_summaries 
-            WHERE user_id = %s 
-            AND date BETWEEN %s AND %s 
+            FROM daily_summaries
+            WHERE user_id = %s
+            AND date BETWEEN %s AND %s
             ORDER BY date DESC
             """, (user_id, start_date, end_date)
         )
@@ -1535,7 +1470,7 @@ def api_user_alerts(user_id):
         since = datetime.now() - timedelta(days=7)
         data = db.execute_query(
             """
-            SELECT 
+            SELECT
                 alert_time,
                 alert_type,
                 priority,
@@ -1543,13 +1478,13 @@ def api_user_alerts(user_id):
                 threshold_value,
                 details,
                 acknowledged
-            FROM alerts 
-            WHERE user_id = %s 
-            AND alert_time >= %s 
+            FROM alerts
+            WHERE user_id = %s
+            AND alert_time >= %s
             ORDER BY alert_time DESC
             """, (user_id, since)
         )
-        
+
         return jsonify({
             'alerts': [
                 {
@@ -1583,7 +1518,7 @@ def export_alerts():
         user_query = request.args.get('user_query')
         # Construir la consulta base
         query = """
-            SELECT 
+            SELECT
                 a.alert_time,
                 u.name AS user_name,
                 u.email AS user_email,
@@ -1647,7 +1582,7 @@ def export_user_alerts(user_id):
     try:
         since = datetime.now() - timedelta(days=7)
         query = """
-            SELECT 
+            SELECT
                 a.alert_time,
                 u.name AS user_name,
                 u.email AS user_email,
@@ -1749,34 +1684,34 @@ def unlink_user():
             user_email = db.execute_query("""
                 SELECT email FROM users WHERE id = %s
             """, (user_id,))
-            
+
             if not user_email:
                 flash('Usuario no encontrado', 'danger')
                 return redirect(url_for('user_stats'))
-                
+
             email = user_email[0][0]
-            
+
             # Start a transaction
             db.execute_query("BEGIN")
-            
+
             try:
                 # 1. Create a new unassigned instance with the same email
                 db.execute_query("""
                     INSERT INTO users (name, email, access_token, refresh_token)
                     VALUES ('', %s, NULL, NULL)
                 """, (email,))
-                
+
                 # 2. Remove tokens from the original instance (but keep name and data)
                 db.execute_query("""
-                    UPDATE users 
-                    SET access_token = NULL, 
+                    UPDATE users
+                    SET access_token = NULL,
                         refresh_token = NULL
                     WHERE id = %s
                 """, (user_id,))
-                
+
                 # Commit the transaction
                 db.execute_query("COMMIT")
-                
+
                 flash('Dispositivo desvinculado correctamente. El usuario y sus datos históricos se mantienen.', 'success')
             except Exception as e:
                 # If anything fails, rollback the transaction
@@ -1784,7 +1719,7 @@ def unlink_user():
                 app.logger.error(f"Error en la transacción de desvincular: {e}")
                 flash('Error al desvincular usuario', 'danger')
                 raise
-                
+
         except Exception as e:
             app.logger.error(f"Error desvinculando usuario: {e}")
             flash('Error al desvincular usuario', 'danger')
@@ -1792,7 +1727,7 @@ def unlink_user():
             db.close()
     else:
         flash('Error de conexión a la base de datos', 'danger')
-    
+
     return redirect(url_for('user_stats'))
 
 @app.route('/livelyageing/debug_static')
