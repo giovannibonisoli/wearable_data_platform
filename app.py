@@ -1005,24 +1005,27 @@ def alerts_dashboard():
                     intraday_metric_type = None
                     if base_alert_type == 'heart':
                         intraday_metric_type = 'heart_rate'
+
                     elif base_alert_type == 'activity':
                         # Only show steps if the reason is steps
                         if alert[7] and 'pasos' in alert[7].lower():
                             intraday_metric_type = 'steps'
-                            app.logger.info(f"Alerta {alert[0]}: activity_drop causada por pasos, se buscarán datos intradía de steps.")
+                            app.logger.info(f"Alert {alert[0]}: activity_drop caused by steps, intraday steps data will be fetched.")
                         else:
-                            app.logger.info(f"Alerta {alert[0]}: activity_drop NO causada por pasos, no se mostrarán datos intradía.")
+                            app.logger.info(f"Alerta {alert[0]}: `activity_drop` NOT caused by steps, intraday data will not be shown.")
                     elif base_alert_type in ['steps', 'calories', 'active_zone_minutes']:
+
                         intraday_metric_type = base_alert_type
+
                     elif base_alert_type == 'intraday':
-                        # Para alertas de intraday_activity_drop, siempre mostrar datos de pasos
+                        # or intraday_activity_drop alerts, always display step data.
                         intraday_metric_type = 'steps'
-                        app.logger.info(f"Alerta {alert[0]}: {alertType}, se buscarán datos intradía de steps.")
+                        app.logger.info(f"Alert {alert[0]}: {alertType}, intraday step data will be fetched.")
 
                     if intraday_metric_type:
                         start_time = alert[1] - timedelta(hours=24)
                         end_time = alert[1]
-                        app.logger.info(f"Alerta {alert[0]}: buscando datos intradía de {intraday_metric_type} para user_id={alert[2]} entre {start_time} y {end_time}")
+                        app.logger.info(f"Alerta {alert[0]}: fetching {intraday_metric_type} intraday data for user_id={alert[2]} from {start_time} to {end_time}")
                         intraday_metrics = db.execute_query("""
                             SELECT time, value
                             FROM intraday_metrics
@@ -1031,17 +1034,17 @@ def alerts_dashboard():
                             AND time BETWEEN %s AND %s
                             ORDER BY time
                         """, (alert[2], intraday_metric_type, start_time, end_time))
-                        app.logger.info(f"Alerta {alert[0]}: encontrados {len(intraday_metrics) if intraday_metrics else 0} datos intradía de {intraday_metric_type}")
+                        app.logger.info(f"Alerta {alert[0]}: fetched {len(intraday_metrics) if intraday_metrics else 0} intraday data for {intraday_metric_type}")
                         if intraday_metrics:
                             intraday_data = {
                                 'times': [m[0].strftime('%H:%M') for m in intraday_metrics],
                                 'values': [float(m[1]) for m in intraday_metrics]
                             }
-                            app.logger.info(f"Datos intradía obtenidos para {intraday_metric_type}: {len(intraday_metrics)} registros")
+                            app.logger.info(f"Intraday data retrieved for {intraday_metric_type}: {len(intraday_metrics)} records")
                         else:
-                            app.logger.info(f"No se encontraron datos intradía para {intraday_metric_type}")
+                            app.logger.info(f"Intraday data for {intraday_metric_type} not found")
 
-                    # Convertir el datetime a string formateado
+                    # To convert a datetime object to a formatted string in Python, you can use the strftime() method.
                     alert_time = alert[1].strftime('%Y-%m-%d %H:%M')
 
                     alerts.append({
@@ -1063,9 +1066,9 @@ def alerts_dashboard():
                     app.logger.error(f"Error procesando alerta {alert[0]}: {e}")
                     continue
 
-            app.logger.info(f"Alertas procesadas: {len(alerts)}")
+            app.logger.info(f"Processed alerts: {len(alerts)}")
 
-            # Crear objeto de paginación
+            # Create a pagination object
             pagination = {
                 'page': page,
                 'per_page': per_page,
@@ -1078,7 +1081,7 @@ def alerts_dashboard():
                 'iter_pages': lambda: range(1, ((total + per_page - 1) // per_page) + 1)
             }
 
-            # Asegurarse de que now sea timezone-aware
+            # Make sure that now is timezone-aware
             now = datetime.now(timezone.utc)
 
             return render_template('alerts_dashboard.html',
@@ -1088,7 +1091,7 @@ def alerts_dashboard():
                                 now=now)
 
         except Exception as e:
-            app.logger.error(f"Error en la consulta SQL: {e}")
+            app.logger.error(f"Error in the SQL query: {e}")
             return render_template('alerts_dashboard.html',
                                 alerts=[],
                                 pagination=None,
@@ -1111,7 +1114,7 @@ def get_alert_details(alert_id):
         if not db.connect():
             return jsonify({'error': 'Database connection error'}), 500
 
-        # Obtener detalles de la alerta
+        # Obtain alert details
         query = """
             SELECT
                 a.id,
@@ -1132,7 +1135,7 @@ def get_alert_details(alert_id):
         result = db.execute_query(query, [alert_id])
 
         if not result:
-            return jsonify({'error': 'Alerta no encontrada'}), 404
+            return jsonify({'error': 'Alert not found'}), 404
 
         alert = {
             'id': result[0][0],
@@ -1151,7 +1154,7 @@ def get_alert_details(alert_id):
         return jsonify(alert)
 
     except Exception as e:
-        app.logger.error(f"Error al obtener detalles de la alerta: {e}")
+        app.logger.error(f"Error obtaining details on the alert: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/livelyageing/api/alerts/<int:alert_id>/acknowledge', methods=['POST'])
@@ -1160,20 +1163,20 @@ def acknowledge_alert(alert_id):
     try:
         db = DatabaseManager()
         if not db.connect():
-            return jsonify({'success': False, 'error': 'Error de conexión a la base de datos'}), 500
+            return jsonify({'success': False, 'error': 'Database connection error'}), 500
 
         try:
-            # Verificar si la alerta existe y no está reconocida
+            # Check if the alert exists and is unacknowledged.
             check_query = "SELECT acknowledged FROM alerts WHERE id = %s"
             result = db.execute_query(check_query, [alert_id])
 
             if not result:
-                return jsonify({'success': False, 'error': 'Alerta no encontrada'}), 404
+                return jsonify({'success': False, 'error': 'Alert not found'}), 404
 
             if result[0][0]:
-                return jsonify({'success': False, 'error': 'La alerta ya está reconocida'}), 400
+                return jsonify({'success': False, 'error': 'The alert has already been acknowledged.'}), 400
 
-            # Actualizar solo el campo acknowledged
+            # Only update 'acknowledged' field
             db.execute_query("""
                 UPDATE alerts
                 SET acknowledged = TRUE
@@ -1193,14 +1196,14 @@ def acknowledge_alert(alert_id):
 @login_required
 def user_detail(user_id):
     """
-    Renderiza la ficha de usuario con la información básica y datos recientes.
-    El resto de datos se cargan vía AJAX.
+    Render the user card with basic information and recent data.
+    The remaining data is loaded via AJAX.
     """
     db = DatabaseManager()
     if not db.connect():
-        return "Error: No se pudo conectar a la base de datos.", 500
+        return "Error: Get the user's basic data.", 500
     try:
-        # Obtener datos básicos del usuario
+        # Get the user's basic data
         user_data = db.execute_query(
             """
             SELECT id, name, email, created_at,
@@ -1211,9 +1214,9 @@ def user_detail(user_id):
             """, (user_id,)
         )
         if not user_data:
-            return "Usuario no encontrado", 404
+            return "User not found", 404
 
-        # Convertir la tupla en un diccionario
+        # Convert the tuple to a dictionary
         user = {
             'id': user_data[0][0],
             'name': user_data[0][1],
@@ -1224,7 +1227,7 @@ def user_detail(user_id):
             'age': int(user_data[0][6]) if user_data[0][6] else None
         }
 
-        # Obtener el último resumen diario para datos actuales
+        # Get last daily summary for current data
         latest_summary = db.execute_query(
             """
             SELECT * FROM daily_summaries
@@ -1241,7 +1244,7 @@ def user_detail(user_id):
         else:
             last_update_datetime = None
 
-        # Obtener alertas recientes no reconocidas
+        # Get recent alerts not acknowledged
         recent_alerts = db.execute_query(
             """
             SELECT * FROM alerts
@@ -1251,12 +1254,12 @@ def user_detail(user_id):
             """, (user_id,)
         )
 
-        # Convertir las alertas en diccionarios
+        # Convert the alerts into dictionaries.
         if recent_alerts:
             alert_columns = [desc[0] for desc in db.cursor.description]
             recent_alerts = [dict(zip(alert_columns, alert)) for alert in recent_alerts]
 
-            # Procesar alertas activas para los indicadores visuales
+            # Process active alerts for visual indicators.
             alerts = {
                 'activity_drop': False,
                 'heart_rate_anomaly': False,
@@ -1285,8 +1288,8 @@ def user_detail(user_id):
                              now=datetime.now(),
                              last_update_datetime=last_update_datetime)
     except Exception as e:
-        app.logger.error(f"Error al cargar la ficha de usuario: {e}")
-        return "Error interno del servidor", 500
+        app.logger.error(f"Error loading the user profile: {e}")
+        return "Internal server error", 500
     finally:
         db.close()
 
@@ -1294,14 +1297,14 @@ def user_detail(user_id):
 @login_required
 def api_user_daily_summary(user_id):
     """
-    Devuelve el resumen diario para un usuario y una fecha (por defecto hoy).
+    Returns the daily summary for a user and a date (today by default)
     """
     date_str = request.args.get('date')
     if date_str:
         try:
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except Exception:
-            return jsonify({'error': 'Formato de fecha inválido'}), 400
+            return jsonify({'error': 'Invalid date format'}), 400
     else:
         date = datetime.now().date()
     db = DatabaseManager()
@@ -1335,9 +1338,11 @@ def api_user_daily_summary(user_id):
         )
         if not summary:
             return jsonify({'error': 'No hay datos para ese día'}), 404
+
         # Mapear los campos a nombres legibles
         columns = [desc[0] for desc in db.cursor.description]
         summary_dict = dict(zip(columns, summary[0]))
+
         # Calcular valores adicionales
         if summary_dict.get('sleep_minutes'):
             summary_dict['sleep_hours'] = round(summary_dict['sleep_minutes'] / 60, 1)
@@ -1351,17 +1356,17 @@ def api_user_daily_summary(user_id):
 @login_required
 def api_user_intraday(user_id):
     """
-    Devuelve los datos intradía para un usuario, fecha y tipo de métrica.
+    Returns intraday data for the users together with date and metric type.
     """
     date_str = request.args.get('date')
     metric_type = request.args.get('type')
     if not metric_type:
-        return jsonify({'error': 'Falta el tipo de métrica'}), 400
+        return jsonify({'error': 'The metric type is missing.'}), 400
     if date_str:
         try:
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except Exception:
-            return jsonify({'error': 'Formato de fecha inválido'}), 400
+            return jsonify({'error': 'Invalid date format'}), 400
     else:
         date = datetime.now().date()
 
@@ -1401,7 +1406,7 @@ def api_user_intraday(user_id):
 @login_required
 def api_user_weekly_summary(user_id):
     """
-    Devuelve los resúmenes diarios de los últimos 7 días para el usuario.
+    Returns the daily summaries from the last 7 days for the user.
     """
     db = DatabaseManager()
     if not db.connect():
@@ -1467,7 +1472,7 @@ def api_user_weekly_summary(user_id):
 @login_required
 def api_user_alerts(user_id):
     """
-    Devuelve las alertas de los últimos 7 días para el usuario.
+    Return the alerts from the last 7 days for the user
     """
     db = DatabaseManager()
     if not db.connect():
@@ -1514,15 +1519,16 @@ def export_alerts():
     from io import StringIO
     db = DatabaseManager()
     if not db.connect():
-        return "Error de conexión a la base de datos", 500
+        return "Database connection error", 500
     try:
-        # Obtener filtros igual que en alerts_dashboard
+        # Get filters the same way as in alerts_dashboard
         date_from = request.args.get('date_from')
         date_to = request.args.get('date_to')
         priority = request.args.get('priority')
         acknowledged = request.args.get('acknowledged')
         user_query = request.args.get('user_query')
-        # Construir la consulta base
+
+        # Build the base query.
         query = """
             SELECT
                 a.alert_time,
@@ -1557,22 +1563,23 @@ def export_alerts():
             params.extend([search_term, search_term])
         query += " ORDER BY a.alert_time DESC"
         alerts = db.execute_query(query, params)
-        # Crear CSV con BOM UTF-8 para compatibilidad con Excel
+
+        # Create a CSV with UTF-8 BOM for Excel compatibility.
         si = StringIO()
         cw = csv.writer(si)
-        cw.writerow(["Fecha/Hora", "Usuario", "Email", "Tipo de Alerta", "Prioridad", "Valor Disparador", "Umbral", "Detalles", "Reconocida"])
+        cw.writerow(["Date", "User", "Email", "alertType", "Priority", "Trigger Value", "Threshold", "Details", "Acknowledged"])
         for a in alerts:
             cw.writerow([
                 a[0].strftime('%Y-%m-%d %H:%M'),
                 a[1], a[2], a[3], a[4], a[5], a[6], a[7], "Sí" if a[8] else "No"
             ])
-        output = '\ufeff' + si.getvalue()  # Añadir BOM UTF-8
+        output = '\ufeff' + si.getvalue()  # Add BOM UTF-8
         si.close()
-        fecha = datetime.now().strftime('%Y%m%d')
+        date = datetime.now().strftime('%Y%m%d')
         return Response(
             output,
             mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=alertas_{fecha}.csv"}
+            headers={"Content-Disposition": f"attachment;filename=alertas_{date}.csv"}
         )
     finally:
         db.close()
@@ -1584,7 +1591,7 @@ def export_user_alerts(user_id):
     from io import StringIO
     db = DatabaseManager()
     if not db.connect():
-        return "Error de conexión a la base de datos", 500
+        return "Database connection error", 500
     try:
         since = datetime.now() - timedelta(days=7)
         query = """
@@ -1606,7 +1613,7 @@ def export_user_alerts(user_id):
         alerts = db.execute_query(query, (user_id, since))
         si = StringIO()
         cw = csv.writer(si)
-        cw.writerow(["Fecha/Hora", "Usuario", "Email", "Tipo de Alerta", "Prioridad", "Valor Disparador", "Umbral", "Detalles", "Reconocida"])
+        cw.writerow(["Date/Hour", "User", "Email", "Alert type", "Priority", "Trigger value", "Threshold", "Details", "Acknowledged"])
         for a in alerts:
             cw.writerow([
                 a[0].strftime('%Y-%m-%d %H:%M'),
@@ -1614,11 +1621,11 @@ def export_user_alerts(user_id):
             ])
         output = '\ufeff' + si.getvalue()
         si.close()
-        fecha = datetime.now().strftime('%Y%m%d')
+        date = datetime.now().strftime('%Y%m%d')
         return Response(
             output,
             mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=alertas_usuario_{user_id}_{fecha}.csv"}
+            headers={"Content-Disposition": f"attachment;filename=alerts_user_{user_id}_{date}.csv"}
         )
     finally:
         db.close()
@@ -1630,14 +1637,15 @@ def export_user_intraday(user_id):
     from io import StringIO
     db = DatabaseManager()
     if not db.connect():
-        return "Error de conexión a la base de datos", 500
+        return "Database connection error", 500
     try:
-        # Obtener fechas y métricas seleccionadas
+        # Obtain selected dates and metrics
         dates = request.args.getlist('dates')
         metrics = request.args.getlist('metrics')
         if not dates or not metrics:
-            return "Debe seleccionar al menos una fecha y una métrica", 400
-        # Preparar consulta
+            return "You must select at least one date and one metric.", 400
+
+        # Set query
         rows = []
         for date_str in dates:
             for metric in metrics:
@@ -1655,16 +1663,16 @@ def export_user_intraday(user_id):
         # Crear CSV
         si = StringIO()
         cw = csv.writer(si)
-        cw.writerow(["Fecha", "Hora", "Métrica", "Valor"])
+        cw.writerow(["Date", "Hour", "Metric", "Value"])
         for r in rows:
             cw.writerow(r)
         output = '\ufeff' + si.getvalue()
         si.close()
-        fecha = datetime.now().strftime('%Y%m%d')
+        date = datetime.now().strftime('%Y%m%d')
         return Response(
             output,
             mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=intradia_usuario_{user_id}_{fecha}.csv"}
+            headers={"Content-Disposition": f"attachment;filename=intraday_user_{user_id}_{date}.csv"}
         )
     finally:
         db.close()
@@ -1680,7 +1688,7 @@ def unlink_user():
     """
     user_id = request.form.get('user_id')
     if not user_id:
-        flash('ID de usuario no proporcionado', 'danger')
+        flash('User ID not provided', 'danger')
         return redirect(url_for('user_stats'))
 
     db = DatabaseManager()
@@ -1692,7 +1700,7 @@ def unlink_user():
             """, (user_id,))
 
             if not user_email:
-                flash('Usuario no encontrado', 'danger')
+                flash('User not found', 'danger')
                 return redirect(url_for('user_stats'))
 
             email = user_email[0][0]
@@ -1718,21 +1726,21 @@ def unlink_user():
                 # Commit the transaction
                 db.execute_query("COMMIT")
 
-                flash('Dispositivo desvinculado correctamente. El usuario y sus datos históricos se mantienen.', 'success')
+                flash('Device successfully unlinked. User and historical data are preserved.', 'success')
             except Exception as e:
                 # If anything fails, rollback the transaction
                 db.execute_query("ROLLBACK")
-                app.logger.error(f"Error en la transacción de desvincular: {e}")
-                flash('Error al desvincular usuario', 'danger')
+                app.logger.error(f"Error in unlink transaction: {e}")
+                flash('Failed to unlink user', 'danger')
                 raise
 
         except Exception as e:
-            app.logger.error(f"Error desvinculando usuario: {e}")
-            flash('Error al desvincular usuario', 'danger')
+            app.logger.error(f"Failed to unlink user: {e}")
+            flash('Failed to unlink user', 'danger')
         finally:
             db.close()
     else:
-        flash('Error de conexión a la base de datos', 'danger')
+        flash('Database connection error', 'danger')
 
     return redirect(url_for('user_stats'))
 
