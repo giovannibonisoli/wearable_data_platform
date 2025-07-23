@@ -21,18 +21,18 @@ app = Flask(__name__,
 
 app.secret_key = os.getenv('SECRET_KEY')
 
-# Configuración básica de logging
+# Basic logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]',
     handlers=[
-        logging.StreamHandler(),  # Log a consola
-        logging.FileHandler('app.log', mode='w')  # Log a archivo, sobrescribiendo cada vez
+        logging.StreamHandler(),  # Log on console
+        logging.FileHandler('app.log', mode='w')  # Log on a file
     ]
 )
 
-# Obtener el modo de ejecución
-FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # Por defecto, modo desarrollo
+# Get execution mode
+FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mode
 USERNAME = os.getenv('log_USERNAME')
 PASSWORD = os.getenv('PASSWORD')
 
@@ -72,39 +72,40 @@ def inject_globals():
 # Configurar Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'  # Ruta para el inicio de sesión
+login_manager.login_view = 'login'  # Route for starting session
 
 
 if FLASK_ENV == 'production':
-    # Modo producción: usar IP pública y HTTPS
+    # Production mode: use public IP and HTTPS.
     HOST = os.getenv('PRODUCTION_HOST','0.0.0.0')
     PORT = int(os.getenv('PRODUCTION_PORT'))
     # SSL_CONTEXT = (
-    #     os.getenv('SSL_CERT'),  # Ruta al certificado
-    #     os.getenv('SSL_KEY')     # Ruta a la clave privada
+    #     os.getenv('SSL_CERT'),  # Path to the certificate.
+    #     os.getenv('SSL_KEY')     # Path to the private key.
     # )
     DEBUG = True
 else:
-    # Modo desarrollo: usar localhost y HTTP
+    # Development mode: use localhost and HTTP
     HOST = os.getenv('HOST')
     PORT = int(os.getenv('PORT'))
     SSL_CONTEXT = None
     DEBUG = os.getenv('DEBUG').lower() == 'true'
-# Modelo de usuario
+
+# User Model
 class User(UserMixin):
     def __init__(self, id):
         self.id = id
 
-# Cargar el usuario
+# Load user
 @login_manager.user_loader
 def load_user(user_id):
     return User(user_id)
 
-# Ruta de inicio de sesión
+# Login path
 @app.route('/livelyageing/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))  # Redirigir a home en lugar de index
+        return redirect(url_for('home'))  # Redirect to home instead of index
 
     if request.method == 'POST':
 
@@ -114,19 +115,20 @@ def login():
         if username == USERNAME and password == PASSWORD:
             user = User(username)
             login_user(user)
-            return redirect(url_for('home'))  # Redirigir a home en lugar de index
+            return redirect(url_for('home'))  # Redirect to home instead of index
+
         else:
-            flash('Usuario o contraseña incorrectos', 'danger')
+            flash('Incorrect username or password.', 'danger')
     return render_template('login.html')
 
-# Ruta de cierre de sesión
+# Logout path
 @app.route('/livelyageing/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# Proteger todas las rutas con @login_required
+# Protect all routes with `@login_required`.
 @app.before_request
 def require_login():
     if not current_user.is_authenticated and request.endpoint != 'login':
@@ -299,15 +301,15 @@ def home():
                 LIMIT 10
             """)
 
-            # Convertir la fecha a datetime para evitar el error de tipo
+            # Convert the date to `datetime` to avoid the type error.
             now = datetime.now()
             processed_users = []
             for user in recent_users:
-                user_list = list(user)  # Convertir tupla a lista para poder modificar
-                if user_list[3]:  # Si created_at no es None
-                    # Convertir date a datetime usando datetime.combine
+                user_list = list(user)  # Convert tuple to list to allow modification.
+                if user_list[3]:  # If `created_at` is not `None`.
+                    # Convert date to datetime using datetime.combine.
                     user_list[3] = datetime.combine(user_list[3], datetime.min.time())
-                processed_users.append(tuple(user_list))  # Volver a convertir a tupla
+                processed_users.append(tuple(user_list))  # Convert back to a tuple.
 
             return render_template('home.html', recent_users=processed_users, now=now)
         except Exception as e:
@@ -332,7 +334,8 @@ def user_stats():
     db = DatabaseManager()
     if db.connect():
         try:
-            # Obtener todos los usuarios con información relevante
+            # Get all users with relevant information.
+
             if search:
                 users = db.execute_query("""
                     WITH UserInstances AS (
@@ -371,38 +374,40 @@ def user_stats():
                     ORDER BY email, created_at DESC
                 """)
 
-            # Procesar los usuarios
+            # Process all users
             processed_users = []
             current_email = None
 
             for user in users:
                 user_id, name, email, created_at, has_tokens, last_update, has_data, row_num = user
 
-                # Es la instancia más reciente si row_num = 1
+                # It's the most recent instance if `row_num = 1`.
+
                 is_latest = (row_num == 1)
 
-                # Si cambiamos de email o es el primer usuario
+                # If we change the email or it's the first user.
                 if email != current_email:
                     current_email = email
 
-                # Determinar el estado del usuario
+                # Determine the user's status.
                 if is_latest:
                     if not name:
-                        # Si no tiene nombre, está sin asignar
+                        # If it doesn’t have a name, it’s unassigned.
                         status = 'unassigned'
                     elif not has_tokens:
-                        # Si tiene nombre pero no tokens, está desvinculado
+                        # If it has a name but no tokens, it’s unlinked.
                         status = 'unlinked'
                     elif has_tokens and name:
-                        # Si tiene nombre y tokens, está activo
+                        # If it has a name and tokens, it’s active.
                         status = 'active'
                 else:
-                    # Las instancias anteriores son históricas si tienen nombre y datos
+                    # Previous instances are historical if they have a name and data.
                     status = 'historical'
 
-                # Añadir el usuario si:
-                # 1. Es la instancia más reciente, O
-                # 2. Es una instancia histórica que tenía nombre y datos
+                # Add the user if:
+                # 1. It is the most recent instance, OR
+                # 2. It is a historical instance that had a name and data
+
                 if is_latest or (name and has_data):
                     processed_users.append({
                         'id': user_id,
@@ -422,11 +427,11 @@ def user_stats():
                                 now=datetime.now())
         except Exception as e:
             app.logger.error(f"Error fetching user statistics: {e}")
-            return "Error: No se pudieron obtener las estadísticas de usuarios.", 500
+            return "Error: Could not retrieve user statistics.", 500
         finally:
             db.close()
     else:
-        return "Error: No se pudo conectar a la base de datos.", 500
+        return "Error: Could not connect to the database.", 500
 
 # Route: Link a new Fitbit device
 @app.route('/livelyageing/link', methods=['GET', 'POST'])
@@ -505,6 +510,7 @@ def assign_user():
 
     return render_template('assign_user.html')
 
+
 @app.route('/livelyageing/callback')
 @login_required
 def callback():
@@ -555,23 +561,23 @@ def callback():
                                 try:
                                     access_token, refresh_token = get_tokens(code, code_verifier)
                                     if not access_token or not refresh_token:
-                                        raise Exception("No se pudieron obtener los tokens de Fitbit")
+                                        raise Exception("Could not retrieve Fitbit tokens.")
                                     db.add_user(new_user_name, email, access_token, refresh_token)
-                                    app.logger.info(f"Dispositivo reasignado a {new_user_name} ({email}) con nuevos tokens.")
+                                    app.logger.info(f"Device reassigned to {new_user_name} ({email}) with new tokens.")
                                 except Exception as e:
-                                    app.logger.error(f"Error obteniendo tokens de Fitbit: {e}")
-                                    flash("Error: No se pudo obtener la autorización de Fitbit. Por favor, inténtalo de nuevo.", "danger")
+                                    app.logger.error(`f"Error getting Fitbit tokens: {e}"`)
+                                    flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
                                     return redirect(url_for('link_device'))
                             else:
-                                app.logger.error("Se requiere autorización para reasignar el dispositivo.")
-                                flash("Error: Se requiere autorización para reasignar el dispositivo.", "danger")
+                                app.logger.error("Authorization is required to reassign the device.")
+                                flash("Error: Authorization is required to reassign the device.", "danger")
                                 return redirect(url_for('link_device'))
                         else:
                             db.add_user(new_user_name, email, existing_access_token, existing_refresh_token)
-                            app.logger.info(f"Dispositivo reasignado a {new_user_name} ({email}) sin necesidad de reautorización.")
+                            app.logger.info(f"Device reassigned to {new_user_name} ({email}) without needing reauthorization.")
                     else:
-                        app.logger.error("Se requiere un nombre de usuario para reasignar el dispositivo.")
-                        flash("Error: Se requiere un nombre de usuario para reasignar el dispositivo.", "danger")
+                        app.logger.error("A username is required to reassign the device.")
+                        flash("Error: A username is required to reassign the device.", "danger")
                         return redirect(url_for('assign_user'))
                 else:
                     # Flow 1: Link a new email to a user
@@ -580,20 +586,20 @@ def callback():
                             try:
                                 access_token, refresh_token = get_tokens(code, code_verifier)
                                 if not access_token or not refresh_token:
-                                    raise Exception("No se pudieron obtener los tokens de Fitbit")
+                                    raise Exception("Could not retrieve the Fitbit tokens.")
                                 db.add_user(new_user_name, email, access_token, refresh_token)
-                                app.logger.info(f"Nuevo usuario {new_user_name} ({email}) añadido.")
+                                app.logger.info(f"New user {new_user_name} ({email}) added.")
                             except Exception as e:
-                                app.logger.error(f"Error obteniendo tokens de Fitbit: {e}")
-                                flash("Error: No se pudo obtener la autorización de Fitbit. Por favor, inténtalo de nuevo.", "danger")
+                                app.logger.error(f"Error retrieving Fitbit tokens: {e}")
+                                flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
                                 return redirect(url_for('link_device'))
                         else:
-                            app.logger.error("Se requiere autorización para vincular un nuevo correo.")
-                            flash("Error: Se requiere autorización para vincular un nuevo correo.", "danger")
+                            app.logger.error("Authorization is required to link a new email.")
+                            flash("Error: Authorization is required to link a new email.", "danger")
                             return redirect(url_for('link_device'))
                     else:
-                        app.logger.error("Se requiere un nombre de usuario para vincular un nuevo correo.")
-                        flash("Error: Se requiere un nombre de usuario para vincular un nuevo correo.", "danger")
+                        app.logger.error("A username is required to link a new email.")
+                        flash("Error: A username is required to link a new email.", "danger")
                         return redirect(url_for('assign_user'))
 
                 # Clear the session data
@@ -605,17 +611,17 @@ def callback():
                 return render_template('confirmation.html', user_name=new_user_name, email=email)
             except Exception as e:
                 app.logger.error(f"Error during token exchange: {e}")
-                flash(f"Error durante el intercambio de tokens: {e}", "danger")
+                flash(f"Error during token exchange: {e}", "danger")
                 return redirect(url_for('link_device'))
             finally:
                 db.close()
         else:
-            app.logger.error("No se pudo conectar a la base de datos.")
-            flash("Error: No se pudo conectar a la base de datos.", "danger")
+            app.logger.error("Could not connect to the database.")
+            flash("Error: Could not connect to the database.", "danger")
             return redirect(url_for('link_device'))
     except Exception as e:
         app.logger.error(f"Unexpected error: {e}")
-        flash(f"Error inesperado: {e}", "danger")
+        flash(f"Unexpected error: {e}", "danger")
         return redirect(url_for('link_device'))
 
 @app.route('/livelyageing/reassign', methods=['POST'])
@@ -786,14 +792,14 @@ def refresh_data():
 @login_required
 def get_daily_summary():
     """
-    Obtiene el resumen diario más reciente del usuario actual.
+    Gets the most recent daily summary of the current user.
     """
     try:
         user_id = get_user_id_by_email(current_user.email)
         if not user_id:
-            return jsonify({'error': 'Usuario no encontrado'}), 404
+            return jsonify({'error': 'User not found'}), 404
 
-        # Obtener el resumen más reciente
+        # Get the most recent summary
         summaries = get_daily_summaries(
             user_id=user_id,
             start_date=datetime.now() - timedelta(days=1),
@@ -801,7 +807,7 @@ def get_daily_summary():
         )
 
         if not summaries:
-            return jsonify({'error': 'No hay datos disponibles'}), 404
+            return jsonify({'error': 'No data available.'}), 404
 
         latest_summary = summaries[-1]
 
@@ -826,21 +832,21 @@ def get_daily_summary():
         })
 
     except Exception as e:
-        app.logger.error(f"Error al obtener el resumen diario: {str(e)}")
-        return jsonify({'error': 'Error interno del servidor'}), 500
+        app.logger.error(f"Error getting the daily summary.: {str(e)}")
+        return jsonify({'error': 'Internal server error.'}), 500
 
 @app.route('/livelyageing/api/alerts')
 @login_required
 def get_user_alerts_api():
     """
-    Obtiene las alertas más recientes del usuario actual.
+    Gets the most recent alerts of the current user.
     """
     try:
         user_id = get_user_id_by_email(current_user.email)
         if not user_id:
-            return jsonify({'error': 'Usuario no encontrado'}), 404
+            return jsonify({'error': 'User not found.'}), 404
 
-        # Obtener alertas de las últimas 24 horas
+        # Get alerts from the last 24 hours.
         alerts = get_user_alerts(
             user_id=user_id,
             start_time=datetime.now() - timedelta(hours=24),
@@ -882,10 +888,10 @@ def alerts_dashboard():
         # If no preloaded data, fetch it from the database
         db = DatabaseManager()
         if not db.connect():
-            app.logger.error("No se pudo conectar a la base de datos")
+            app.logger.error("Database connection error")
             return jsonify({'error': 'Database connection error'}), 500
 
-        # Obtener parámetros de filtrado
+        # Get filtering parameters.
         date_from = request.args.get('date_from')
         date_to = request.args.get('date_to')
         priority = request.args.get('priority')
@@ -894,11 +900,11 @@ def alerts_dashboard():
         alert_type = request.args.get('alert_type')
         urgent_only = request.args.get('urgent_only') == 'on'
         page = request.args.get('page', 1, type=int)
-        per_page = 10  # Número de alertas por página
+        per_page = 10  # Number of alerts per page.
 
         app.logger.info(f"Parámetros de filtrado: date_from={date_from}, date_to={date_to}, priority={priority}, acknowledged={acknowledged}, user_query={user_query}, alert_type={alert_type}, urgent_only={urgent_only}")
 
-        # Crear diccionario de filtros para la paginación
+        # Create a filter dictionary for pagination.
         filters_dict = {}
         if date_from:
             filters_dict['date_from'] = date_from
@@ -915,7 +921,7 @@ def alerts_dashboard():
         if urgent_only:
             filters_dict['urgent_only'] = 'on'
 
-        # Construir la consulta base
+        # Build the base query.
         query = """
             SELECT
                 a.id,
@@ -935,7 +941,7 @@ def alerts_dashboard():
         """
         params = []
 
-        # Aplicar filtros
+        # Apply filters
         if date_from:
             query += " AND a.alert_time >= %s"
             params.append(f"{date_from} 00:00:00")
@@ -958,23 +964,23 @@ def alerts_dashboard():
         if urgent_only:
             query += " AND a.acknowledged = FALSE AND a.alert_time <= NOW() - INTERVAL '24 hours'"
 
-        # Ordenar por prioridad y fecha descendente
+        # Sort by priority and descending date.
         query += " ORDER BY CASE a.priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END, a.alert_time DESC"
 
         app.logger.info(f"Query: {query}")
         app.logger.info(f"Params: {params}")
 
         try:
-            # Obtener el total de alertas para la paginación
+            # Get the total number of alerts for pagination
             count_query = f"SELECT COUNT(*) FROM ({query}) AS count_query"
             total = db.execute_query(count_query, params)[0][0]
             app.logger.info(f"Total de alertas encontradas: {total}")
 
-            # Aplicar paginación
+            # Apply pagination
             query += " LIMIT %s OFFSET %s"
             params.extend([per_page, (page - 1) * per_page])
 
-            # Ejecutar la consulta
+            # Execute the query
             alerts_data = db.execute_query(query, params)
             app.logger.info(f"Alertas obtenidas: {len(alerts_data) if alerts_data else 0}")
 
@@ -986,21 +992,21 @@ def alerts_dashboard():
                                     filters_dict=filters_dict,
                                     now=datetime.now(timezone.utc))
 
-            # Convertir las tuplas en diccionarios con nombres de atributos
+            # Cnvert tuples to dictionaries with attribute names
             alerts = []
             for alert in alerts_data:
                 try:
-                    # Obtener datos intradía para la alerta
+                    # Get intraday data for the alert.
                     intraday_data = {}
                     alert_type = alert[3]
                     base_alert_type = alert_type.split('_')[0] if '_' in alert_type else alert_type
 
-                    # Mapear base_alert_type a la métrica real de intradía
+                    # Map base_alert_type to the actual intraday metric
                     intraday_metric_type = None
                     if base_alert_type == 'heart':
                         intraday_metric_type = 'heart_rate'
                     elif base_alert_type == 'activity':
-                        # Solo mostrar pasos si el motivo es pasos
+                        # Only show steps if the reason is steps
                         if alert[7] and 'pasos' in alert[7].lower():
                             intraday_metric_type = 'steps'
                             app.logger.info(f"Alerta {alert[0]}: activity_drop causada por pasos, se buscarán datos intradía de steps.")
