@@ -55,7 +55,7 @@ class DatabaseManager:
         """Execute a query and return the results."""
         try:
             self.cursor.execute(query, params or ())
-            if self.cursor.description:  # Si la consulta retorna resultados
+            if self.cursor.description:  # If the query returns results
                 result = self.cursor.fetchall()
                 self.commit()
                 return result
@@ -246,7 +246,7 @@ class DatabaseManager:
         return self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email))
 
     def get_alert_by_id(self, alert_id):
-        """Obtiene una alerta específica por su ID"""
+        """Get a specific alert by its ID"""
         if not self.connect():
             return None
 
@@ -259,7 +259,7 @@ class DatabaseManager:
             """
             result = self.execute_query(query, [alert_id])
             if result and len(result) > 0:
-                # Convertir el resultado a un diccionario
+                # Convert the result to a dictionary
                 columns = [desc[0] for desc in self.cursor.description]
                 alert = dict(zip(columns, result[0]))
                 return alert
@@ -268,9 +268,9 @@ class DatabaseManager:
             print(f"Error al obtener alerta por ID: {str(e)}")
             return None
 
-# Función de conveniencia para mantener compatibilidad con el código existente
+
 def connect_to_db():
-    """Función de conveniencia para mantener compatibilidad con el código existente."""
+    """Function to maintain compatibility with existing code."""
     try:
         connection = psycopg2.connect(
             host=DB_CONFIG["host"],
@@ -282,7 +282,7 @@ def connect_to_db():
         )
         return connection
     except Exception as e:
-        print(f"Error al conectar a la base de datos: {e}")
+        print(f"Database connection error: {e}")
         return None
 
 def init_db():
@@ -504,7 +504,7 @@ def save_to_db(user_id, date, **data):
     if connection:
         try:
             with connection.cursor() as cursor:
-                # Insertar datos en la tabla daily_summaries
+                # Insert data into the daily_summaries table
                 insert_query = """
                 INSERT INTO daily_summaries (
                     user_id, date, steps, heart_rate, sleep_minutes,
@@ -555,9 +555,9 @@ def save_to_db(user_id, date, **data):
                 ))
 
                 connection.commit()
-                print(f"Datos de usuario {user_id} guardados exitosamente en daily_summaries.")
+                print(f"Data of user {user_id} successfully saved to daily_summaries.")
         except Exception as e:
-            print(f"Error al guardar los datos: {e}")
+            print(f"Error saving data: {e}")
             connection.rollback()
         finally:
             connection.close()
@@ -873,7 +873,7 @@ def insert_daily_summary(user_id, date, **data):
         return False
 
     try:
-        # Insertar datos en la tabla daily_summaries
+        # Insert data into the daily_summaries table
         insert_query = """
         INSERT INTO daily_summaries (
             user_id, date, steps, heart_rate, sleep_minutes,
@@ -1169,7 +1169,7 @@ def get_daily_summaries(user_id, start_date=None, end_date=None):
 
     db = DatabaseManager()
     if not db.connect():
-        print("Error al conectar a la base de datos")
+        print("Database connection error")
         return []
 
     try:
@@ -1349,10 +1349,10 @@ def create_test_data():
             """)
             user_id = cursor.fetchone()[0]
 
-            # Fecha de la alerta (hoy)
+            # Alert date (today)
             alert_date = datetime.now().date()
 
-            # Crear datos de actividad para los últimos 7 días
+            # Create activity data for the last 7 days
             for i in range(7):
                 date = alert_date - timedelta(days=i)
                 cursor.execute("""
