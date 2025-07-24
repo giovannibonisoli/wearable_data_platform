@@ -89,8 +89,20 @@ class DatabaseManager:
         result = self.execute_query(query, (email,))
         return result[0] if result else None
 
-    def add_user(self, name, email, access_token=None, refresh_token=None):
+    def add_user(self, name):
         """Add a new user to the database"""
+
+        query = """
+            INSERT INTO users (name)
+            VALUES (%s)
+            RETURNING id
+        """
+        result = self.execute_query(query, (name))
+        return result[0][0] if result else None
+
+
+    def add_device(self, name, email, access_token=None, refresh_token=None):
+        """Add a new device to the database"""
         if access_token and refresh_token:
             encrypted_access_token = encrypt_token(access_token)
             encrypted_refresh_token = encrypt_token(refresh_token)
@@ -99,7 +111,7 @@ class DatabaseManager:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO users (name, email, access_token, refresh_token)
+            INSERT INTO devices (name, email, access_token, refresh_token)
             VALUES (%s, %s, %s, %s)
             RETURNING id
         """
@@ -306,9 +318,9 @@ def init_db():
         # Enable TimeScaleDB extension
         db.execute_query("CREATE EXTENSION IF NOT EXISTS timescaledb;")
 
-        # Create user table
+        # Create device table
         db.execute_query("""
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS devices (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL,
@@ -318,11 +330,31 @@ def init_db():
             );
         """)
 
+        # Create user table
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # Create device_usages table
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS device_usages (
+                id SERIAL,
+                user_id INTEGER REFERENCES users(id),
+                device_id INTEGER REFERENCES devices(id),
+                start_date DATE NOT NULL,
+                end_date DATE
+            );
+        """)
+
         # Create daily summaries table
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS daily_summaries (
                 id SERIAL,
-                user_id INTEGER REFERENCES users(id),
+                device_id INTEGER REFERENCES devices(id),
                 date DATE NOT NULL,
                 steps INTEGER,
                 heart_rate INTEGER,
@@ -341,7 +373,7 @@ def init_db():
                 oxygen_saturation FLOAT,
                 respiratory_rate FLOAT,
                 temperature FLOAT,
-                UNIQUE(user_id, date)
+                UNIQUE(device_id, date)
             );
         """)
 
@@ -357,7 +389,7 @@ def init_db():
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS intraday_metrics (
                 id SERIAL,
-                user_id INTEGER REFERENCES users(id),
+                device_id INTEGER REFERENCES devices(id),
                 time TIMESTAMPTZ,
                 heart_rate FLOAT,
                 steps FLOAT,
@@ -737,13 +769,13 @@ def run_tests():
 
     print("\n=== Starting tests with simulated data ===\n")
 
-    # Case 1: User with initial normal data
+    # Case 1: Device with initial normal data
     print("1. Creating user with normal data...")
-    user_id_1 = add_user(
-        name="Juan Pérez",
-        email="juan@example.com",
-        access_token="token_juan",
-        refresh_token="refresh_juan"
+    user_id_1 = add_device(
+        name="Device di prova",
+        email="devicediprova@example.com",
+        access_token="access_token",
+        refresh_token="refresh_token"
     )
 
     # Insert 5 days of normal data
@@ -1294,6 +1326,8 @@ def reset_database():
                 cursor.execute("DROP TABLE IF EXISTS sleep_logs CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS devic_usages CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS devices CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS users CASCADE;")
 
                 connection.commit()
@@ -1306,27 +1340,27 @@ def reset_database():
                 # Add the test user using DatabaseManager instance
                 db = DatabaseManager()
                 if db.connect():
-                    db.add_user(
-                        name="",
+                    db.add_device(
+                        name="Sense 2",
                         email="Wearable2LivelyAgeign@gmail.com",
                         access_token="",
                         refresh_token=""
                     )
                     db.close()
 
-                print("Wearable2LivelyAgeign@gmail.com user added successfully.")
+                print("Wearable2LivelyAgeign@gmail.com user device successfully.")
 
                 db = DatabaseManager()
                 if db.connect():
-                    db.add_user(
-                        name="",
+                    db.add_device(
+                        name="Versa 4",
                         email="Wearable1LivelyAgeign@gmail.com",
                         access_token="",
                         refresh_token=""
                     )
                     db.close()
 
-                print("Wearable1LivelyAgeign@gmail.com user added successfully.")
+                print("Wearable1LivelyAgeign@gmail.com device added successfully.")
 
         except Exception as e:
             print(f"Error resetting database: {e}")
