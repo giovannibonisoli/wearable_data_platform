@@ -28,13 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         console.log('Authorize button clicked');
 
-        // Mostrar estado de carga
+        // Show loading status
         spinner.classList.remove('d-none');
         buttonText.textContent = '{{ _("Authorizing...") }}';
         authButton.disabled = true;
 
-        // Redirigir directamente a la URL de autorización
-        // Usar replace para evitar que el usuario pueda volver atrás
+        console.log(authUrl);
+
+        // Redirect directly to the authorization URL
+        // Use replace to prevent the user from navigating back.
         window.location.replace(authUrl);
     });
 });

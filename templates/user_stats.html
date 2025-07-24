@@ -98,7 +98,7 @@
                                             <td><span class="badge bg-warning">{{ _('Unassigned') }}</span></td>
                                             <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                                             <td>
-                                                <a href="{{ url_for('assign_user', email=user.email) }}" class="btn btn-success btn-sm">
+                                                <a href="{{ url_for('link_device') }}" class="btn btn-success btn-sm">
                                                     <i class="bi bi-person-plus"></i> {{ _('Assign User') }}
                                                 </a>
                                             </td>
