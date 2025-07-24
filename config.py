@@ -1,15 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde .env, forzando la sobreescritura
+# Load enviroment variables from .env by forcing overwriting
+
 load_dotenv(override=True)
 ADMIN_MAIL = os.getenv("ADMIN_MAIL")
 ADMIN_PSSW = os.getenv("ADMIN_PSSW")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-# URL de redirección basada en el entorno
-#REDIRECT_URI = "http://localhost:5000/livelyageing/callback"
+#  Environment-based redirect URL
+
+# REDIRECT_URI = "http://localhost:5000/livelyageing/callback"
 REDIRECT_URI = "https://tango.ing.unimo.it/livelyageing/callback"
 # if os.getenv("FLASK_ENV") == "production":
 #     REDIRECT_URI = "https://tango.ing.unimo.it/livelyageing/callback"
@@ -32,10 +34,9 @@ DB_CONFIG = {
 }
 
 
-# Lista de usuarios Fitbit (correos electrónicos)
+# List of Fitbit Users (emails)
 USERS = [
     # {"email": "Wearable1LivelyAgeign@gmail.com", "auth_code": None, "access_token": None, "refresh_token": None},
     # {"email": "Wearable2LivelyAgeign@gmail.com", "auth_code": None, "access_token": None, "refresh_token": None},
     {"email": "Wearable4LivelyAgeign@gmail.com ", "auth_code": None, "access_token": None, "refresh_token": None}
 ]
-
