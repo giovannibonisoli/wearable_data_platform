@@ -6,20 +6,20 @@ import os
 
 load_dotenv()
 
-# Generar una clave secreta (debe ser la misma para cifrar y descifrar)
+# Generate a secret key (it must be the same for encryption and decryption)
 SECRET_KEY = os.getenv('ENCRYPTION_KEY')
 
-# Asegúrate de que la clave tenga 32 bytes
+# Make sure the key is 32 bytes
 if len(SECRET_KEY) != 32:
     raise ValueError("La clave de cifrado debe tener 32 bytes.")
 
-# Convertir la clave a formato base64 para Fernet
+# Convert the key to base64 format for Fernet
 fernet_key = base64.urlsafe_b64encode(SECRET_KEY.encode())
 cipher_suite = Fernet(fernet_key)
 
 def encrypt_token(token):
     """
-    Cifra un token usando AES.
+    Encrypt a token with AES.
     """
     if not token:
         return None
@@ -27,7 +27,7 @@ def encrypt_token(token):
 
 def decrypt_token(encrypted_token):
     """
-    Descifra un token usando AES.
+    Dencrypt a token with AES.
     """
     if not encrypted_token:
         return None
