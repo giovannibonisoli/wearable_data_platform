@@ -30,7 +30,7 @@ import json
 import time
 import logging
 
-# Configuración de logs
+# Logs configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -54,7 +54,7 @@ def get_checkpoint(email):
             with open(checkpoint_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            logger.warning(f"No se pudo leer el checkpoint para {email}: {e}")
+            logger.warning(f"Could not read checkpoint for {email}: {e}")
     return {}
 
 def update_checkpoint(email, checkpoint):
