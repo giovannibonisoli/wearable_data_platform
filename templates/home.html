@@ -12,42 +12,42 @@
     </div>
 
     <div class="row g-4">
-        <!-- Tarjeta para Vincular Dispositivo -->
+        <!-- Card for devices -->
         <div class="col-md-6 col-lg-4">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-link fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Link Device') }}</h3>
-                    <p class="card-text">{{ _('Connect a new Fitbit device or reassign an existing one to a user') }}</p>
-                    <a href="{{ url_for('link_device') }}" class="btn btn-primary">
+                    <h3 class="card-title">{{ _('Devices') }}</h3>
+                    <p class="card-text">{{ _('Access the list of devices') }}</p>
+                    <a href="{{ url_for('') }}" class="btn btn-primary">
                         <i class="fas fa-plus-circle me-2"></i>{{ _('Link Device') }}
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Tarjeta para Dashboard -->
+        <!-- Card for users -->
         <div class="col-md-6 col-lg-4">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Alert Dashboard') }}</h3>
-                    <p class="card-text">{{ _('View a general summary of the most recent data from all users') }}</p>
-                    <a href="{{ url_for('alerts_dashboard') }}" class="btn btn-primary">
-                        <i class="fas fa-chart-bar me-2"></i>{{ _('View Dashboard') }}
+                    <h3 class="card-title">{{ _('Users') }}</h3>
+                    <p class="card-text">{{ _('View the list of all users') }}</p>
+                    <a href="{{ url_for('') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i>{{ _('View Users') }}
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Tarjeta para Estadísticas de Usuarios -->
+        <!-- Card for statistics -->
         <div class="col-md-6 col-lg-4">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Users') }}</h3>
+                    <h3 class="card-title">{{ _('Users statistics') }}</h3>
                     <p class="card-text">{{ _('Access detailed statistics for each individual user') }}</p>
-                    <a href="{{ url_for('user_stats') }}" class="btn btn-primary">
+                    <a href="{{ url_for('') }}" class="btn btn-primary">
                         <i class="fas fa-users me-2"></i>{{ _('View Users') }}
                     </a>
                 </div>
@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    {% if recent_users %}
+    <!-- {% if recent_users %}
     <div class="row mt-5">
         <div class="col-12">
             <div class="card">
@@ -116,7 +116,7 @@
             </div>
         </div>
     </div>
-    {% endif %}
+    {% endif %} -->
 </div>
 
 <script>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.success) {
                             console.log('Dashboard data preloaded successfully');
                             lastPreloadTimestamp = data.timestamp;
-                            
+
                             // Start checking for updates
                             if (!updateCheckInterval) {
                                 updateCheckInterval = setInterval(checkForUpdates, 30000); // Check every 30 seconds
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to check for updates
     function checkForUpdates() {
         if (!lastPreloadTimestamp) return;
-        
+
         fetch(`/livelyageing/check_dashboard_updates?timestamp=${lastPreloadTimestamp}`)
             .then(response => response.json())
             .then(data => {
@@ -181,4 +181,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

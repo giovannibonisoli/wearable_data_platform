@@ -89,6 +89,18 @@ class DatabaseManager:
         result = self.execute_query(query, (email,))
         return result[0] if result else None
 
+    def get_device_by_email(self, email):
+        """Fetch a device by email."""
+        query = """
+            SELECT id, name, email, access_token, refresh_token
+            FROM devices
+            WHERE email = %s
+            ORDER BY created_at DESC
+            LIMIT 1
+        """
+        result = self.execute_query(query, (email,))
+        return result[0] if result else None
+
     def add_user(self, name):
         """Add a new user to the database"""
 
@@ -117,6 +129,20 @@ class DatabaseManager:
         """
         result = self.execute_query(query, (name, email, encrypted_access_token, encrypted_refresh_token))
         return result[0][0] if result else None
+
+    def update_device_tokens(self, email, access_token, refresh_token):
+        """Update tokens of an existing device"""
+
+        encrypted_access_token = encrypt_token(access_token)
+        encrypted_refresh_token = encrypt_token(refresh_token)
+
+        query = """
+            UPDATE devices
+            SET access_token = %s, refresh_token = %s
+            WHERE email = %s;
+        """
+        result = self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email))
+        return result
 
     def get_daily_summaries(self, user_id, start_date=None, end_date=None):
         """

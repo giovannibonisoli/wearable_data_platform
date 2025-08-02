@@ -304,12 +304,12 @@ def home():
             # Convert the date to `datetime` to avoid the type error.
             now = datetime.now()
             processed_users = []
-            for user in recent_users:
-                user_list = list(user)  # Convert tuple to list to allow modification.
-                if user_list[3]:  # If `created_at` is not `None`.
-                    # Convert date to datetime using datetime.combine.
-                    user_list[3] = datetime.combine(user_list[3], datetime.min.time())
-                processed_users.append(tuple(user_list))  # Convert back to a tuple.
+            # for user in recent_users:
+            #     user_list = list(user)  # Convert tuple to list to allow modification.
+            #     if user_list[3]:  # If `created_at` is not `None`.
+            #         # Convert date to datetime using datetime.combine.
+            #         user_list[3] = datetime.combine(user_list[3], datetime.min.time())
+            #     processed_users.append(tuple(user_list))  # Convert back to a tuple.
 
             return render_template('home.html', recent_users=processed_users, now=now)
         except Exception as e:
@@ -439,28 +439,47 @@ def user_stats():
 def link_device():
     if request.method == 'POST':
         email = request.form.get('email')
+        print(email)
         if not email:
             flash('Please select an email.', 'danger')
             return redirect(url_for('link_device'))
 
-        # Check if the email has an assigned name.
-        db = DatabaseManager()
-        if db.connect():
-            user = db.get_user_by_email(email)
+        # # Check if the email has an assigned name.
+        # db = DatabaseManager()
+        # if db.connect():
+        #     user = db.get_user_by_email(email)
+        #
+        #     # If there is no user or no name is assigned.
+        #     if not user or not user[1]:
+        #         session['pending_email'] = email
+        #         return redirect(url_for('assign_user'))
+        #     else:
+        #
+        #     # Name already assigned
+        #         session['pending_email'] = email
+        #         session['new_user_name'] = user[1]
+        #         return render_template('reassign_device.html', email=email, user_name=user[1])
+        # else:
+        #     flash('Database connection error.', 'danger')
+        #     return redirect(url_for('link_device'))
 
-            # If there is no user or no name is assigned.
-            if not user or not user[1]:
-                session['pending_email'] = email
-                return redirect(url_for('assign_user'))
-            else:
+        # Generate state and store it in the session.
+        session['state'] = generate_state()
+        session['pending_email'] = email
+        # session['new_user_name'] = user_name
+        session['code_verifier'] = generate_code_verifier()
 
-            # Name already assigned
-                session['pending_email'] = email
-                session['new_user_name'] = user[1]
-                return render_template('reassign_device.html', email=email, user_name=user[1])
-        else:
-            flash('Database connection error.', 'danger')
-            return redirect(url_for('link_device'))
+        code_challenge = generate_code_challenge(session['code_verifier'])
+        auth_url = generate_auth_url(code_challenge, session['state'])
+
+
+        app.logger.info(f"Generated auth URL for {email}: {auth_url}")
+        app.logger.info(f"Session state: {session['state']}")
+        app.logger.info(f"Session code_verifier: {session['code_verifier']}")
+
+        return render_template('link_auth.html', auth_url=auth_url)
+
+
 
     # GET request - Show form
     db = DatabaseManager()
@@ -469,7 +488,7 @@ def link_device():
         return redirect(url_for('home'))
 
     try:
-        emails = db.execute_query("SELECT DISTINCT email FROM users")
+        emails = db.execute_query("SELECT DISTINCT email FROM devices")
         return render_template('link_device.html', emails=[email[0] for email in emails])
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
@@ -499,8 +518,6 @@ def assign_user():
 
         code_challenge = generate_code_challenge(session['code_verifier'])
         auth_url = generate_auth_url(code_challenge, session['state'])
-
-        print(auth_url)
 
         app.logger.info(f"Generated auth URL for {email}: {auth_url}")
         app.logger.info(f"Session state: {session['state']}")
@@ -536,10 +553,10 @@ def callback():
             return redirect(url_for('link_device'))
 
         email = session.get('pending_email')
-        new_user_name = session.get('new_user_name')
+        # new_user_name = session.get('new_user_name')
         code_verifier = session.get('code_verifier')
 
-        if not all([email, new_user_name, code_verifier, code]):
+        if not all([email, code_verifier, code]):
             app.logger.error("Missing required session variables or authorization code")
             flash("Error: Missing required information. Please try again.", "danger")
             return redirect(url_for('link_device'))
@@ -548,67 +565,60 @@ def callback():
         if db.connect():
             try:
                 # Query to check if the email is already in use
-                existing_user = db.get_user_by_email(email)
+                # existing_user = db.get_user_by_email(email)
+                existing_device = db.get_device_by_email(email)
 
-                if existing_user:
+                # if existing_user:
+                if existing_device:
                     # Unpack the user data correctly
-                    user_id, existing_name, existing_email, existing_access_token, existing_refresh_token = existing_user
+                    user_id, existing_name, existing_email, existing_access_token, existing_refresh_token = existing_device
 
-                    # Flow 2: Reassign the device to a new user
-                    if new_user_name:
-                        if not existing_access_token or not existing_refresh_token:
-                            if code:
-                                try:
-                                    access_token, refresh_token = get_tokens(code, code_verifier)
-                                    if not access_token or not refresh_token:
-                                        raise Exception("Could not retrieve Fitbit tokens.")
-                                    db.add_user(new_user_name, email, access_token, refresh_token)
-                                    app.logger.info(f"Device reassigned to {new_user_name} ({email}) with new tokens.")
-                                except Exception as e:
-                                    app.logger.error(`f"Error getting Fitbit tokens: {e}"`)
-                                    flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
-                                    return redirect(url_for('link_device'))
-                            else:
-                                app.logger.error("Authorization is required to reassign the device.")
-                                flash("Error: Authorization is required to reassign the device.", "danger")
-                                return redirect(url_for('link_device'))
-                        else:
-                            db.add_user(new_user_name, email, existing_access_token, existing_refresh_token)
-                            app.logger.info(f"Device reassigned to {new_user_name} ({email}) without needing reauthorization.")
-                    else:
-                        app.logger.error("A username is required to reassign the device.")
-                        flash("Error: A username is required to reassign the device.", "danger")
-                        return redirect(url_for('assign_user'))
-                else:
-                    # Flow 1: Link a new email to a user
-                    if new_user_name:
+
+                    if not existing_access_token or not existing_refresh_token:
                         if code:
                             try:
                                 access_token, refresh_token = get_tokens(code, code_verifier)
                                 if not access_token or not refresh_token:
-                                    raise Exception("Could not retrieve the Fitbit tokens.")
-                                db.add_user(new_user_name, email, access_token, refresh_token)
-                                app.logger.info(f"New user {new_user_name} ({email}) added.")
+                                    raise Exception("Could not retrieve Fitbit tokens.")
+                                db.update_device_tokens(email, access_token, refresh_token)
+                                app.logger.info(f"Device {existing_name} has been updated.")
                             except Exception as e:
-                                app.logger.error(f"Error retrieving Fitbit tokens: {e}")
+                                app.logger.error(f"Error getting Fitbit tokens: {e}")
                                 flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
                                 return redirect(url_for('link_device'))
                         else:
-                            app.logger.error("Authorization is required to link a new email.")
-                            flash("Error: Authorization is required to link a new email.", "danger")
+                            app.logger.error("Authorization is required for this device")
+                            flash("Error: Authorization is required for this device.", "danger")
                             return redirect(url_for('link_device'))
                     else:
-                        app.logger.error("A username is required to link a new email.")
-                        flash("Error: A username is required to link a new email.", "danger")
-                        return redirect(url_for('assign_user'))
+                        db.update_device_tokens(email, existing_access_token, existing_refresh_token)
+                        app.logger.info(f"Device {existing_name} is already authorized.")
+
+                else:
+                    if code:
+                        try:
+                            access_token, refresh_token = get_tokens(code, code_verifier)
+                            if not access_token or not refresh_token:
+                                raise Exception("Could not retrieve the Fitbit tokens.")
+                            db.add_device("New Device", email, access_token, refresh_token)
+                            app.logger.info(f"New device added.")
+                        except Exception as e:
+                            app.logger.error(f"Error retrieving Fitbit tokens: {e}")
+                            flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
+                            return redirect(url_for('link_device'))
+                    else:
+                        app.logger.error("Authorization is required for this device.")
+                        flash("Error: Authorization is required for this device.", "danger")
+                        return redirect(url_for('link_device'))
+
 
                 # Clear the session data
                 session.pop('pending_email', None)
-                session.pop('new_user_name', None)
+                # session.pop('new_user_name', None)
                 session.pop('code_verifier', None)
                 session.pop('state', None)
 
-                return render_template('confirmation.html', user_name=new_user_name, email=email)
+                return render_template('confirmation.html', user_name="New Device", email=email)
             except Exception as e:
                 app.logger.error(f"Error during token exchange: {e}")
                 flash(f"Error during token exchange: {e}", "danger")
