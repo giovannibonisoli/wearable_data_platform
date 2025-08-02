@@ -130,19 +130,6 @@ class DatabaseManager:
         result = self.execute_query(query, (name, email, encrypted_access_token, encrypted_refresh_token))
         return result[0][0] if result else None
 
-    def update_device_tokens(self, email, access_token, refresh_token):
-        """Update tokens of an existing device"""
-
-        encrypted_access_token = encrypt_token(access_token)
-        encrypted_refresh_token = encrypt_token(refresh_token)
-
-        query = """
-            UPDATE devices
-            SET access_token = %s, refresh_token = %s
-            WHERE email = %s;
-        """
-        result = self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email))
-        return result
 
     def get_daily_summaries(self, user_id, start_date=None, end_date=None):
         """
@@ -282,6 +269,37 @@ class DatabaseManager:
             WHERE email = %s
         """
         return self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email))
+
+    def update_device_tokens(self, email, access_token, refresh_token):
+        """
+            Updates a device's access and refresh tokens.
+
+            Args:
+                email (str): User's email address.
+                access_token (str): New access token.
+                refresh_token (str): New refresh token.
+        """
+
+        # Encrypt the tokens before storing them
+        encrypted_access_token = encrypt_token(access_token)
+        encrypted_refresh_token = encrypt_token(refresh_token)
+        device_id=get_device_id_by_email(email)
+
+        connection = connect_to_db()
+        if connection:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE devices
+                        SET access_token = %s, refresh_token = %s
+                        WHERE id = %s;
+                    """, (encrypted_access_token, encrypted_refresh_token, device_id))
+                    connection.commit()
+                    print(f"Tokens updated for the device: {email}.")
+            except Exception as e:
+                print(f"Failed to update the tokens: {e}")
+            finally:
+                connection.close()
 
     def get_alert_by_id(self, alert_id):
         """Get a specific alert by its ID"""
@@ -694,6 +712,37 @@ def get_user_id_by_email(email):
         finally:
             connection.close()
     return None
+
+
+def get_device_id_by_email(email):
+    """
+        Retrieves the most recent device ID based on their email address.
+
+        Args:
+            email (str): Device's email address.
+
+        Returns:
+            int: Most recent device ID or None if not found.
+    """
+
+    connection = connect_to_db()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id FROM devices
+                    WHERE email = %s
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT 1;
+                """, (email,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            print(f"Error retrieving the user ID: {e}")
+        finally:
+            connection.close()
+    return None
+
 
 def update_users_tokens(email, access_token, refresh_token):
     """
