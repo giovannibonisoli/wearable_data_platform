@@ -320,6 +320,41 @@ def home():
     else:
         return "Error! Unable to connect with the database", 500
 
+
+# Route: List of all available devices
+@app.route('/livelyageing/available_devices')
+@login_required
+def available_devices():
+
+    db = DatabaseManager()
+    if db.connect():
+        try:
+            # Get recent users with their latest activity (only users with names AND valid tokens)
+            devices = db.execute_query("""
+                SELECT id, name, email
+                FROM devices
+            """)
+
+            final_devices = []
+            for device in devices:
+                final_devices.append({
+                    "id": device[0],
+                    "name": device[1],
+                    "email": device[2]
+                })
+
+            final_devices.reverse()
+
+            return render_template('available_devices.html', devices=final_devices)
+        except Exception as e:
+            app.logger.error(f"Error fetching data about available devices: {e}")
+            return "Error! Error fetching data about available devices.", 500
+        finally:
+            db.close()
+    else:
+        return "Error! Unable to connect with the database", 500
+
+
 @app.route('/livelyageing/user_stats')
 @login_required
 def user_stats():
@@ -433,13 +468,14 @@ def user_stats():
     else:
         return "Error: Could not connect to the database.", 500
 
+
+
 # Route: Link a new Fitbit device
 @app.route('/livelyageing/link', methods=['GET', 'POST'])
 @login_required
 def link_device():
     if request.method == 'POST':
         email = request.form.get('email')
-        print(email)
         if not email:
             flash('Please select an email.', 'danger')
             return redirect(url_for('link_device'))

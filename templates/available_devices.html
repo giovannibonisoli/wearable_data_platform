@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('List of Fitbit Devices') }} - Lively Ageing{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ _('List of Fitbit Devices') }}</h1>
+
+    {% if devices %}
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>{{ _('Device Name') }}</th>
+                    <th>{{ _('Email') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr>
+                    <td>{{ device.name }}</td>
+                    <td>{{ device.email }}</td>
+                    <td>
+                        <form action="{{ url_for('link_device') }}" method="POST">
+                            <input type="hidden" name="id" value="{{ device.id }}">
+                            <input type="hidden" name="email" value="{{ device.email }}">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                {{ _('Authorize device access') }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {{ _('No devices found.') }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+</script>
+{% endblock %}
