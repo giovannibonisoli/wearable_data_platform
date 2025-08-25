@@ -1574,9 +1574,46 @@ def drop_intraday_data():
             connection.close()
 
 
+def delete_access():
+    connection = connect_to_db()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                print(f"Dropping accesse")
+                query = "UPDATE devices SET access_token = NULL, refresh_token = NULL;"
+
+                cursor.execute(query, [])
+                connection.commit()
+
+        except Exception as e:
+            print(f"Error while dropping intraday table: {e}")
+        finally:
+            connection.close()
+
+
+def drop_useless_devices():
+
+    connection = connect_to_db()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                print(f"Dropping intraday table")
+                query = "DELETE FROM devices WHERE id=3;"
+
+                cursor.execute(query, [])
+                connection.commit()
+
+        except Exception as e:
+            print(f"Error while dropping intraday table: {e}")
+        finally:
+            connection.close()
+
+
 if __name__ == "__main__":
     # Reset and reinitialize the database
-    reset_database()
+    # reset_database()
     # Create test data
     # create_test_data()
     # drop_intraday_data()
+    # delete_access()
+    drop_useless_devices()
