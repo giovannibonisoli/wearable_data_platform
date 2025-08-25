@@ -6,14 +6,53 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ _('List of Fitbit Devices') }}</h1>
 
+    <!-- Add New Device Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ _('Add New Device') }}</h5>
+        </div>
+        <div class="card-body">
+            <form id="addDeviceForm" method="POST" action="{{ url_for('available_devices') }}">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="deviceName">{{ _('Device Name') }}</label>
+                            <input type="text" class="form-control" id="deviceName" name="name" required
+                                   placeholder="{{ _('Enter device name') }}">
+                            <div class="invalid-feedback" id="nameFeedback">
+                                {{ _('Please provide a device name.') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="deviceEmail">{{ _('Email Address') }}</label>
+                            <input type="email" class="form-control" id="deviceEmail" name="email" required
+                                   placeholder="{{ _('Enter email address') }}">
+                            <div class="invalid-feedback" id="emailFeedback">
+                                {{ _('Please provide a valid email address.') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">
+                            {{ _('Add Device') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Devices List -->
     {% if devices %}
     <div class="table-responsive">
-        <table class="table table-sm">
-            <thead>
+        <table class="table table-sm table-hover">
+            <thead class="thead-light">
                 <tr>
                     <th>{{ _('Device Name') }}</th>
                     <th>{{ _('Email') }}</th>
-                    <th></th>
+                    <th>{{ _('Actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -22,7 +61,7 @@
                     <td>{{ device.name }}</td>
                     <td>{{ device.email }}</td>
                     <td>
-                        <form action="{{ url_for('link_device') }}" method="POST">
+                        <form action="{{ url_for('link_device') }}" method="POST" class="d-inline">
                             <input type="hidden" name="id" value="{{ device.id }}">
                             <input type="hidden" name="email" value="{{ device.email }}">
                             <button type="submit" class="btn btn-primary btn-sm">
@@ -37,7 +76,7 @@
     </div>
     {% else %}
     <div class="alert alert-info" role="alert">
-        {{ _('No devices found.') }}
+        {{ _('No devices found. Please add a device using the form above.') }}
     </div>
     {% endif %}
 </div>

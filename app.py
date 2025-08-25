@@ -269,6 +269,7 @@ def check_dashboard_updates():
         app.logger.error(f"Error checking dashboard updates: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/livelyageing/home')
 @login_required
 def home():
@@ -276,81 +277,46 @@ def home():
     Render the home page with recent activity.
     """
     db = DatabaseManager()
-    if db.connect():
-        try:
-            # Get recent users with their latest activity (only users with names AND valid tokens)
-            recent_users = db.execute_query("""
-                WITH LastUserInstance AS (
-                    SELECT
-                        email,
-                        MAX(created_at) as last_created
-                    FROM users
-                    GROUP BY email
-                )
-                SELECT u.id, u.name, u.email,
-                       MAX(d.date) as created_at
-                FROM users u
-                LEFT JOIN daily_summaries d ON u.id = d.user_id
-                INNER JOIN LastUserInstance lui ON u.email = lui.email
-                    AND u.created_at = lui.last_created
-                WHERE u.name != ''
-                    AND u.access_token IS NOT NULL
-                    AND u.refresh_token IS NOT NULL
-                GROUP BY u.id, u.name, u.email
-                ORDER BY created_at DESC NULLS LAST
-                LIMIT 10
-            """)
+    return render_template('home.html')
 
-            # Convert the date to `datetime` to avoid the type error.
-            now = datetime.now()
-            processed_users = []
-            # for user in recent_users:
-            #     user_list = list(user)  # Convert tuple to list to allow modification.
-            #     if user_list[3]:  # If `created_at` is not `None`.
-            #         # Convert date to datetime using datetime.combine.
-            #         user_list[3] = datetime.combine(user_list[3], datetime.min.time())
-            #     processed_users.append(tuple(user_list))  # Convert back to a tuple.
-
-            return render_template('home.html', recent_users=processed_users, now=now)
-        except Exception as e:
-            app.logger.error(f"Error fetching data for home page: {e}")
-            return "Error! Error fetching data for home page.", 500
-        finally:
-            db.close()
-    else:
-        return "Error! Unable to connect with the database", 500
 
 
 # Route: List of all available devices
-@app.route('/livelyageing/available_devices')
+@app.route('/livelyageing/available_devices', methods=['GET', 'POST'])
 @login_required
 def available_devices():
 
     db = DatabaseManager()
     if db.connect():
-        try:
-            # Get recent users with their latest activity (only users with names AND valid tokens)
-            devices = db.execute_query("""
-                SELECT id, name, email
-                FROM devices
-            """)
+        if request.method == 'POST':
+            name = request.form['name']
+            email = request.form['email']
+            db.add_device(name, email)
+            return redirect(url_for('available_devices'))
+        else:
+            try:
+                # Get recent users with their latest activity (only users with names AND valid tokens)
+                devices = db.execute_query("""
+                    SELECT id, name, email
+                    FROM devices
+                """)
 
-            final_devices = []
-            for device in devices:
-                final_devices.append({
-                    "id": device[0],
-                    "name": device[1],
-                    "email": device[2]
-                })
+                final_devices = []
+                for device in devices:
+                    final_devices.append({
+                        "id": device[0],
+                        "name": device[1],
+                        "email": device[2]
+                    })
 
-            final_devices.reverse()
+                final_devices.reverse()
 
-            return render_template('available_devices.html', devices=final_devices)
-        except Exception as e:
-            app.logger.error(f"Error fetching data about available devices: {e}")
-            return "Error! Error fetching data about available devices.", 500
-        finally:
-            db.close()
+                return render_template('available_devices.html', devices=final_devices)
+            except Exception as e:
+                app.logger.error(f"Error fetching data about available devices: {e}")
+                return "Error! Error fetching data about available devices.", 500
+            finally:
+                db.close()
     else:
         return "Error! Unable to connect with the database", 500
 
