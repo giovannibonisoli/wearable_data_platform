@@ -163,13 +163,13 @@ class DatabaseManager:
         result = self.execute_query(query, params)
         return result if result else []
 
-    def get_intraday_metrics(self, user_id, metric_type, start_time=None, end_time=None):
-        """Gets the intraday metrics of a user."""
+    def get_intraday_metrics(self, device_id, metric_type, start_time=None, end_time=None):
+        """Gets the intraday metrics of a device."""
         query = """
             SELECT time, value FROM intraday_metrics
-            WHERE user_id = %s AND type = %s
+            WHERE device_id = %s AND type = %s
         """
-        params = [user_id, metric_type]
+        params = [device_id, metric_type]
 
         if start_time:
             query += " AND time >= %s"
@@ -638,9 +638,9 @@ def save_to_db(user_id, date, **data):
         finally:
             connection.close()
 
-def get_user_tokens(email):
+def get_device_tokens(email):
     """
-    Retrieve and decrypt tokens for the user with the most recent timestamp or highest user_id.
+    Retrieve and decrypt tokens for the devices with the most recent timestamp or highest user_id.
     """
     conn = connect_to_db()
     if conn:
@@ -648,7 +648,7 @@ def get_user_tokens(email):
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT access_token, refresh_token
-                    FROM users
+                    FROM devices
                     WHERE email = %s
                     ORDER BY created_at DESC, id DESC
                     LIMIT 1;
@@ -675,7 +675,7 @@ def get_unique_emails():
     if connection:
         try:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT DISTINCT email FROM users;")
+                cursor.execute("SELECT DISTINCT email FROM devices;")
                 emails = [row[0] for row in cursor.fetchall()]
                 return emails
         except Exception as e:
@@ -1060,7 +1060,7 @@ def check_intraday_timestamp(user_id, timestamp):
             with conn.cursor() as cursor:
                 query = """
                     SELECT * FROM intraday_metrics
-                    WHERE user_id = %s
+                    WHERE device_id = %s
                     AND time = %s
                 """
 
@@ -1112,12 +1112,12 @@ def check_intraday_timestamp(user_id, timestamp):
 #             connection.close()
 
 
-def insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=None):
+def insert_intraday_metric(device_id, timestamp, data_type='heart_rate', value=None):
     """
         Inserts intraday data into the database using the new TimeScaleDB schema.
 
         Args:
-            user_id (int): User ID.
+            device_id (int): User ID.
             timestamp (datetime): Timestamp of the data.
             heart_rate (int/float):
             steps (int/float):
@@ -1129,7 +1129,7 @@ def insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=Non
     conn = connect_to_db()
     if conn:
 
-        if check_intraday_timestamp(user_id, timestamp):
+        if check_intraday_timestamp(device_id, timestamp):
 
             try:
                 with conn.cursor() as cursor:
@@ -1137,12 +1137,12 @@ def insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=Non
                     cursor.execute(f"""
                         UPDATE intraday_metrics
                         SET {data_type}=%s
-                        WHERE user_id=%s
+                        WHERE device_id=%s
                         AND time=%s
-                    """, (value, user_id, timestamp))
+                    """, (value, device_id, timestamp))
 
                     conn.commit()
-                    print(f"Intraday {data_type} data for user {user_id} successfully updated in intraday_metrics.")
+                    print(f"Intraday {data_type} data for user {device_id} successfully updated in intraday_metrics.")
             except Exception as e:
                 print(f"Error updating intraday data: {e}")
                 conn.rollback()
@@ -1165,12 +1165,12 @@ def insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=Non
                     values[data_type] = value
 
                     cursor.execute("""
-                        INSERT INTO intraday_metrics (user_id, time, heart_rate, steps, calories, distance)
+                        INSERT INTO intraday_metrics (device_id, time, heart_rate, steps, calories, distance)
                         VALUES (%s, %s, %s, %s, %s, %s);
-                    """, (user_id, timestamp, values["heart_rate"], values["steps"], values["calories"], values["distance"]))
+                    """, (device_id, timestamp, values["heart_rate"], values["steps"], values["calories"], values["distance"]))
 
                     conn.commit()
-                    print(f"Intraday {data_type} data for user {user_id} successfully saved in intraday_metrics.")
+                    print(f"Intraday {data_type} data for device {device_id} successfully saved in intraday_metrics.")
             except Exception as e:
                 print(f"Error inserting intraday data: {e}")
                 conn.rollback()
@@ -1323,7 +1323,7 @@ def get_intraday_metrics(user_id, metric_type, start_time=None, end_time=None):
             with connection.cursor() as cursor:
                 query = """
                 SELECT time, value FROM intraday_metrics
-                WHERE user_id = %s AND type = %s
+                WHERE device_id = %s AND type = %s
                 """
                 params = [user_id, metric_type]
 
