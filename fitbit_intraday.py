@@ -23,7 +23,7 @@ from base64 import b64encode
 from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
-from db import get_unique_emails, get_latest_user_id_by_email, insert_intraday_metric, get_user_tokens, update_users_tokens
+from db import get_unique_emails, get_device_id_by_email, insert_intraday_metric, get_device_tokens
 import sys
 import os
 import json
@@ -114,9 +114,9 @@ def get_intraday_data(access_token, email, date_str=None):
         today = datetime.now().strftime("%Y-%m-%d")
     else:
         today = date_str
-    user_id = get_latest_user_id_by_email(email)
+    user_id = get_device_id_by_email(email)
     if not user_id:
-        logger.error(f"Error: No user_id found for the email {email}")
+        logger.error(f"Error: No device_id found for the email {email}")
         return False
     checkpoint = get_checkpoint(email)
     try:
@@ -256,8 +256,8 @@ def get_intraday_data(access_token, email, date_str=None):
 # If you want to backfill a specific range, set the dates in 'YYYY-MM-DD' format.
 # If you don't want to backfill, leave both as None.
 
-BACKFILL_START_DATE = "2025-02-28"  # First day to collect (inclusive)
-BACKFILL_END_DATE = "2025-03-31"    # Last day to collect (inclusive)
+BACKFILL_START_DATE = "2025-06-19"  # First day to collect (inclusive)
+BACKFILL_END_DATE = "2025-07-31"    # Last day to collect (inclusive)
 
 
 # --- MAIN WORKFLOW ---
@@ -266,10 +266,12 @@ def process_all_users():
     if not unique_emails:
         logger.error("No emails found in the database.")
         return
+
     today = datetime.now().date()
     for email in unique_emails:
         logger.info(f"\n=== Processing user: {email} ===")
-        access_token, refresh_token = get_user_tokens(email)
+        # access_token, refresh_token = get_user_tokens(email)
+        access_token, refresh_token = get_device_tokens(email)
         if not access_token or not refresh_token:
             logger.warning(f"No valid tokens found for the email {email}. It is necessary to re-link the device.")
             continue
@@ -287,6 +289,7 @@ def process_all_users():
                 last_date = None
         else:
             last_date = None
+
         # Determine the date range to process.
 
         if BACKFILL_START_DATE and BACKFILL_END_DATE:
@@ -294,17 +297,18 @@ def process_all_users():
             # Backfill mode: only collect data between those dates.
             start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
             end_date = datetime.strptime(BACKFILL_END_DATE, "%Y-%m-%d").date()
-            print(start_date, end_date)
+
+            print("START DATE:", start_date, "END DATE:", end_date)
             if last_date is not None and last_date >= start_date:
                 # If the checkpoint is already within the range, continue from the next day.
                 current_date = last_date + timedelta(days=1)
             else:
                 current_date = start_date
             # Only process up to end_date.
-            print(start_date, end_date, current_date)
 
+            print("START DATE:", start_date, "END DATE:", end_date, "CURRENT DATE:", current_date)
             while current_date <= end_date:
-                print(current_date)
+                print("CURRENT DATE:", current_date)
                 date_str = current_date.strftime('%Y-%m-%d')
                 try:
                     logger.info(f"Collecting intraday data for {email} on {date_str}")
