@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 # Generate a secret key (it must be the same for encryption and decryption)
-SECRET_KEY = os.getenv('ENCRYPTION_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # Make sure the key is 32 bytes
 if len(SECRET_KEY) != 32:
