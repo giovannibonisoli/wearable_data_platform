@@ -2,12 +2,12 @@ from base64 import b64encode
 from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
-from db import get_unique_emails, save_to_db, get_user_tokens, get_latest_user_id_by_email, update_users_tokens, insert_daily_summary, insert_intraday_metric, DatabaseManager
+from db import get_unique_emails, save_to_db, get_device_tokens, get_latest_device_id_by_email, update_device_tokens, insert_daily_summary, insert_intraday_metric, DatabaseManager
 import sys
 import os
 import json
 import time
-from alert_rules import evaluate_all_alerts
+# from alert_rules import evaluate_all_alerts
 
 # Logs configuration
 import logging
@@ -63,10 +63,10 @@ def refresh_access_token(refresh_token):
 def get_fitbit_data(access_token, email):
     headers = {"Authorization": f"Bearer {access_token}"}
     def fetch_and_store(date_str):
-        user_id = get_latest_user_id_by_email(email)
+        device_id = get_latest_device_id_by_email(email)
         db = DatabaseManager()
-        if not user_id:
-            logger.error(f"Error: No user_id found for the email {email}")
+        if not device_id:
+            logger.error(f"Error: No device_id found for the email {email}")
             return False
         data = {
             'steps': 0,
@@ -164,14 +164,14 @@ def get_fitbit_data(access_token, email):
 
             # Save to the database
             insert_daily_summary(
-                user_id=user_id,
+                device_id=device_id,
                 date=date_str,
                 **data
             )
 
             # Evaluar alertas después de guardar los datos
             current_date = datetime.strptime(date_str, "%Y-%m-%d")
-            alerts = evaluate_all_alerts(user_id, current_date)
+            """alerts = evaluate_all_alerts(user_id, current_date)
             if alerts:
                 logger.info(f"Alertas generadas para {email}: {alerts}")
 
@@ -193,7 +193,7 @@ def get_fitbit_data(access_token, email):
             logger.info(f"Data collected for {email} in {date_str}:")
             for key, value in data.items():
                 logger.info(f"{key}: {value}")
-            return True
+            return True"""
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 raise
@@ -218,14 +218,14 @@ def process_emails(emails):
         return
 
     # Rango de fechas
-    START_DATE = datetime(2025, 3, 1)
-    # END_DATE = datetime.now()
-    END_DATE = datetime(2025, 3, 31)
+    START_DATE = datetime(2025, 3, 31)
+    END_DATE = datetime.now()
+    # END_DATE = datetime(2025, 3, 31)
 
     for email in valid_emails:
         logger.info(f"\n=== Processing user: {email} ===")
         # Obtener y desencriptar los tokens
-        access_token, refresh_token = get_user_tokens(email)
+        access_token, refresh_token = get_device_tokens(email)
         if not access_token or not refresh_token:
             logger.warning(f"No valid tokens were found for the email. {email}. Link the device again.")
             continue
@@ -247,6 +247,7 @@ def process_emails(emails):
         #current_date = datetime(2025, 6, 1)
 
         fetch_and_store = get_fitbit_data(access_token, email)
+
         rate_limit_hit = False
         current_access_token = access_token
         current_refresh_token = refresh_token
@@ -256,7 +257,9 @@ def process_emails(emails):
             date_str = current_date.strftime("%Y-%m-%d")
             logger.info(f"Processing {date_str} for {email}")
             try:
+                print("fetch_and_store: IS IT?")
                 success = fetch_and_store(date_str)
+                print("THIS DOES NOT THROW THE EXCEPTION")
                 if success:
                     logger.info(f"Data successfully collected for {email} on {date_str}.")
                 # Guardar checkpoint
@@ -267,7 +270,7 @@ def process_emails(emails):
                     logger.warning(f"Token expired for email {email}. Attempting to refresh the token...")
                     new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
                     if new_access_token and new_refresh_token:
-                        update_users_tokens(email, new_access_token, new_refresh_token)
+                        update_device_tokens(email, new_access_token, new_refresh_token)
                         current_access_token = new_access_token
                         current_refresh_token = new_refresh_token
                         fetch_and_store = get_fitbit_data(current_access_token, email)

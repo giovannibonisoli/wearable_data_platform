@@ -324,6 +324,34 @@ class DatabaseManager:
             print(f"Error al obtener alerta por ID: {str(e)}")
             return None
 
+    def store_pending_auth(self, state, code_verifier, email):
+        """Store pending authorization with expiration"""
+        query = """
+            INSERT INTO pending_authorizations (state, code_verifier, email, expires_at)
+            VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes')
+        """
+        self.cursor.execute(query, (state, code_verifier, email))
+        self.connection.commit()
+
+    def get_pending_auth(self, state):
+        """Retrieve pending authorization if not expired"""
+        query = """
+            SELECT code_verifier, email
+            FROM pending_authorizations
+            WHERE state = %s AND expires_at > NOW()
+        """
+        self.cursor.execute(query, (state,))
+        result = self.cursor.fetchone()
+        if result:
+            return {'code_verifier': result[0], 'email': result[1]}
+        return None
+
+def delete_pending_auth(self, state):
+    """Delete used pending authorization"""
+    query = "DELETE FROM pending_authorizations WHERE state = %s"
+    self.cursor.execute(query, (state,))
+    self.connection.commit()
+
 
 def connect_to_db():
     """Function to maintain compatibility with existing code."""
@@ -501,6 +529,22 @@ def init_db():
             );
         """)
 
+        db.execute_query("""
+            CREATE TABLE pending_authorizations (
+                    id SERIAL,
+                    device_id int,
+                    state VARCHAR(500) UNIQUE NOT NULL,
+                    code_verifier VARCHAR(128) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                    FOREIGN KEY (device_id) REFERENCES devices(id)
+                );
+
+                CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
+                CREATE INDEX idx_pending_auth_expires ON pending_authorizations(expires_at);
+        """)
+
         print("Database successfully initialized with TimeScaleDB.")
         return True
 
@@ -521,6 +565,30 @@ def get_latest_user_id_by_email(email):
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT id FROM users
+                    WHERE email = %s
+                    ORDER BY created_at DESC
+                    LIMIT 1;
+                """, (email,))
+                result = cur.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            print(f"Error retrieving the most recent user_id: {e}")
+        finally:
+            conn.close()
+    return None
+
+
+def get_latest_device_id_by_email(email):
+    """
+        Retrieves the most recent user_id associated with an email address.
+    """
+
+    conn = connect_to_db()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id FROM devices
                     WHERE email = %s
                     ORDER BY created_at DESC
                     LIMIT 1;
@@ -744,7 +812,7 @@ def get_device_id_by_email(email):
     return None
 
 
-def update_users_tokens(email, access_token, refresh_token):
+def update_device_tokens(email, access_token, refresh_token):
     """
         Updates a user's access and refresh tokens.
 
@@ -764,7 +832,7 @@ def update_users_tokens(email, access_token, refresh_token):
         try:
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    UPDATE users
+                    UPDATE device
                     SET access_token = %s, refresh_token = %s
                     WHERE id = %s;
                 """, (encrypted_access_token, encrypted_refresh_token, user_id))
@@ -964,7 +1032,87 @@ def run_tests():
 
     print("\n=== Tests completed ===\n")
 
-def insert_daily_summary(user_id, date, **data):
+def insert_daily_summary(device_id, date, **data):
+    """
+        Inserts or updates a daily summary in the daily_summaries table.
+
+        Args:
+            device_id (int): Device ID.
+            date (str): Date of the data (YYYY-MM-DD).
+            data (dict): Dictionary with Fitbit data.
+    """
+
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
+
+    print("DEVICE ID:", device_id)
+
+    try:
+        # Insert data into the daily_summaries table
+        insert_query = """
+        INSERT INTO daily_summaries (
+            device_id, date, steps, heart_rate, sleep_minutes,
+            calories, distance, floors, elevation, active_minutes,
+            sedentary_minutes, nutrition_calories, water, weight,
+            bmi, fat, oxygen_saturation, respiratory_rate, temperature
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        )
+        ON CONFLICT (device_id, date) DO UPDATE SET
+            steps = EXCLUDED.steps,
+            heart_rate = EXCLUDED.heart_rate,
+            sleep_minutes = EXCLUDED.sleep_minutes,
+            calories = EXCLUDED.calories,
+            distance = EXCLUDED.distance,
+            floors = EXCLUDED.floors,
+            elevation = EXCLUDED.elevation,
+            active_minutes = EXCLUDED.active_minutes,
+            sedentary_minutes = EXCLUDED.sedentary_minutes,
+            nutrition_calories = EXCLUDED.nutrition_calories,
+            water = EXCLUDED.water,
+            weight = EXCLUDED.weight,
+            bmi = EXCLUDED.bmi,
+            fat = EXCLUDED.fat,
+            oxygen_saturation = EXCLUDED.oxygen_saturation,
+            respiratory_rate = EXCLUDED.respiratory_rate,
+            temperature = EXCLUDED.temperature;
+        """
+
+
+
+
+        db.execute_query(insert_query, (
+            device_id, date,
+            data.get("steps"),
+            data.get("heart_rate"),
+            data.get("sleep_minutes"),
+            data.get("calories"),
+            data.get("distance"),
+            data.get("floors"),
+            data.get("elevation"),
+            data.get("active_minutes"),
+            data.get("sedentary_minutes"),
+            data.get("nutrition_calories"),
+            data.get("water"),
+            data.get("weight"),
+            data.get("bmi"),
+            data.get("fat"),
+            data.get("oxygen_saturation"),
+            data.get("respiratory_rate"),
+            data.get("temperature")
+        ))
+
+        return True
+    except Exception as e:
+        print(f"Error saving the daily summary: {e}")
+        return False
+    finally:
+        db.close()
+
+
+def insert_daily_summary_old(user_id, date, **data):
     """
         Inserts or updates a daily summary in the daily_summaries table.
 
@@ -1011,7 +1159,7 @@ def insert_daily_summary(user_id, date, **data):
         """
 
         db.execute_query(insert_query, (
-            user_id, date,
+            device_id, date,
             data.get("steps"),
             data.get("heart_rate"),
             data.get("sleep_minutes"),
@@ -1037,7 +1185,6 @@ def insert_daily_summary(user_id, date, **data):
         return False
     finally:
         db.close()
-
 
 
 def check_intraday_timestamp(user_id, timestamp):
@@ -1579,7 +1726,7 @@ def delete_access():
     if connection:
         try:
             with connection.cursor() as cursor:
-                print(f"Dropping accesse")
+                print(f"Dropping access")
                 query = "UPDATE devices SET access_token = NULL, refresh_token = NULL;"
 
                 cursor.execute(query, [])
@@ -1591,23 +1738,72 @@ def delete_access():
             connection.close()
 
 
+
 def drop_useless_devices():
 
     connection = connect_to_db()
     if connection:
         try:
             with connection.cursor() as cursor:
-                print(f"Dropping intraday table")
-                query = "DELETE FROM devices WHERE id=3;"
+                print(f"Dropping a device")
+                query = "DELETE FROM devices WHERE id=6;"
 
                 cursor.execute(query, [])
                 connection.commit()
 
         except Exception as e:
-            print(f"Error while dropping intraday table: {e}")
+            print(f"Error while dropping useless devices: {e}")
         finally:
             connection.close()
 
+
+def drop_authorizations():
+
+    connection = connect_to_db()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                print(f"Dropping authorizations")
+                query = "DELETE FROM devices WHERE 1=1;"
+                query = "DROP TABLE IF EXISTS pending_authorizations CASCADE;"
+
+                cursor.execute(query, [])
+                connection.commit()
+
+        except Exception as e:
+            print(f"Error authorizations: {e}")
+        finally:
+            connection.close()
+
+
+
+def add_authorizations_table():
+
+    connection = connect_to_db()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    CREATE TABLE pending_authorizations (
+                            id SERIAL,
+                            state VARCHAR(500) UNIQUE NOT NULL,
+                            code_verifier VARCHAR(128) NOT NULL,
+                            email VARCHAR(255) NOT NULL,
+                            expires_at TIMESTAMP NOT NULL,
+                            created_at TIMESTAMP DEFAULT NOW()
+                    );
+
+                    CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
+                    CREATE INDEX idx_pending_auth_expires ON pending_authorizations(expires_at);
+                """
+
+                cursor.execute(query, [])
+                connection.commit()
+
+        except Exception as e:
+            print(f"Error creating pending authorizations: {e}")
+        finally:
+            connection.close()
 
 if __name__ == "__main__":
     # Reset and reinitialize the database
@@ -1615,5 +1811,7 @@ if __name__ == "__main__":
     # Create test data
     # create_test_data()
     # drop_intraday_data()
-    # delete_access()
-    drop_useless_devices()
+
+    drop_authorizations()
+    add_authorizations_table()
+    delete_access()

@@ -778,7 +778,7 @@ if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
 
     # Reset tables to ensure schema is updated with client_id and client_secret columns
-    reset_tables()
+    # reset_tables()
     # init_db() will be called by reset_tables()
 
     # Synchronize all accounts from ACCOUNTS_CONFIG to the database.

@@ -10,7 +10,7 @@
                 <div class="card-header">
                     <h4 class="mb-0">{{ _('Link Fitbit Device') }}</h4>
                 </div>
- 
+
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('link_device') }}" class="link-device-form">
                         <div class="mb-4">
@@ -22,11 +22,11 @@
                                 {% endfor %}
                             </select>
                             <div class="form-text">
-                                <i class="fas fa-info-circle"></i> 
+                                <i class="fas fa-info-circle"></i>
                                 {{ _('Each email is linked to a Fitbit device. When authorized, data will be assigned to the selected user.') }}
                             </div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between align-items-center">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-link"></i> {{ _('Authorize Fitbit') }}

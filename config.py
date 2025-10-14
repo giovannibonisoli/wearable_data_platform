@@ -40,3 +40,9 @@ USERS = [
     # {"email": "Wearable2LivelyAgeign@gmail.com", "auth_code": None, "access_token": None, "refresh_token": None},
     {"email": "Wearable4LivelyAgeign@gmail.com ", "auth_code": None, "access_token": None, "refresh_token": None}
 ]
+
+# Email configuration
+EMAIL_SENDER = 'unimorefitbitapi@gmail.com'
+EMAIL_PASSWORD = 'wbrx tzau yidm ctza'
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587

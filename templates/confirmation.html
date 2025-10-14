@@ -9,7 +9,7 @@
             <div class="card">
                 <div class="card-header bg-success text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-check-circle me-2"></i>{{ _('Device Linking Successful!') }}
+                        <i class="fas fa-check-circle me-2"></i>{{ _('Authorization given successfully!') }}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -26,11 +26,11 @@
                         <p class="mb-1"><strong>{{ _('User:') }}</strong> {{ user_name }}</p>
                         <p class="mb-0"><strong>{{ _('Email:') }}</strong> {{ email }}</p>
                     </div>
-                    <div class="text-center">
+                    {#<div class="text-center">
                         <a href="{{ url_for('index') }}" class="btn btn-primary w-100 position-relative" id="home-button" onclick="return false;">
                             <span class="countdown-text">{{ _('Return to Home (5)') }}</span>
                         </a>
-                    </div>
+                    </div>#}
                 </div>
             </div>
         </div>
