@@ -7,9 +7,7 @@ import smtplib
 
 
 def send_email(recipient_email, subject, html, text):
-    """Invia l'email con il link di autorizzazione."""
-
-    scope = ['activity', 'heartrate', 'location', 'nutrition', 'profile', 'settings', 'sleep', 'social', 'weight']
+    """Invia un email"""
 
     try:
         # Create the message

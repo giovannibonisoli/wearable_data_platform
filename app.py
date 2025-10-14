@@ -455,113 +455,6 @@ def user_stats():
         return "Error: Could not connect to the database.", 500
 
 
-
-# Route: Link a new Fitbit device
-@app.route('/livelyageing/link', methods=['GET', 'POST'])
-@login_required
-def link_device():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        if not email:
-            flash('Please select an email.', 'danger')
-            return redirect(url_for('link_device'))
-
-        # Generate state and store it in the session.
-        session['state'] = generate_state()
-        session['pending_email'] = email
-        # session['new_user_name'] = user_name
-        session['code_verifier'] = generate_code_verifier()
-
-        code_challenge = generate_code_challenge(session['code_verifier'])
-        auth_url = generate_auth_url(code_challenge, session['state'])
-
-
-        app.logger.info(f"Generated auth URL for {email}: {auth_url}")
-        app.logger.info(f"Session state: {session['state']}")
-        app.logger.info(f"Session code_verifier: {session['code_verifier']}")
-
-        return render_template('link_auth.html', auth_url=auth_url)
-
-
-
-    # GET request - Show form
-    db = DatabaseManager()
-    if not db.connect():
-        flash('Database connection error.', 'danger')
-        return redirect(url_for('home'))
-
-    try:
-        emails = db.execute_query("SELECT DISTINCT email FROM devices")
-        return render_template('link_device.html', emails=[email[0] for email in emails])
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('home'))
-    finally:
-        db.close()
-
-
-
-# def send_authorization_email(user_email, authorization_url):
-#     """Invia l'email con il link di autorizzazione."""
-
-#     scope = ['activity', 'heartrate', 'location', 'nutrition', 'profile', 'settings', 'sleep', 'social', 'weight']
-
-#     try:
-#         # Crea il messaggio
-#         msg = MIMEMultipart('alternative')
-#         msg['Subject'] = 'Autorizzazione Fitbit - Lively Ageing'
-#         msg['From'] = EMAIL_SENDER
-#         msg['To'] = user_email
-
-#         # Corpo dell'email in HTML
-#         html = f"""
-#         <html>
-#           <body>
-#             <h2>Autorizzazione Fitbit</h2>
-#             <p>Ciao,</p>
-#             <p>Per autorizzare l'accesso ai tuoi dati Fitbit, clicca sul link qui sotto:</p>
-#             <p><a href="{authorization_url}">Autorizza Fitbit</a></p>
-#             <p>Oppure copia e incolla questo link nel tuo browser:</p>
-#             <p>{authorization_url}</p>
-#             <br>
-#             <p>Grazie,<br>Team Lively Ageing</p>
-#           </body>
-#         </html>
-#         """
-
-#         # Corpo dell'email in testo semplice
-#         text = f"""
-#         Autorizzazione Fitbit
-
-#         Ciao,
-
-#         Per autorizzare l'accesso ai tuoi dati Fitbit, copia e incolla questo link nel tuo browser:
-
-#         {authorization_url}
-
-#         Grazie,
-#         Team Lively Ageing
-#         """
-
-#         part1 = MIMEText(text, 'plain')
-#         part2 = MIMEText(html, 'html')
-
-#         msg.attach(part1)
-#         msg.attach(part2)
-
-#         # Invia l'email
-#         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-#         server.starttls()
-#         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-#         server.sendmail(EMAIL_SENDER, user_email, msg.as_string())
-#         server.quit()
-
-#         return True
-#     except Exception as e:
-#         print(f"Error sending the email: {e}")
-#         return False
-
-
 @app.route('/livelyageing/send_auth_email', methods=['POST'])
 @login_required
 def send_auth_email():
@@ -569,7 +462,7 @@ def send_auth_email():
     user_email = request.form.get('email')
     if not user_email:
         flash('Please select an email.', 'danger')
-        return redirect(url_for('link_device'))
+        return redirect(url_for('available_devices'))
 
     # Generate code_verifier and store it temporarily with email as key
     code_verifier = generate_code_verifier()
@@ -676,115 +569,6 @@ def assign_user():
 
     return render_template('assign_user.html')
 
-
-# @app.route('/livelyageing/callback')
-# def callback():
-#     """
-#     Handle the callback from Fitbit after the user authorizes the app.
-#     This route captures the authorization code and exchanges it for access and refresh tokens.
-#     """
-#     app.logger.info("Callback route accessed")
-#     app.logger.info(f"Request args: {request.args}")
-#     app.logger.info(f"Request path: {request.path}")
-#
-#     try:
-#         code = request.args.get('code')
-#         returned_state = request.args.get('state')
-#         stored_state = session.get('state')
-#
-#         app.logger.info(f"Callback triggered with code: {code} and state: {returned_state}")
-#         app.logger.info(f"Stored state in session: {stored_state}")
-#
-#         if returned_state != stored_state:
-#             app.logger.error("Invalid state parameter. Possible CSRF attack.")
-#             flash("Error: Invalid state parameter. Possible CSRF attack.", "danger")
-#             return redirect(url_for('link_device'))
-#
-#         email = session.get('pending_email')
-#
-#         print("EMAIL:", email)
-#         # new_user_name = session.get('new_user_name')
-#         code_verifier = session.get('code_verifier')
-#
-#         if not all([email, code_verifier, code]):
-#             app.logger.error("Missing required session variables or authorization code")
-#             flash("Error: Missing required information. Please try again.", "danger")
-#             return redirect(url_for('link_device'))
-#
-#         db = DatabaseManager()
-#         if db.connect():
-#             try:
-#                 # Query to check if the email is already in use
-#                 # existing_user = db.get_user_by_email(email)
-#                 existing_device = db.get_device_by_email(email)
-#
-#                 # if existing_user:
-#                 if existing_device:
-#                     # Unpack the user data correctly
-#                     user_id, existing_name, existing_email, existing_access_token, existing_refresh_token = existing_device
-#
-#                     print("INSERTING NEW TOKENS")
-#
-#                     if not existing_access_token or not existing_refresh_token:
-#                         if code:
-#                             try:
-#                                 access_token, refresh_token = get_tokens(code, code_verifier)
-#                                 if not access_token or not refresh_token:
-#                                     raise Exception("Could not retrieve Fitbit tokens.")
-#                                 db.update_device_tokens(email, access_token, refresh_token)
-#                                 app.logger.info(f"Device {existing_name} has been updated.")
-#                             except Exception as e:
-#                                 app.logger.error(f"Error getting Fitbit tokens: {e}")
-#                                 flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
-#                                 return redirect(url_for('link_device'))
-#                         else:
-#                             app.logger.error("Authorization is required for this device")
-#                             flash("Error: Authorization is required for this device.", "danger")
-#                             return redirect(url_for('link_device'))
-#                     else:
-#                         db.update_device_tokens(email, existing_access_token, existing_refresh_token)
-#                         app.logger.info(f"Device {existing_name} is already authorized.")
-#
-#                 else:
-#                     if code:
-#                         try:
-#                             access_token, refresh_token = get_tokens(code, code_verifier)
-#                             if not access_token or not refresh_token:
-#                                 raise Exception("Could not retrieve the Fitbit tokens.")
-#                             db.add_device("New Device", email, access_token, refresh_token)
-#                             app.logger.info(f"New device added.")
-#                         except Exception as e:
-#                             app.logger.error(f"Error retrieving Fitbit tokens: {e}")
-#                             flash("Error: Could not obtain Fitbit authorization. Please try again.", "danger")
-#                             return redirect(url_for('link_device'))
-#                     else:
-#                         app.logger.error("Authorization is required for this device.")
-#                         flash("Error: Authorization is required for this device.", "danger")
-#                         return redirect(url_for('link_device'))
-#
-#
-#                 # Clear the session data
-#                 session.pop('pending_email', None)
-#                 # session.pop('new_user_name', None)
-#                 session.pop('code_verifier', None)
-#                 session.pop('state', None)
-#
-#                 return render_template('confirmation.html', user_name="New Device", email=email)
-#             except Exception as e:
-#                 app.logger.error(f"Error during token exchange: {e}")
-#                 flash(f"Error during token exchange: {e}", "danger")
-#                 return redirect(url_for('link_device'))
-#             finally:
-#                 db.close()
-#         else:
-#             app.logger.error("Could not connect to the database.")
-#             flash("Error: Could not connect to the database.", "danger")
-#             return redirect(url_for('link_device'))
-#     except Exception as e:
-#         app.logger.error(f"Unexpected error: {e}")
-#         flash(f"Unexpected error: {e}", "danger")
-#         return redirect(url_for('link_device'))
-
 @app.route('/livelyageing/callback')
 def callback():
     """
@@ -823,7 +607,7 @@ def callback():
                 if not pending_auth:
                     app.logger.error("No pending authorization found or expired")
                     flash("Error: Authorization link expired. Please request a new one.", "danger")
-                    return redirect(url_for('link_device'))
+                    return redirect(url_for('available_devices'))
 
                 code_verifier = pending_auth['code_verifier']
 
@@ -2004,44 +1788,6 @@ def debug_static():
         'style_url': style_url,
         'styles_url': styles_url
     }
-
-@app.route('/livelyageing/add_email', methods=['GET', 'POST'])
-@login_required
-def add_email():
-    """
-    Handle adding a new email to the system.
-    """
-    if request.method == 'POST':
-        email = request.form.get('email')
-        if not email:
-            flash(_('Please provide an email address.'), 'danger')
-            return redirect(url_for('add_email'))
-
-        db = DatabaseManager()
-        if not db.connect():
-            flash(_('Database connection error.'), 'danger')
-            return redirect(url_for('add_email'))
-
-        try:
-            # Check if email already exists
-            existing_user = db.get_user_by_email(email)
-            if existing_user:
-                flash(_('This email is already registered in the system.'), 'warning')
-                return redirect(url_for('add_email'))
-
-            # Add the email to the database without tokens (they'll be added during linking)
-            db.add_user(name="", email=email)
-            flash(_('Email added successfully. You can now link a device to it.'), 'success')
-            return redirect(url_for('link_device'))
-
-        except Exception as e:
-            app.logger.error(f"Error adding email: {e}")
-            flash(_('An error occurred while adding the email.'), 'danger')
-            return redirect(url_for('add_email'))
-        finally:
-            db.close()
-
-    return render_template('add_email.html')
 
 # Run the Flask app
 if __name__ == '__main__':
