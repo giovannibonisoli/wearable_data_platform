@@ -1,89 +1,303 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('List of Fitbit Devices') }} - Lively Ageing{% endblock %}
+{% block title %}{{ _('Device Management') }} - Lively Ageing Medical Platform{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">{{ _('List of Fitbit Devices') }}</h1>
-
-    <!-- Add New Device Form -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">{{ _('Add New Device') }}</h5>
-        </div>
-        <div class="card-body">
-            <form id="addDeviceForm" method="POST" action="{{ url_for('available_devices') }}">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="deviceName">{{ _('Device Name') }}</label>
-                            <input type="text" class="form-control" id="deviceName" name="name" required
-                                   placeholder="{{ _('Enter device name') }}">
-                            <div class="invalid-feedback" id="nameFeedback">
-                                {{ _('Please provide a device name.') }}
+<div class="dashboard">
+    <div class="container py-5">
+    
+        <!-- Add New Device Form -->
+        <div class="card device-card mb-5">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>{{ _('Add New Medical Device') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="addDeviceForm" method="POST" action="{{ url_for('available_devices') }}" class="device-form">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="deviceName" class="form-label form-label">
+                                    <i class="fas fa-watch me-2"></i>{{ _('Device Name') }}
+                                </label>
+                                <input type="text" class="form-control form-control" id="deviceName" name="name" required
+                                       placeholder="{{ _('Enter device name (e.g., Patient Fitbit)') }}">
+                                <div class="invalid-feedback" id="nameFeedback">
+                                    {{ _('Please provide a device name.') }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="deviceEmail">{{ _('Email Address') }}</label>
-                            <input type="email" class="form-control" id="deviceEmail" name="email" required
-                                   placeholder="{{ _('Enter email address') }}">
-                            <div class="invalid-feedback" id="emailFeedback">
-                                {{ _('Please provide a valid email address.') }}
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="deviceEmail" class="form-label form-label">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Patient Email') }}
+                                </label>
+                                <input type="email" class="form-control form-control" id="deviceEmail" name="email" required
+                                       placeholder="{{ _('Enter patient email address') }}">
+                                <div class="invalid-feedback" id="emailFeedback">
+                                    {{ _('Please provide a valid email address.') }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success w-100">
-                            {{ _('Add Device') }}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Devices List -->
-    {% if devices %}
-    <div class="table-responsive">
-        <table class="table table-sm table-hover">
-            <thead class="thead-light">
-                <tr>
-                    <th>{{ _('Device Name') }}</th>
-                    <th>{{ _('Email') }}</th>
-                    <th>{{ _('Actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for device in devices %}
-                <tr>
-                    <td>{{ device.name }}</td>
-                    <td>{{ device.email }}</td>
-                    <td>
-                        <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
-                            <input type="hidden" name="id" value="{{ device.id }}">
-                            <input type="hidden" name="email" value="{{ device.email }}">
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                {{ _('Authorize device access') }}
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success btn-lg w-100 add-btn">
+                                <i class="fas fa-plus me-2"></i>{{ _('Add Device') }}
                             </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Devices List -->
+        {% if devices %}
+        <div class="card devices-table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover devices-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="table-header">
+                                    <i class="fas fa-watch me-2"></i>{{ _('Device Name') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-user me-2"></i>{{ _('Patient Email') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-shield-alt me-2"></i>{{ _('Status') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in devices %}
+                            <tr class="device-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="device-icon me-3">
+                                            <i class="fas fa-watch text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-primary">{{ device.name }}</strong>
+                                            <br>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="patient-info">
+                                        <i class="fas fa-envelope text-muted me-2"></i>
+                                        {{ device.email }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>{{ _('Pending Authorization') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="id" value="{{ device.id }}">
+                                        <input type="hidden" name="email" value="{{ device.email }}">
+                                        <button type="submit" class="btn btn-primary btn-sm action-btn">
+                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Send Authorization') }}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card empty-state-card">
+            <div class="card-body text-center py-5">
+                <div class="empty-icon mb-4">
+                    <i class="fas fa-watch fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">{{ _('No Devices Connected') }}</h4>
+                <p class="text-muted mb-4">{{ _('Start monitoring patient health by adding a wearable device.') }}</p>
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{{ _('Getting Started:') }}</strong> {{ _('Use the form above to add a new medical device and begin monitoring patient health data.') }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="alert alert-info" role="alert">
-        {{ _('No devices found. Please add a device using the form above.') }}
-    </div>
-    {% endif %}
 </div>
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(74, 144, 164, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .icon-container {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .badge-container .badge {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+    }
+    
+    .device-card {
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .form-label {
+        color: var(--text);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-control {
+        border: 2px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+    
+    .add-btn {
+        background: var(--gradient);
+        border: none;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .add-btn i {
+        color: var(--white);
+    }
+    
+    .add-btn:hover {
+        background: linear-gradient(135deg, #1e3d73 0%, #3a7a8a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+    }
+    
+    .devices-table-card {
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .table-header {
+        background: var(--gradient);
+        color: var(--white);
+        font-weight: 600;
+        padding: 1.25rem 1rem;
+        border: none;
+    }
+    
+    .table-header i {
+        color: var(--white);
+    }
+    
+    .device-row {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .device-row:hover {
+        background-color: var(--accent);
+    }
+    
+    .device-row td {
+        padding: 1.5rem 1rem;
+        vertical-align: middle;
+    }
+    
+    .device-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .patient-info {
+        display: flex;
+        align-items: center;
+        color: var(--text);
+    }
+    
+    .action-btn {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn i {
+        color: var(--white);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+    }
+    
+    .empty-state-card {
+        border-left: 4px solid var(--info);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .empty-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .icon-container {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .device-row td {
+            padding: 1rem 0.5rem;
+        }
+        
+        .device-icon {
+            width: 40px;
+            height: 40px;
+        }
+    }
+</style>
 {% endblock %}
-
-{% block scripts %}
-<script>
-
-</script>
 {% endblock %}

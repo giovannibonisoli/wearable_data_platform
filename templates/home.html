@@ -1,184 +1,220 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Home') }} - Lively Ageing{% endblock %}
+{% block title %}{{ _('Medical Dashboard') }} - Lively Ageing{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h1 class="display-4">{{ _('Welcome to Lively Ageing') }}</h1>
-            <p class="lead">{{ _('Monitor and manage Fitbit users physical activity data') }}</p>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <!-- Card for devices -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-link fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Devices') }}</h3>
-                    <p class="card-text">{{ _('Access the list of devices') }}</p>
-                    <a href="{{ url_for('available_devices') }}" class="btn btn-primary">
-                        <i class="fas fa-plus-circle me-2"></i>{{ _('List of devices') }}
-                    </a>
+<div class="dashboard">
+    <div class="container py-5">
+        <!-- Main Dashboard Cards -->
+        <div class="row g-4">
+            <!-- Patient Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_devices') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-user-md fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title text-primary mb-2">{{ _('Patient Management') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Monitor and manage patient health data from wearable devices') }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card for users -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Users') }}</h3>
-                    <p class="card-text">{{ _('View the list of all users') }}</p>
-                    <a href="{{ url_for('available_devices') }}" class="btn btn-primary">
-                        <i class="fas fa-chart-bar me-2"></i>{{ _('View Users') }}
-                    </a>
+            <!-- Medical Alerts -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('alerts_dashboard') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                        </div>
+                        <h5 class="card-title text-warning mb-2">{{ _('Medical Alerts') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Review and manage critical health alerts and anomalies') }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card for statistics -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">{{ _('Users statistics') }}</h3>
-                    <p class="card-text">{{ _('Access detailed statistics for each individual user') }}</p>
-                    <a href="{{ url_for('available_devices') }}" class="btn btn-primary">
-                        <i class="fas fa-users me-2"></i>{{ _('View Users') }}
-                    </a>
+            <!-- Device Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_devices') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-watch fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title text-success mb-2">{{ _('Device Management') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Configure and monitor wearable health devices') }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- {% if recent_users %}
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title mb-0">{{ _('Recent Activity') }}</h3>
+            <!-- Health Analytics -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_devices') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-chart-bar fa-3x text-info"></i>
+                        </div>
+                        <h5 class="card-title text-info mb-2">{{ _('Health Analytics') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Comprehensive health data analysis and reporting') }}</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>{{ _('User') }}</th>
-                                    <th>{{ _('Email') }}</th>
-                                    <th>{{ _('Last Update') }}</th>
-                                    <th>{{ _('State') }}</th>
-                                    <th>{{ _('Actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in recent_users %}
-                                <tr>
-                                    <td>{{ user[1] }}</td>
-                                    <td>{{ user[2] }}</td>
-                                    <td>{{ user[3]|datetime if user[3] else '—' }}</td>
-                                    <td>
-                                        {% if user[3] %}
-                                            {% set hours_since_update = ((now - user[3]).total_seconds() / 3600)|round %}
-                                            {% if hours_since_update <= 24 %}
-                                                <span class="badge bg-success" title="Datos actualizados en las últimas 24h">
-                                                    <i class="fas fa-check-circle"></i> OK
-                                                </span>
-                                            {% elif hours_since_update <= 72 %}
-                                                <span class="badge bg-warning" title="Sin datos en las últimas 24-72h">
-                                                    <i class="fas fa-exclamation-circle"></i> Atención
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-danger" title="Sin datos en más de 72h">
-                                                    <i class="fas fa-times-circle"></i> Crítico
-                                                </span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="badge bg-danger" title="Nunca sincronizado">
-                                                <i class="fas fa-times-circle"></i> Sin datos
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{{ url_for('user_detail', user_id=user[0]) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-user"></i> {{ _('View Details') }}
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            </div>
+
+            <!-- Patient Statistics -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_devices') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-chart-pie fa-3x text-secondary"></i>
+                        </div>
+                        <h5 class="card-title text-secondary mb-2">{{ _('Patient Statistics') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Detailed individual patient health statistics and trends') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_devices') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-server fa-3x text-dark"></i>
+                        </div>
+                        <h5 class="card-title text-dark mb-2">{{ _('System Status') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Monitor system health and device connectivity status') }}</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %} -->
 </div>
 
+{% block extra_css %}
+<style>
+    .welcome-header {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(74, 144, 164, 0.05) 100%);
+        padding: 3rem 2rem;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .badge-container .badge {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+    }
+    
+    .stats-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(44, 90, 160, 0.2);
+    }
+    
+    .stats-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .dashboard-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(44, 90, 160, 0.15);
+    }
+    
+    .card-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+    
+    .dashboard-card:hover .card-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.2) 0%, rgba(74, 144, 164, 0.2) 100%);
+        transform: scale(1.1);
+    }
+    
+    .clickable-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .clickable-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(44, 90, 160, 0.15);
+    }
+    
+    .clickable-card:active {
+        transform: translateY(-2px);
+    }
+    
+    .activity-card {
+        border-left: 4px solid var(--primary);
+    }
+    
+    .list-group-item {
+        border-color: rgba(44, 90, 160, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item:hover {
+        background-color: var(--accent);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Preload dashboard data when hovering over the link
-    const dashboardLink = document.querySelector('a[href*="/livelyageing/alerts_dashboard"]');
-    let preloadTimeout;
-    let lastPreloadTimestamp = null;
-    let updateCheckInterval = null;
-
-    if (dashboardLink) {
-        dashboardLink.addEventListener('mouseenter', function() {
-            preloadTimeout = setTimeout(function() {
-                fetch('/livelyageing/preload_dashboard')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            console.log('Dashboard data preloaded successfully');
-                            lastPreloadTimestamp = data.timestamp;
-
-                            // Start checking for updates
-                            if (!updateCheckInterval) {
-                                updateCheckInterval = setInterval(checkForUpdates, 30000); // Check every 30 seconds
-                            }
-                        }
-                    })
-            }, 500);
+    // Add click handlers to all clickable cards
+    const clickableCards = document.querySelectorAll('.clickable-card');
+    
+    clickableCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
         });
-
-        dashboardLink.addEventListener('mouseleave', function() {
-            clearTimeout(preloadTimeout);
-        });
-    }
-
-    // Function to check for updates
-    function checkForUpdates() {
-        if (!lastPreloadTimestamp) return;
-
-        fetch(`/livelyageing/check_dashboard_updates?timestamp=${lastPreloadTimestamp}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.needs_refresh) {
-                    console.log('New updates available, refreshing dashboard data...');
-                    // Preload new data
-                    fetch('/livelyageing/preload_dashboard')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                lastPreloadTimestamp = data.timestamp;
-                            }
-                        });
+        
+        // Add keyboard accessibility
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const url = this.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
                 }
-            })
-            .catch(error => console.error('Error checking for updates:', error));
-    }
-
-    // Clean up interval when leaving the page
-    window.addEventListener('beforeunload', function() {
-        if (updateCheckInterval) {
-            clearInterval(updateCheckInterval);
-        }
+            }
+        });
+        
+        // Make cards focusable for keyboard navigation
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', card.querySelector('.card-title').textContent);
     });
 });
 </script>
+{% endblock %}
+
 {% endblock %}
