@@ -519,23 +519,10 @@ def send_auth_email():
                 db.store_pending_auth(state, code_verifier, user_email)
             finally:
                 db.close()
-        return f'''
-            <html>
-                <body>
-                    <h2>Email inviata!</h2>
-                    <p>Abbiamo inviato il link di autorizzazione a: <strong>{user_email}</strong></p>
-                </body>
-            </html>
-        '''
+        return render_template('auth_email_sent_confirmation.html', email=user_email)
     else:
-        return '''
-            <html>
-                <body>
-                    <h2>Errore</h2>
-                    <p>Si è verificato un errore nell'invio dell'email.</p>
-                </body>
-            </html>
-        '''
+        flash('Error sending email. Please try again.', 'danger')
+        return redirect(url_for('available_devices'))
 
 
 @app.route('/livelyageing/assign', methods=['GET', 'POST'])
@@ -632,30 +619,34 @@ def callback():
                 # Delete the pending authorization
                 db.delete_pending_auth(state)
 
-                return render_template('confirmation.html',
+                return render_template('auth_confirmation.html',
                                      user_name=device_name,
                                      email=email,
-                                     success=True)
+                                     success=True,
+                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
             except Exception as e:
                 app.logger.error(f"Error during token exchange: {e}")
-                return render_template('confirmation.html',
+                return render_template('auth_confirmation.html',
                                      email=email,
                                      success=False,
-                                     error=str(e))
+                                     error=str(e),
+                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
             finally:
                 db.close()
         else:
             app.logger.error("Could not connect to the database.")
-            return render_template('confirmation.html',
+            return render_template('auth_confirmation.html',
                                  success=False,
-                                 error="Database connection failed")
+                                 error="Database connection failed",
+                                 link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
     except Exception as e:
         app.logger.error(f"Unexpected error: {e}")
-        return render_template('confirmation.html',
+        return render_template('auth_confirmation.html',
                              success=False,
-                             error=str(e))
+                             error=str(e),
+                             link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 @app.route('/livelyageing/reassign', methods=['POST'])
 @login_required
@@ -701,7 +692,7 @@ def reassign_device():
                     # If tokens are valid, proceed to add the new user without reauthorization
                     db.add_user(new_user_name, email, existing_access_token, existing_refresh_token)
                     app.logger.info(f"Device reassigned to {new_user_name} ({email}) without reauthorization.")
-                    return render_template('confirmation.html', user_name=new_user_name, email=email)
+                    return render_template('auth_confirmation.html', user_name=new_user_name, email=email, link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
             else:
                 app.logger.error(f"Email {email} is not in use.")
                 return "Error: The email is not in use.", 400
