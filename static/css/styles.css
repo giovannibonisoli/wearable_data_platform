@@ -782,6 +782,10 @@ main {
     color: var(--white);
 }
 
+.btn-primary i {
+    color: var(--white);
+}
+
 .add-btn:hover {
     background: linear-gradient(135deg, #1e3d73 0%, #3a7a8a 100%);
     transform: translateY(-2px);
