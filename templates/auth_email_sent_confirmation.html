@@ -24,7 +24,7 @@
                         </p>
                         <div class="alert alert-info">
                             <i class="fas fa-envelope me-2"></i>
-                            <strong>{{ email }}</strong>
+                            <strong>{{ address_name }}</strong>
                         </div>
                         
                         <!-- Instructions -->
@@ -36,14 +36,14 @@
                                 <li>{{ _('Check your email inbox') }}</li>
                                 <li>{{ _('Click on the authorization link') }}</li>
                                 <li>{{ _('Complete the Fitbit authorization process') }}</li>
-                                <li>{{ _('Return to the platform to see your device') }}</li>
+                                <li>{{ _('Return to the platform to see your email status') }}</li>
                             </ol>
                         </div>
                         
                         <!-- Action Buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                            <a href="{{ url_for('available_devices') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-left me-2"></i>{{ _('Back to Device Management') }}
+                            <a href="{{ url_for('available_email_addresses') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>{{ _('Back to Email Management') }}
                             </a>
                             <a href="{{ url_for('home') }}" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-home me-2"></i>{{ _('Go to Dashboard') }}

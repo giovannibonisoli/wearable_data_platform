@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Email Management') }} - Lively Ageing Medical Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-5">
+    
+        <!-- Add New Email Form -->
+        <div class="card email-card mb-5">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>{{ _('Add New Email Address') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="addEmailForm" method="POST" action="{{ url_for('available_email_addresses') }}" class="device-form">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="addressNameInsert" class="form-label form-label">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Address Name') }}
+                                </label>
+                                <input type="email" class="form-control form-control" id="addressNameInsert" 
+                                    name="addressName" required placeholder="{{ _('Enter address name') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success btn-lg w-100 add-btn">
+                                <i class="fas fa-plus me-2"></i>{{ _('Add Email address') }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Email addresses List -->
+        {% if email_addresses %}
+        <div class="card devices-table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover devices-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="table-header">
+                                    <i class="fas fa-watch me-2"></i>{{ _('Address Name') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-shield-alt me-2"></i>{{ _('Status') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for email_address in email_addresses %}
+                            <tr class="device-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="device-icon me-3">
+                                            <i class="fas fa-watch text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-primary">{{ email_address.address_name }}</strong>
+                                            <br>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'inserted' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-clock me-1"></i>{{ _('Not Authorized') }}
+                                    </span>
+                                    {% elif email_address.status == 'pending_auth_request' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>{{ _('Pending Authorization Request') }}
+                                    </span>
+                                    {% elif email_address.status == 'authorized' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>{{ _('Authorized') }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>{{ _('not_active') }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'inserted' %}
+                                    <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="addressIdAuth" value="{{ email_address.id }}">
+                                        <input type="hidden" name="addressNameAuth" value="{{ email_address.address_name }}">
+                                        <button type="submit" class="btn btn-primary btn-sm action-btn">
+                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Send Authorization Email') }}
+                                        </button>
+                                    </form>
+                                    {% elif email_address.status == 'authorized' %}
+                                    <form action="{{ url_for('') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="id" value="{{ email_address.id }}">
+                                        <input type="hidden" name="" value="{{ email_address.address_name }}">
+                                        <button type="submit" class="btn btn-primary btn-sm action-btn">
+                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Deactivate Email') }}
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <h3>No action allowed</h3>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card empty-state-card">
+            <div class="card-body text-center py-5">
+                <div class="empty-icon mb-4">
+                    <i class="fas fa-watch fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">{{ _('No Email Addresses inserted') }}</h4>
+                <p class="text-muted mb-4">{{ _('Start monitoring patient health by adding an email address.') }}</p>
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{{ _('Getting Started:') }}</strong> {{ _('Use the form above to add a new email address and begin monitoring the associated wearable.') }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    /* Device management specific styles that aren't in shared CSS */
+</style>
+{% endblock %}
+{% endblock %}

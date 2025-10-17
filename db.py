@@ -267,6 +267,18 @@ class DatabaseManager:
             return {'code_verifier': result[0][0], 'email_id': result[0][1]}
         return None
 
+    def check_pending_auth(self, email_id):
+        """Check if there is a pending authorization for an inserted mail"""
+        query = """
+            SELECT *
+            FROM pending_authorizations
+            WHERE email_id = %s AND expires_at > NOW()
+        """
+        result = self.execute_query(query, (email_id,))
+        if result:
+            return True
+        return False
+
     def delete_pending_auth(self, state):
         """Delete used pending authorization"""
         query = "DELETE FROM pending_authorizations WHERE state = %s"
@@ -631,7 +643,6 @@ def init_db():
                     email_id INTEGER REFERENCES email_addresses(id),
                     state VARCHAR(500) UNIQUE NOT NULL,
                     code_verifier VARCHAR(128) NOT NULL,
-                    email VARCHAR(255) NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
                 );

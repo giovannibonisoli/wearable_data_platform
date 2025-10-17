@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('Device Linking Confirmation') }} - Lively Ageing Wearable Platform</title>
+    <title>{{ _('Email Data Access Confirmation') }} - Lively Ageing Wearable Platform</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -33,7 +33,7 @@
             <h2 class="mb-0">
                 <i class="fas fa-check-circle me-2"></i>{{ _('Authorization Successful!') }}
             </h2>
-            <p class="mb-0 mt-2 opacity-90">{{ _('Device has been successfully linked to the medical platform') }}</p>
+            <p class="mb-0 mt-2 opacity-90">{{ _('Wearable data access has been successfully obtained for {}') }}</p>
         </div>
         
         <div class="confirmation-body">
@@ -47,13 +47,10 @@
             </div>
             
             <div class="user-info-card">
-                <h5>
-                    <i class="fas fa-user-md me-2"></i>{{ _('Device Linked to Patient:') }}
-                </h5>
-                <div class="user-detail">
-                    <strong>{{ _('Patient Name:') }}</strong>
-                    <span>{{ user_name }}</span>
-                </div>
+                {#<h5>
+                    <i class="fas fa-user-md me-2"></i>{{ _('Address linked:') }}
+                </h5>#}
+
                 <div class="user-detail">
                     <strong>{{ _('Email Address:') }}</strong>
                     <span>{{ email }}</span>
