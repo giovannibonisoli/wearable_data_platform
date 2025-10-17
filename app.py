@@ -2,7 +2,7 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 from rich import _console
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url
-from db import DatabaseManager, get_daily_summaries, get_user_alerts, get_user_id_by_email
+from db import DatabaseManager
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
 from emails import send_email
@@ -819,16 +819,23 @@ def get_daily_summary():
     Gets the most recent daily summary of the current user.
     """
     try:
-        user_id = get_user_id_by_email(current_user.email)
-        if not user_id:
-            return jsonify({'error': 'User not found'}), 404
+        db = DatabaseManager()
+        if not db.connect():
+            return jsonify({'error': 'Database connection failed'}), 500
+        
+        try:
+            user_id = db.get_user_id_by_email(current_user.email)
+            if not user_id:
+                return jsonify({'error': 'User not found'}), 404
 
-        # Get the most recent summary
-        summaries = get_daily_summaries(
-            user_id=user_id,
-            start_date=datetime.now() - timedelta(days=1),
-            end_date=datetime.now()
-        )
+            # Get the most recent summary
+            summaries = db.get_daily_summaries(
+                email_id=user_id,
+                start_date=datetime.now() - timedelta(days=1),
+                end_date=datetime.now()
+            )
+        finally:
+            db.close()
 
         if not summaries:
             return jsonify({'error': 'No data available.'}), 404
@@ -866,17 +873,24 @@ def get_user_alerts_api():
     Gets the most recent alerts of the current user.
     """
     try:
-        user_id = get_user_id_by_email(current_user.email)
-        if not user_id:
-            return jsonify({'error': 'User not found.'}), 404
+        db = DatabaseManager()
+        if not db.connect():
+            return jsonify({'error': 'Database connection failed'}), 500
+        
+        try:
+            user_id = db.get_user_id_by_email(current_user.email)
+            if not user_id:
+                return jsonify({'error': 'User not found.'}), 404
 
-        # Get alerts from the last 24 hours.
-        alerts = get_user_alerts(
-            user_id=user_id,
-            start_time=datetime.now() - timedelta(hours=24),
-            end_time=datetime.now(),
-            acknowledged=False
-        )
+            # Get alerts from the last 24 hours.
+            alerts = db.get_user_alerts(
+                email_id=user_id,
+                start_time=datetime.now() - timedelta(hours=24),
+                end_time=datetime.now(),
+                acknowledged=False
+            )
+        finally:
+            db.close()
 
         return jsonify([{
             'id': alert[0],

@@ -7,7 +7,7 @@ import json
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from db import get_daily_summaries, get_intraday_metrics, get_sleep_logs, DatabaseManager
+from db import DatabaseManager
 from alert_rules import get_triggered_alerts
 
 # Configure logging directory

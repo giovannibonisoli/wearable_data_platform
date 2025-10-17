@@ -1,15 +1,19 @@
 import numpy as np
 from datetime import datetime, timedelta
-from db import get_daily_summaries, get_intraday_metrics, DatabaseManager
+from db import DatabaseManager
 import json
 
 def check_activity_drop(user_id, current_date):
     """Verifica si hay una caída significativa en la actividad física."""
+    db = DatabaseManager()
+    if not db.connect():
+        return False
+    
     try:
         # Obtener datos de los últimos 7 días (excluyendo hoy)
         start_date = current_date - timedelta(days=7)
         end_date = current_date - timedelta(days=1)
-        daily_summaries = get_daily_summaries(user_id, start_date, end_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, end_date)
         if not daily_summaries or len(daily_summaries) < 2:
             print(f"[activity_drop] No hay suficientes datos para el usuario {user_id}.")
             return False
@@ -27,7 +31,7 @@ def check_activity_drop(user_id, current_date):
         if avg_steps < 100 or avg_active_minutes < 5:
             print(f"[activity_drop][DEBUG] Promedios demasiado bajos para usuario {user_id}: avg_steps={avg_steps}, avg_active_minutes={avg_active_minutes}")
             return False
-        today_data = get_daily_summaries(user_id, current_date, current_date)
+        today_data = db.get_daily_summaries(user_id, current_date, current_date)
         if not today_data:
             print(f"[activity_drop][DEBUG] No hay datos de hoy para el usuario {user_id}.")
             return False
@@ -47,56 +51,52 @@ def check_activity_drop(user_id, current_date):
         print(f"[activity_drop][DEBUG] avg_steps={avg_steps}, today_steps={today_steps}, steps_drop={steps_drop:.2f}%")
         print(f"[activity_drop][DEBUG] avg_active_minutes={avg_active_minutes}, today_active_minutes={today_active_minutes}, active_minutes_drop={active_minutes_drop:.2f}%")
         print(f"[activity_drop][DEBUG] Thresholds: HIGH>30%, MEDIUM>20%")
-        db = DatabaseManager()
-        if not db.connect():
-            return False
-        try:
-            if (today_steps < avg_steps and steps_drop > 30) or (today_active_minutes < avg_active_minutes and active_minutes_drop > 30):
-                print(f"[activity_drop][DEBUG] Se dispara alerta HIGH para user_id={user_id}")
-                priority = "high"
-                threshold = 30.0
-                drop_value = max(steps_drop if today_steps < avg_steps else 0, active_minutes_drop if today_active_minutes < avg_active_minutes else 0)
-                if today_steps < avg_steps:
-                    details = (f"Disminución significativa en los pasos diarios (Valor actual: {today_steps:.2f}, comparado con el promedio: {avg_steps:.2f})")
-                elif today_active_minutes < avg_active_minutes:
-                    details = (f"Disminución significativa en los minutos activos diarios (Valor actual: {today_active_minutes:.2f}, comparado con el promedio: {avg_active_minutes:.2f})")
-                else:
-                    return False
-                db.insert_alert(
-                    user_id=user_id,
-                    alert_type="activity_drop",
-                    priority=priority,
-                    triggering_value=drop_value,
-                    threshold=threshold,
-                    timestamp=current_date,
-                    details=details
-                )
-                print(f"[activity_drop][DEBUG] ALERTA HIGH generada para user_id={user_id} con drop_value={drop_value}")
-                return True
-            elif (today_steps < avg_steps and steps_drop > 20) or (today_active_minutes < avg_active_minutes and active_minutes_drop > 20):
-                print(f"[activity_drop][DEBUG] Se dispara alerta MEDIUM para user_id={user_id}")
-                priority = "medium"
-                threshold = 20.0
-                drop_value = max(steps_drop if today_steps < avg_steps else 0, active_minutes_drop if today_active_minutes < avg_active_minutes else 0)
-                if today_steps < avg_steps:
-                    details = (f"Disminución moderada en los pasos diarios (Valor actual: {today_steps:.2f}, comparado con el promedio: {avg_steps:.2f})")
-                elif today_active_minutes < avg_active_minutes:
-                    details = (f"Disminución moderada en los minutos activos diarios (Valor actual: {today_active_minutes:.2f}, comparado con el promedio: {avg_active_minutes:.2f})")
-                else:
-                    return False
-                db.insert_alert(
-                    user_id=user_id,
-                    alert_type="activity_drop",
-                    priority=priority,
-                    triggering_value=drop_value,
-                    threshold=threshold,
-                    timestamp=current_date,
-                    details=details
-                )
-                print(f"[activity_drop][DEBUG] ALERTA MEDIUM generada para user_id={user_id} con drop_value={drop_value}")
-                return True
+        if (today_steps < avg_steps and steps_drop > 30) or (today_active_minutes < avg_active_minutes and active_minutes_drop > 30):
+            print(f"[activity_drop][DEBUG] Se dispara alerta HIGH para user_id={user_id}")
+            priority = "high"
+            threshold = 30.0
+            drop_value = max(steps_drop if today_steps < avg_steps else 0, active_minutes_drop if today_active_minutes < avg_active_minutes else 0)
+            if today_steps < avg_steps:
+                details = (f"Disminución significativa en los pasos diarios (Valor actual: {today_steps:.2f}, comparado con el promedio: {avg_steps:.2f})")
+            elif today_active_minutes < avg_active_minutes:
+                details = (f"Disminución significativa en los minutos activos diarios (Valor actual: {today_active_minutes:.2f}, comparado con el promedio: {avg_active_minutes:.2f})")
             else:
-                print(f"[activity_drop][DEBUG] No se dispara alerta para user_id={user_id}. steps_drop={steps_drop:.2f}%, active_minutes_drop={active_minutes_drop:.2f}% (umbral 20/30%)")
+                return False
+            db.insert_alert(
+                email_id=user_id,
+                alert_type="activity_drop",
+                priority=priority,
+                triggering_value=drop_value,
+                threshold=threshold,
+                timestamp=current_date,
+                details=details
+            )
+            print(f"[activity_drop][DEBUG] ALERTA HIGH generada para user_id={user_id} con drop_value={drop_value}")
+            return True
+        elif (today_steps < avg_steps and steps_drop > 20) or (today_active_minutes < avg_active_minutes and active_minutes_drop > 20):
+            print(f"[activity_drop][DEBUG] Se dispara alerta MEDIUM para user_id={user_id}")
+            priority = "medium"
+            threshold = 20.0
+            drop_value = max(steps_drop if today_steps < avg_steps else 0, active_minutes_drop if today_active_minutes < avg_active_minutes else 0)
+            if today_steps < avg_steps:
+                details = (f"Disminución moderada en los pasos diarios (Valor actual: {today_steps:.2f}, comparado con el promedio: {avg_steps:.2f})")
+            elif today_active_minutes < avg_active_minutes:
+                details = (f"Disminución moderada en los minutos activos diarios (Valor actual: {today_active_minutes:.2f}, comparado con el promedio: {avg_active_minutes:.2f})")
+            else:
+                return False
+            db.insert_alert(
+                email_id=user_id,
+                alert_type="activity_drop",
+                priority=priority,
+                triggering_value=drop_value,
+                threshold=threshold,
+                timestamp=current_date,
+                details=details
+            )
+            print(f"[activity_drop][DEBUG] ALERTA MEDIUM generada para user_id={user_id} con drop_value={drop_value}")
+            return True
+        else:
+            print(f"[activity_drop][DEBUG] No se dispara alerta para user_id={user_id}. steps_drop={steps_drop:.2f}%, active_minutes_drop={active_minutes_drop:.2f}% (umbral 20/30%)")
         finally:
             db.close()
     except Exception as e:
@@ -105,10 +105,14 @@ def check_activity_drop(user_id, current_date):
 
 def check_sedentary_increase(user_id, current_date):
     """Verifica cambios significativos en el tiempo sedentario."""
+    db = DatabaseManager()
+    if not db.connect():
+        return False
+    
     try:
         start_date = current_date - timedelta(days=7)
         end_date = current_date - timedelta(days=1)
-        daily_summaries = get_daily_summaries(user_id, start_date, end_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, end_date)
         if not daily_summaries or len(daily_summaries) < 2:
             print(f"[sedentary_increase][DEBUG] No hay suficientes datos sedentarios para el usuario {user_id} para generar alertas.")
             return False
@@ -124,7 +128,7 @@ def check_sedentary_increase(user_id, current_date):
         if avg_sedentary < 60:
             print(f"[sedentary_increase][DEBUG] Promedio de tiempo sedentario demasiado bajo ({avg_sedentary} minutos) para generar alertas fiables.")
             return False
-        today_data = get_daily_summaries(user_id, current_date, current_date)
+        today_data = db.get_daily_summaries(user_id, current_date, current_date)
         if not today_data:
             print(f"[sedentary_increase][DEBUG] No hay datos de tiempo sedentario para hoy para el usuario {user_id}.")
             return False
@@ -192,7 +196,7 @@ def check_sleep_duration_change(user_id, current_date):
         # Obtener datos de los últimos 7 días (excluyendo hoy)
         start_date = current_date - timedelta(days=7)
         end_date = current_date - timedelta(days=1)
-        daily_summaries = get_daily_summaries(user_id, start_date, end_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, end_date)
         if not daily_summaries or len(daily_summaries) < 2:
             print(f"[sleep_duration_change][DEBUG] No hay suficientes datos de sueño para el usuario {user_id} para generar alertas.")
             return False
@@ -210,7 +214,7 @@ def check_sleep_duration_change(user_id, current_date):
         if avg_sleep < 60:
             print(f"[sleep_duration_change][DEBUG] Promedio de sueño demasiado bajo ({avg_sleep} minutos) para generar alertas fiables.")
             return False
-        today_data = get_daily_summaries(user_id, current_date, current_date)
+        today_data = db.get_daily_summaries(user_id, current_date, current_date)
         if not today_data:
             print(f"[sleep_duration_change][DEBUG] No hay datos de sueño para hoy para el usuario {user_id}.")
             return False
@@ -276,7 +280,7 @@ def check_heart_rate_anomaly(user_id, current_date):
     try:
         start_time = current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_time = current_date.replace(hour=23, minute=59, second=59, microsecond=0)
-        heart_rate_data = get_intraday_metrics(user_id, 'heart_rate', start_time, end_time)
+        heart_rate_data = db.get_intraday_metrics(user_id, 'heart_rate', start_time, end_time)
         if not heart_rate_data:
             return False
         values = [hr[1] for hr in heart_rate_data]
@@ -365,7 +369,7 @@ def check_data_quality(user_id, current_date):
     # Obtener datos del día actual
     end_date = current_date
     start_date = current_date - timedelta(days=1)
-    summaries = get_daily_summaries(user_id, start_date, end_date)
+    summaries = db.get_daily_summaries(user_id, start_date, end_date)
     
     if not summaries:
         return False
@@ -469,7 +473,7 @@ def check_intraday_anomalies(user_id, current_date):
         
     try:
         for metric_type in metric_types:
-            metrics = get_intraday_metrics(user_id, metric_type, start_time, end_time)
+            metrics = db.get_intraday_metrics(user_id, metric_type, start_time, end_time)
             
             if not metrics or len(metrics) < 10:  # Necesitamos suficientes datos
                 print(f"Insuficientes datos intradía para {metric_type} (usuario {user_id}).")
@@ -552,7 +556,7 @@ def check_intraday_activity_drop(user_id, current_date):
     # Obtener datos intradía de pasos para el día
     start_time = current_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_time = start_time + timedelta(days=1)
-    steps_data = get_intraday_metrics(user_id, 'steps', start_time, end_time)
+    steps_data = db.get_intraday_metrics(user_id, 'steps', start_time, end_time)
     if not steps_data or len(steps_data) < 12:  # Al menos 12 intervalos (ej: cada 2h)
         return False
     # Buscar intervalos largos (>=2h) con 0 pasos

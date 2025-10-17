@@ -77,44 +77,8 @@ class DatabaseManager:
             self.rollback()
             return False
 
-    def get_user_by_email(self, email):
-        """Fetch a user by email."""
-        query = """
-            SELECT id, name, email, access_token, refresh_token
-            FROM users
-            WHERE email = %s
-            ORDER BY created_at DESC
-            LIMIT 1
-        """
-        result = self.execute_query(query, (email,))
-        return result[0] if result else None
-
-    def get_device_by_email(self, email):
-        """Fetch a device by email."""
-        query = """
-            SELECT id, name, email, access_token, refresh_token
-            FROM devices
-            WHERE email = %s
-            ORDER BY created_at DESC
-            LIMIT 1
-        """
-        result = self.execute_query(query, (email,))
-        return result[0] if result else None
-
-    def add_user(self, name):
-        """Add a new user to the database"""
-
-        query = """
-            INSERT INTO users (name)
-            VALUES (%s)
-            RETURNING id
-        """
-        result = self.execute_query(query, (name))
-        return result[0][0] if result else None
-
-
-    def add_device(self, name, email, access_token=None, refresh_token=None):
-        """Add a new device to the database"""
+    def add_email_address(self, address_name, access_token=None, refresh_token=None):
+        """Add a new email address to the database"""
         if access_token and refresh_token:
             encrypted_access_token = encrypt_token(access_token)
             encrypted_refresh_token = encrypt_token(refresh_token)
@@ -123,20 +87,20 @@ class DatabaseManager:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO devices (name, email, access_token, refresh_token)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO email_address (address_name, access_token, refresh_token)
+            VALUES (%s, 'pending_auth_request', %s, %s)
             RETURNING id
         """
-        result = self.execute_query(query, (name, email, encrypted_access_token, encrypted_refresh_token))
+        result = self.execute_query(query, (address_name, encrypted_access_token, encrypted_refresh_token))
         return result[0][0] if result else None
 
 
-    def get_daily_summaries(self, user_id, start_date=None, end_date=None):
+    def get_daily_summaries(self, email_id, start_date=None, end_date=None):
         """
         Gets the daily summaries of a user within a date range.
 
         Args:
-            user_id (int): User ID
+            email_id (int): User ID
             start_date (datetime): Start date (inclusive)
             end_date (datetime): End date (inclusive)
 
@@ -146,10 +110,10 @@ class DatabaseManager:
 
         query = """
             SELECT * FROM daily_summaries
-            WHERE user_id = %s
+            WHERE email_id = %s
         """
 
-        params = [user_id]
+        params = [email_id]
 
         if start_date:
             query += " AND date >= %s"
@@ -163,13 +127,13 @@ class DatabaseManager:
         result = self.execute_query(query, params)
         return result if result else []
 
-    def get_intraday_metrics(self, device_id, metric_type, start_time=None, end_time=None):
-        """Gets the intraday metrics of a device."""
+    def get_intraday_metrics(self, email_id, metric_type, start_time=None, end_time=None):
+        """Gets the intraday metrics associated to an email address."""
         query = """
             SELECT time, value FROM intraday_metrics
-            WHERE device_id = %s AND type = %s
+            WHERE email_id = %s AND type = %s
         """
-        params = [device_id, metric_type]
+        params = [email_id, metric_type]
 
         if start_time:
             query += " AND time >= %s"
@@ -183,13 +147,13 @@ class DatabaseManager:
 
         return self.execute_query(query, params)
 
-    def get_sleep_logs(self, user_id, start_date=None, end_date=None):
-        """Gets the sleep records of a user."""
+    def get_sleep_logs(self, email_id, start_date=None, end_date=None):
+        """Gets the sleep records associated to an email address."""
         query = """
             SELECT * FROM sleep_logs
-            WHERE user_id = %s
+            WHERE email_id = %s
         """
-        params = [user_id]
+        params = [email_id]
 
         if start_date:
             query += " AND start_time >= %s"
@@ -203,13 +167,13 @@ class DatabaseManager:
 
         return self.execute_query(query, params)
 
-    def get_user_alerts(self, user_id, start_time=None, end_time=None, acknowledged=None):
-        """Gets the alerts of a user."""
+    def get_user_alerts(self, email_id, start_time=None, end_time=None, acknowledged=None):
+        """Gets the alerts associated to an email address."""
         query = """
             SELECT * FROM alerts
-            WHERE user_id = %s
+            WHERE email_id = %s
         """
-        params = [user_id]
+        params = [email_id]
 
         if start_time:
             query += " AND alert_time >= %s"
@@ -225,12 +189,13 @@ class DatabaseManager:
 
         return self.execute_query(query, params)
 
-    def insert_alert(self, user_id, alert_type, priority, triggering_value, threshold, timestamp=None, details=None):
+
+    def insert_alert(self, email_id, alert_type, priority, triggering_value, threshold, timestamp=None, details=None):
         """
         Inserts a new alert into the database.
 
         Args:
-            user_id (int): User ID
+        email_id (int): Email ID
             alert_type (str): Type of alert
             priority (str): Alert priority (high, medium, low)
             triggering_value (float): Value that triggered the alert
@@ -248,58 +213,16 @@ class DatabaseManager:
 
             query = """
                 INSERT INTO alerts (
-                    user_id, alert_type, priority, triggering_value, threshold_value, alert_time, details
+                    email_id, alert_type, priority, triggering_value, threshold_value, alert_time, details
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
-            result = self.execute_query(query, (user_id, alert_type, priority, triggering_value, threshold, timestamp, details))
+            result = self.execute_query(query, (email_id, alert_type, priority, triggering_value, threshold, timestamp, details))
             return result[0][0] if result else None
         except Exception as e:
             print(f"Error executing query: {e}")
             return None
 
-    def update_user_tokens(self, email, access_token, refresh_token):
-        """Update a user's tokens."""
-        encrypted_access_token = encrypt_token(access_token)
-        encrypted_refresh_token = encrypt_token(refresh_token)
-
-        query = """
-            UPDATE users
-            SET access_token = %s, refresh_token = %s
-            WHERE email = %s
-        """
-        return self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email))
-
-    def update_device_tokens(self, email, access_token, refresh_token):
-        """
-            Updates a device's access and refresh tokens.
-
-            Args:
-                email (str): User's email address.
-                access_token (str): New access token.
-                refresh_token (str): New refresh token.
-        """
-
-        # Encrypt the tokens before storing them
-        encrypted_access_token = encrypt_token(access_token)
-        encrypted_refresh_token = encrypt_token(refresh_token)
-        device_id=get_device_id_by_email(email)
-
-        connection = connect_to_db()
-        if connection:
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        UPDATE devices
-                        SET access_token = %s, refresh_token = %s
-                        WHERE id = %s;
-                    """, (encrypted_access_token, encrypted_refresh_token, device_id))
-                    connection.commit()
-                    print(f"Tokens updated for the device: {email}.")
-            except Exception as e:
-                print(f"Failed to update the tokens: {e}")
-            finally:
-                connection.close()
 
     def get_alert_by_id(self, alert_id):
         """Get a specific alert by its ID"""
@@ -324,37 +247,228 @@ class DatabaseManager:
             print(f"Error al obtener alerta por ID: {str(e)}")
             return None
 
-    def store_pending_auth(self, state, code_verifier, email):
+    def store_pending_auth(self, email_id, state, code_verifier):
         """Store pending authorization with expiration"""
         query = """
-            INSERT INTO pending_authorizations (state, code_verifier, email, expires_at)
+            INSERT INTO pending_authorizations (email_id, state, code_verifier, expires_at)
             VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes')
         """
-        self.cursor.execute(query, (state, code_verifier, email))
-        self.connection.commit()
+        return self.execute_query(query, (email_id, state, code_verifier))
 
     def get_pending_auth(self, state):
         """Retrieve pending authorization if not expired"""
         query = """
-            SELECT code_verifier, email
+            SELECT code_verifier, email_id
             FROM pending_authorizations
             WHERE state = %s AND expires_at > NOW()
         """
-        self.cursor.execute(query, (state,))
-        result = self.cursor.fetchone()
+        result = self.execute_query(query, (state,))
         if result:
-            return {'code_verifier': result[0], 'email': result[1]}
+            return {'code_verifier': result[0][0], 'email_id': result[0][1]}
         return None
 
 def delete_pending_auth(self, state):
     """Delete used pending authorization"""
     query = "DELETE FROM pending_authorizations WHERE state = %s"
-    self.cursor.execute(query, (state,))
-    self.connection.commit()
+        return self.execute_query(query, (state,))
+
+    def get_email_id_by_name(self, address_name):
+        """Retrieves email address id by its name"""
+        query = """
+            SELECT id FROM email_addresses
+            WHERE address_name = %s
+            ORDER BY created_at DESC
+            LIMIT 1;
+        """
+        result = self.execute_query(query, (address_name,))
+        return result[0][0] if result else None
+
+    def get_email_tokens(self, email_id):
+        """Retrieve and decrypt tokens for an email address"""
+        query = """
+            SELECT access_token, refresh_token
+            FROM email_addresses
+            WHERE id = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1;
+        """
+        result = self.execute_query(query, (email_id,))
+        if result:
+            encrypted_access_token, encrypted_refresh_token = result[0]
+            # Decrypt the tokens
+            access_token = decrypt_token(encrypted_access_token)
+            refresh_token = decrypt_token(encrypted_refresh_token)
+            return access_token, refresh_token
+        return None, None
+
+    def update_email_tokens(self, email_id, access_token, refresh_token):
+        """Updates the access and refresh tokens of an email address"""
+        # Encrypt the tokens before storing them
+        encrypted_access_token = encrypt_token(access_token)
+        encrypted_refresh_token = encrypt_token(refresh_token)
+
+        query = """
+            UPDATE email_addresses
+            SET access_token = %s, refresh_token = %s
+            WHERE id = %s;
+        """
+        result = self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email_id))
+        return result
+
+    def check_intraday_timestamp(self, email_id, timestamp):
+        """Checks if intraday timestamp is already present"""
+        query = """
+            SELECT * FROM intraday_metrics
+            WHERE email_id = %s
+            AND time = %s
+        """
+        result = self.execute_query(query, (email_id, timestamp))
+        return bool(result)
+
+    def insert_intraday_metric(self, email_id, timestamp, data_type='heart_rate', value=None):
+        """Inserts intraday data into the database"""
+        if self.check_intraday_timestamp(email_id, timestamp):
+            # Update existing record
+            query = f"""
+                UPDATE intraday_metrics
+                SET {data_type} = %s
+                WHERE email_id = %s
+                AND time = %s
+            """
+            result = self.execute_query(query, (value, email_id, timestamp))
+            if result:
+                print(f"Intraday {data_type} data for email_id {email_id} successfully updated in intraday_metrics.")
+            return result
+        else:
+            # Insert new record
+            values = {
+                "heart_rate": None,
+                "steps": None,
+                "calories": None,
+                "distance": None
+            }
+            values[data_type] = value
+
+            query = """
+                INSERT INTO intraday_metrics (email_id, time, heart_rate, steps, calories, distance)
+                VALUES (%s, %s, %s, %s, %s, %s);
+            """
+            result = self.execute_query(query, (email_id, timestamp, values["heart_rate"], values["steps"], values["calories"], values["distance"]))
+            if result:
+                print(f"Intraday {data_type} data for email_id {email_id} successfully saved in intraday_metrics.")
+            return result
+
+    def insert_sleep_log(self, email_id, start_time, end_time, **data):
+        """Inserts a sleep record into the database"""
+        query = """
+            INSERT INTO sleep_logs (
+                email_id, start_time, end_time, duration_ms,
+                efficiency, minutes_asleep, minutes_awake,
+                minutes_in_rem, minutes_in_light, minutes_in_deep
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        result = self.execute_query(query, (
+            email_id, start_time, end_time,
+            data.get('duration_ms'),
+            data.get('efficiency'),
+            data.get('minutes_asleep'),
+            data.get('minutes_awake'),
+            data.get('minutes_in_rem'),
+            data.get('minutes_in_light'),
+            data.get('minutes_in_deep')
+        ))
+        if result:
+            print(f"Sleep record inserted for email address {email_id}")
+        return result
+
+    def get_user_history(self, email_id):
+        """Retrieves the complete history of an email address"""
+        query = """
+            SELECT * FROM daily_summaries
+            WHERE email_id = %s
+            ORDER BY date;
+        """
+        result = self.execute_query(query, (email_id,))
+        return result if result else []
+
+    def insert_daily_summary(self, email_id, date, **data):
+        """Inserts or updates a daily summary in the daily_summaries table"""
+        query = """
+            INSERT INTO daily_summaries (
+                email_id, date, steps, heart_rate, sleep_minutes,
+                calories, distance, floors, elevation, active_minutes,
+                sedentary_minutes, nutrition_calories, water, weight,
+                bmi, fat, oxygen_saturation, respiratory_rate, temperature
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            ON CONFLICT (email_id, date) DO UPDATE SET
+                steps = EXCLUDED.steps,
+                heart_rate = EXCLUDED.heart_rate,
+                sleep_minutes = EXCLUDED.sleep_minutes,
+                calories = EXCLUDED.calories,
+                distance = EXCLUDED.distance,
+                floors = EXCLUDED.floors,
+                elevation = EXCLUDED.elevation,
+                active_minutes = EXCLUDED.active_minutes,
+                sedentary_minutes = EXCLUDED.sedentary_minutes,
+                nutrition_calories = EXCLUDED.nutrition_calories,
+                water = EXCLUDED.water,
+                weight = EXCLUDED.weight,
+                bmi = EXCLUDED.bmi,
+                fat = EXCLUDED.fat,
+                oxygen_saturation = EXCLUDED.oxygen_saturation,
+                respiratory_rate = EXCLUDED.respiratory_rate,
+                temperature = EXCLUDED.temperature;
+        """
+        result = self.execute_query(query, (
+            email_id, date,
+            data.get("steps"),
+            data.get("heart_rate"),
+            data.get("sleep_minutes"),
+            data.get("calories"),
+            data.get("distance"),
+            data.get("floors"),
+            data.get("elevation"),
+            data.get("active_minutes"),
+            data.get("sedentary_minutes"),
+            data.get("nutrition_calories"),
+            data.get("water"),
+            data.get("weight"),
+            data.get("bmi"),
+            data.get("fat"),
+            data.get("oxygen_saturation"),
+            data.get("respiratory_rate"),
+            data.get("temperature")
+        ))
+        return result
+
+    def get_unique_emails(self):
+        """Retrieves a list of unique email addresses from the database"""
+        query = "SELECT DISTINCT address_name FROM email_addresses;"
+        result = self.execute_query(query)
+        return [row[0] for row in result] if result else []
+
+    def get_user_id_by_email(self, email):
+        """Retrieves the most recent user ID based on their email address"""
+        query = """
+            SELECT id FROM email_addresses
+            WHERE address_name = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1;
+        """
+        result = self.execute_query(query, (email,))
+        return result[0][0] if result else None
 
 
 def connect_to_db():
-    """Function to maintain compatibility with existing code."""
+    """
+    Function to maintain compatibility with existing code.
+    DEPRECATED: Use DatabaseManager class instead for better connection management.
+    """
+    import warnings
+    warnings.warn("connect_to_db() is deprecated. Use DatabaseManager class instead.", DeprecationWarning, stacklevel=2)
+    
     try:
         connection = psycopg2.connect(
             host=DB_CONFIG["host"],
@@ -390,35 +504,17 @@ def init_db():
         # Enable TimeScaleDB extension
         db.execute_query("CREATE EXTENSION IF NOT EXISTS timescaledb;")
 
-        # Create device table
+        db.execute_query("CREATE TYPE status_type AS ENUM ('inserted', 'authorized', 'non_active');")
+
+        # Create email_addresses table
         db.execute_query("""
-            CREATE TABLE IF NOT EXISTS devices (
+            CREATE TABLE IF NOT EXISTS email_addresses (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL,
+                address_name VARCHAR(255) NOT NULL,
+                status status_type NOT NULL DEFAULT 'inserted',
                 access_token TEXT,
                 refresh_token TEXT,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-
-        # Create user table
-        db.execute_query("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-
-        # Create device_usages table
-        db.execute_query("""
-            CREATE TABLE IF NOT EXISTS device_usages (
-                id SERIAL,
-                user_id INTEGER REFERENCES users(id),
-                device_id INTEGER REFERENCES devices(id),
-                start_date DATE NOT NULL,
-                end_date DATE
             );
         """)
 
@@ -426,7 +522,7 @@ def init_db():
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS daily_summaries (
                 id SERIAL,
-                device_id INTEGER REFERENCES devices(id),
+                email_id INTEGER REFERENCES email_addresses(id),
                 date DATE NOT NULL,
                 steps INTEGER,
                 heart_rate INTEGER,
@@ -461,7 +557,7 @@ def init_db():
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS intraday_metrics (
                 id SERIAL,
-                device_id INTEGER REFERENCES devices(id),
+                email_id INTEGER REFERENCES email_addresses(id),
                 time TIMESTAMPTZ,
                 heart_rate FLOAT,
                 steps FLOAT,
@@ -482,7 +578,7 @@ def init_db():
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS sleep_logs (
                 id SERIAL,
-                user_id INTEGER REFERENCES users(id),
+                email_id INTEGER REFERENCES email_addresses(id),
                 start_time TIMESTAMPTZ NOT NULL,
                 end_time TIMESTAMPTZ NOT NULL,
                 duration_ms INTEGER,
@@ -508,7 +604,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS alerts (
                 id SERIAL,
                 alert_time TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                user_id INTEGER REFERENCES users(id),
+                email_id INTEGER REFERENCES email_addresses(id),
                 alert_type VARCHAR(100) NOT NULL,
                 priority VARCHAR(20) NOT NULL,
                 triggering_value DOUBLE PRECISION,
@@ -516,7 +612,7 @@ def init_db():
                 details TEXT,
                 acknowledged BOOLEAN DEFAULT FALSE,
                 acknowledged_at TIMESTAMPTZ,
-                acknowledged_by INTEGER REFERENCES users(id),
+                acknowledged_by INTEGER REFERENCES email_addresses(id),
                 PRIMARY KEY (id, alert_time)
             );
         """)
@@ -532,13 +628,13 @@ def init_db():
         db.execute_query("""
             CREATE TABLE pending_authorizations (
                     id SERIAL,
-                    device_id int,
+                    email_id int,
                     state VARCHAR(500) UNIQUE NOT NULL,
                     code_verifier VARCHAR(128) NOT NULL,
                     email VARCHAR(255) NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
-                    FOREIGN KEY (device_id) REFERENCES devices(id)
+                    FOREIGN KEY (email_id) REFERENCES email_addresses(id)
                 );
 
                 CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
@@ -554,57 +650,11 @@ def init_db():
     finally:
         db.close()
 
-def get_latest_user_id_by_email(email):
-    """
-        Retrieves the most recent user_id associated with an email address.
-    """
-
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT id FROM users
-                    WHERE email = %s
-                    ORDER BY created_at DESC
-                    LIMIT 1;
-                """, (email,))
-                result = cur.fetchone()
-                return result[0] if result else None
-        except Exception as e:
-            print(f"Error retrieving the most recent user_id: {e}")
-        finally:
-            conn.close()
-    return None
-
-
-def get_latest_device_id_by_email(email):
-    """
-        Retrieves the most recent user_id associated with an email address.
-    """
-
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT id FROM devices
-                    WHERE email = %s
-                    ORDER BY created_at DESC
-                    LIMIT 1;
-                """, (email,))
-                result = cur.fetchone()
-                return result[0] if result else None
-        except Exception as e:
-            print(f"Error retrieving the most recent user_id: {e}")
-        finally:
-            conn.close()
-    return None
-
 
 def insert_intraday_data(user_id, timestamp, heart_rate=0, steps=0, calories=0, distance=0, active_zone_minutes=0):
     """
         Inserts intraday data into the database using the new TimeScaleDB schema.
+        DEPRECATED: Use DatabaseManager.insert_intraday_metric() instead.
 
         Args:
             user_id (int): User ID.
@@ -615,290 +665,55 @@ def insert_intraday_data(user_id, timestamp, heart_rate=0, steps=0, calories=0, 
             distance (int/float):
             active_zone_minutes (int/float):
     """
-
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cursor:
-                # Insert directly into the intraday_metrics table
-                cursor.execute("""
-                    INSERT INTO intraday_metrics (user_id, time, heart_rate, steps, calories, distance, active_zone_minutes)
-                    VALUES (%s, %s, %s, %s);
-                """, (user_id, timestamp, heart_rate, steps, calories, distance, active_zone_minutes))
-
-                conn.commit()
-                print(f"Intraday {data_type} data for user {user_id} successfully saved in intraday_metrics.")
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
+    
+    try:
+        # Insert each metric type separately
+        if heart_rate > 0:
+            db.insert_intraday_metric(user_id, timestamp, 'heart_rate', heart_rate)
+        if steps > 0:
+            db.insert_intraday_metric(user_id, timestamp, 'steps', steps)
+        if calories > 0:
+            db.insert_intraday_metric(user_id, timestamp, 'calories', calories)
+        if distance > 0:
+            db.insert_intraday_metric(user_id, timestamp, 'distance', distance)
+        return True
         except Exception as e:
             print(f"Error inserting intraday data: {e}")
-            conn.rollback()
+        return False
         finally:
-            conn.close()
+        db.close()
 
 def save_to_db(user_id, date, **data):
     """
         Saves Fitbit data in the database using the new TimeScaleDB schema.
+        DEPRECATED: Use DatabaseManager.insert_daily_summary() instead.
 
         Args:
             user_id (int): User ID.
             date (str): Date of the data (YYYY-MM-DD).
             data (dict): Dictionary with Fitbit data.
     """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                # Insert data into the daily_summaries table
-                insert_query = """
-                INSERT INTO daily_summaries (
-                    user_id, date, steps, heart_rate, sleep_minutes,
-                    calories, distance, floors, elevation, active_minutes,
-                    sedentary_minutes, nutrition_calories, water, weight,
-                    bmi, fat, oxygen_saturation, respiratory_rate, temperature
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-                ON CONFLICT (date, user_id) DO UPDATE SET
-                    steps = EXCLUDED.steps,
-                    heart_rate = EXCLUDED.heart_rate,
-                    sleep_minutes = EXCLUDED.sleep_minutes,
-                    calories = EXCLUDED.calories,
-                    distance = EXCLUDED.distance,
-                    floors = EXCLUDED.floors,
-                    elevation = EXCLUDED.elevation,
-                    active_minutes = EXCLUDED.active_minutes,
-                    sedentary_minutes = EXCLUDED.sedentary_minutes,
-                    nutrition_calories = EXCLUDED.nutrition_calories,
-                    water = EXCLUDED.water,
-                    weight = EXCLUDED.weight,
-                    bmi = EXCLUDED.bmi,
-                    fat = EXCLUDED.fat,
-                    oxygen_saturation = EXCLUDED.oxygen_saturation,
-                    respiratory_rate = EXCLUDED.respiratory_rate,
-                    temperature = EXCLUDED.temperature;
-                """
-                cursor.execute(insert_query, (
-                    user_id, date,
-                    data.get("steps"),
-                    data.get("heart_rate"),
-                    data.get("sleep_minutes"),
-                    data.get("calories"),
-                    data.get("distance"),
-                    data.get("floors"),
-                    data.get("elevation"),
-                    data.get("active_minutes"),
-                    data.get("sedentary_minutes"),
-                    data.get("nutrition_calories"),
-                    data.get("water"),
-                    data.get("weight"),
-                    data.get("bmi"),
-                    data.get("fat"),
-                    data.get("oxygen_saturation"),
-                    data.get("respiratory_rate"),
-                    data.get("temperature")
-                ))
-
-                connection.commit()
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
+    
+    try:
+        result = db.insert_daily_summary(user_id, date, **data)
+        if result:
                 print(f"Data of user {user_id} successfully saved to daily_summaries.")
+        return result
         except Exception as e:
             print(f"Error saving data: {e}")
-            connection.rollback()
+        return False
         finally:
-            connection.close()
-
-def get_device_tokens(email):
-    """
-    Retrieve and decrypt tokens for the devices with the most recent timestamp or highest user_id.
-    """
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    SELECT access_token, refresh_token
-                    FROM devices
-                    WHERE email = %s
-                    ORDER BY created_at DESC, id DESC
-                    LIMIT 1;
-                """, (email,))
-                result = cur.fetchone()
-                if result:
-                    encrypted_access_token, encrypted_refresh_token = result
-                    # Decrypt the tokens
-                    access_token = decrypt_token(encrypted_access_token)
-                    refresh_token = decrypt_token(encrypted_refresh_token)
-                    return access_token, refresh_token
-        except Exception as e:
-            print(f"Error retrieving user tokens: {e}")
-        finally:
-            conn.close()
-    return None, None
-
-def get_unique_emails():
-    """
-        Retrieves a list of unique emails from the database.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT DISTINCT email FROM devices;")
-                emails = [row[0] for row in cursor.fetchall()]
-                return emails
-        except Exception as e:
-            print(f"Error retrieving unique emails: {e}")
-        finally:
-            connection.close()
-    return []
-
-def get_user_id_by_email(email):
-    """
-        Retrieves the most recent user ID based on their email address.
-
-        Args:
-            email (str): User's email address.
-
-        Returns:
-            int: Most recent user ID or None if not found.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT id FROM users
-                    WHERE email = %s
-                    ORDER BY created_at DESC, id DESC
-                    LIMIT 1;
-                """, (email,))
-                result = cursor.fetchone()
-                return result[0] if result else None
-        except Exception as e:
-            print(f"Error retrieving the user ID: {e}")
-        finally:
-            connection.close()
-    return None
+        db.close()
 
 
-def get_device_id_by_email(email):
-    """
-        Retrieves the most recent device ID based on their email address.
-
-        Args:
-            email (str): Device's email address.
-
-        Returns:
-            int: Most recent device ID or None if not found.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT id FROM devices
-                    WHERE email = %s
-                    ORDER BY created_at DESC, id DESC
-                    LIMIT 1;
-                """, (email,))
-                result = cursor.fetchone()
-                return result[0] if result else None
-        except Exception as e:
-            print(f"Error retrieving the user ID: {e}")
-        finally:
-            connection.close()
-    return None
-
-
-def update_device_tokens(email, access_token, refresh_token):
-    """
-        Updates a user's access and refresh tokens.
-
-        Args:
-            email (str): User's email address.
-            access_token (str): New access token.
-            refresh_token (str): New refresh token.
-    """
-
-    # Encrypt the tokens before storing them
-    encrypted_access_token = encrypt_token(access_token)
-    encrypted_refresh_token = encrypt_token(refresh_token)
-    user_id=get_user_id_by_email(email)
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    UPDATE device
-                    SET access_token = %s, refresh_token = %s
-                    WHERE id = %s;
-                """, (encrypted_access_token, encrypted_refresh_token, user_id))
-                connection.commit()
-                print(f"Tokens updated for the user. {email}.")
-        except Exception as e:
-            print(f"Failed to update the tokens: {e}")
-        finally:
-            connection.close()
-
-def get_user_history(user_id):
-    """
-        Retrieves the complete history of a user using the new TimeScaleDB schema.
-
-        Args:
-            user_id (int): User's ID.
-
-        Returns:
-            list: List of tuples containing the user's history.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT * FROM daily_summaries
-                    WHERE user_id = %s
-                    ORDER BY date;
-                """, (user_id,))
-                history = cursor.fetchall()
-                return history
-        except Exception as e:
-            print(f"Failed to retrieve the history: {e}")
-        finally:
-            connection.close()
-
-def get_email_history(email):
-    """
-        Retrieves the complete history of an email (which may be associated with multiple users) using the new TimeScaleDB schema.
-
-        Args:
-            email (str): User's email address.
-
-        Returns:
-            list: List of tuples containing the email's history.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT u.name, d.*
-                    FROM users u
-                    JOIN daily_summaries d ON u.id = d.user_id
-                    WHERE u.email = %s
-                    ORDER BY u.created_at, d.date;
-                """, (email,))
-                history = cursor.fetchall()
-                return history
-        except Exception as e:
-            print(f"Failed to retrieve the history: {e}")
-        finally:
-            connection.close()
-    return []
 
 def run_tests():
     """
@@ -1032,508 +847,6 @@ def run_tests():
 
     print("\n=== Tests completed ===\n")
 
-def insert_daily_summary(device_id, date, **data):
-    """
-        Inserts or updates a daily summary in the daily_summaries table.
-
-        Args:
-            device_id (int): Device ID.
-            date (str): Date of the data (YYYY-MM-DD).
-            data (dict): Dictionary with Fitbit data.
-    """
-
-    db = DatabaseManager()
-    if not db.connect():
-        print("Failed to connect to the database")
-        return False
-
-    print("DEVICE ID:", device_id)
-
-    try:
-        # Insert data into the daily_summaries table
-        insert_query = """
-        INSERT INTO daily_summaries (
-            device_id, date, steps, heart_rate, sleep_minutes,
-            calories, distance, floors, elevation, active_minutes,
-            sedentary_minutes, nutrition_calories, water, weight,
-            bmi, fat, oxygen_saturation, respiratory_rate, temperature
-        ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-        )
-        ON CONFLICT (device_id, date) DO UPDATE SET
-            steps = EXCLUDED.steps,
-            heart_rate = EXCLUDED.heart_rate,
-            sleep_minutes = EXCLUDED.sleep_minutes,
-            calories = EXCLUDED.calories,
-            distance = EXCLUDED.distance,
-            floors = EXCLUDED.floors,
-            elevation = EXCLUDED.elevation,
-            active_minutes = EXCLUDED.active_minutes,
-            sedentary_minutes = EXCLUDED.sedentary_minutes,
-            nutrition_calories = EXCLUDED.nutrition_calories,
-            water = EXCLUDED.water,
-            weight = EXCLUDED.weight,
-            bmi = EXCLUDED.bmi,
-            fat = EXCLUDED.fat,
-            oxygen_saturation = EXCLUDED.oxygen_saturation,
-            respiratory_rate = EXCLUDED.respiratory_rate,
-            temperature = EXCLUDED.temperature;
-        """
-
-
-
-
-        db.execute_query(insert_query, (
-            device_id, date,
-            data.get("steps"),
-            data.get("heart_rate"),
-            data.get("sleep_minutes"),
-            data.get("calories"),
-            data.get("distance"),
-            data.get("floors"),
-            data.get("elevation"),
-            data.get("active_minutes"),
-            data.get("sedentary_minutes"),
-            data.get("nutrition_calories"),
-            data.get("water"),
-            data.get("weight"),
-            data.get("bmi"),
-            data.get("fat"),
-            data.get("oxygen_saturation"),
-            data.get("respiratory_rate"),
-            data.get("temperature")
-        ))
-
-        return True
-    except Exception as e:
-        print(f"Error saving the daily summary: {e}")
-        return False
-    finally:
-        db.close()
-
-
-def insert_daily_summary_old(user_id, date, **data):
-    """
-        Inserts or updates a daily summary in the daily_summaries table.
-
-        Args:
-            user_id (int): User ID.
-            date (str): Date of the data (YYYY-MM-DD).
-            data (dict): Dictionary with Fitbit data.
-    """
-
-    db = DatabaseManager()
-    if not db.connect():
-        print("Failed to connect to the database")
-        return False
-
-    try:
-        # Insert data into the daily_summaries table
-        insert_query = """
-        INSERT INTO daily_summaries (
-            user_id, date, steps, heart_rate, sleep_minutes,
-            calories, distance, floors, elevation, active_minutes,
-            sedentary_minutes, nutrition_calories, water, weight,
-            bmi, fat, oxygen_saturation, respiratory_rate, temperature
-        ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-        )
-        ON CONFLICT (user_id, date) DO UPDATE SET
-            steps = EXCLUDED.steps,
-            heart_rate = EXCLUDED.heart_rate,
-            sleep_minutes = EXCLUDED.sleep_minutes,
-            calories = EXCLUDED.calories,
-            distance = EXCLUDED.distance,
-            floors = EXCLUDED.floors,
-            elevation = EXCLUDED.elevation,
-            active_minutes = EXCLUDED.active_minutes,
-            sedentary_minutes = EXCLUDED.sedentary_minutes,
-            nutrition_calories = EXCLUDED.nutrition_calories,
-            water = EXCLUDED.water,
-            weight = EXCLUDED.weight,
-            bmi = EXCLUDED.bmi,
-            fat = EXCLUDED.fat,
-            oxygen_saturation = EXCLUDED.oxygen_saturation,
-            respiratory_rate = EXCLUDED.respiratory_rate,
-            temperature = EXCLUDED.temperature;
-        """
-
-        db.execute_query(insert_query, (
-            device_id, date,
-            data.get("steps"),
-            data.get("heart_rate"),
-            data.get("sleep_minutes"),
-            data.get("calories"),
-            data.get("distance"),
-            data.get("floors"),
-            data.get("elevation"),
-            data.get("active_minutes"),
-            data.get("sedentary_minutes"),
-            data.get("nutrition_calories"),
-            data.get("water"),
-            data.get("weight"),
-            data.get("bmi"),
-            data.get("fat"),
-            data.get("oxygen_saturation"),
-            data.get("respiratory_rate"),
-            data.get("temperature")
-        ))
-
-        return True
-    except Exception as e:
-        print(f"Error saving the daily summary: {e}")
-        return False
-    finally:
-        db.close()
-
-
-def check_intraday_timestamp(user_id, timestamp):
-    """
-        Checks if intraday timestamp is already present
-
-        Args:
-            user_id (int): User ID
-            timestamp (datetime): Timestamp of the metric.
-            end_date (datetime): End date (inclusive)
-
-        Returns:
-            list: List of tuples with daily data, ordered by date
-    """
-
-    conn = connect_to_db()
-    if conn:
-
-        try:
-            with conn.cursor() as cursor:
-                query = """
-                    SELECT * FROM intraday_metrics
-                    WHERE device_id = %s
-                    AND time = %s
-                """
-
-                cursor.execute(query, [user_id, timestamp])
-                result = cursor.fetchone()
-
-                return True if result else False
-
-        except Exception as e:
-            print(f"Error checking intraday timestamp: {e}")
-            return False
-        finally:
-            conn.close()
-
-    return False
-
-
-# def insert_intraday_metric(user_id, timestamp, metric_type, value):
-#     """
-#         Inserts an intraday metric into the intraday_metrics table.
-#
-#         Args:
-#             user_id (int): User ID.
-#             timestamp (datetime): Timestamp of the metric.
-#             metric_type (str): Type of metric ('heart_rate', 'steps', etc.).
-#             value (float): Value of the metric.
-#     """
-#
-#     connection = connect_to_db()
-#     if connection:
-#
-#         if check_intraday_timestamp():
-#
-#         else:
-#
-#         try:
-#             with connection.cursor() as cursor:
-#                 insert_query = """
-#                 INSERT INTO intraday_metrics (user_id, time, type, value)
-#                 VALUES (%s, %s, %s, %s);
-#                 """
-#                 cursor.execute(insert_query, (user_id, timestamp, metric_type, value))
-#                 connection.commit()
-#                 print(f"Intraday metric {metric_type} for user {user_id} saved successfully.")
-#         except Exception as e:
-#             print(f"Error saving the intraday metric: {e}")
-#             connection.rollback()
-#         finally:
-#             connection.close()
-
-
-def insert_intraday_metric(device_id, timestamp, data_type='heart_rate', value=None):
-    """
-        Inserts intraday data into the database using the new TimeScaleDB schema.
-
-        Args:
-            device_id (int): User ID.
-            timestamp (datetime): Timestamp of the data.
-            heart_rate (int/float):
-            steps (int/float):
-            calories (int/float):
-            distance (int/float):
-    """
-
-
-    conn = connect_to_db()
-    if conn:
-
-        if check_intraday_timestamp(device_id, timestamp):
-
-            try:
-                with conn.cursor() as cursor:
-                    # Insert directly into the intraday_metrics table
-                    cursor.execute(f"""
-                        UPDATE intraday_metrics
-                        SET {data_type}=%s
-                        WHERE device_id=%s
-                        AND time=%s
-                    """, (value, device_id, timestamp))
-
-                    conn.commit()
-                    print(f"Intraday {data_type} data for user {device_id} successfully updated in intraday_metrics.")
-            except Exception as e:
-                print(f"Error updating intraday data: {e}")
-                conn.rollback()
-            finally:
-                conn.close()
-
-        else:
-
-            try:
-                with conn.cursor() as cursor:
-                    # Insert directly into the intraday_metrics table
-
-                    values = {
-                                "heart_rate": None,
-                                "steps": None,
-                                "calories": None,
-                                "distance": None
-                    }
-
-                    values[data_type] = value
-
-                    cursor.execute("""
-                        INSERT INTO intraday_metrics (device_id, time, heart_rate, steps, calories, distance)
-                        VALUES (%s, %s, %s, %s, %s, %s);
-                    """, (device_id, timestamp, values["heart_rate"], values["steps"], values["calories"], values["distance"]))
-
-                    conn.commit()
-                    print(f"Intraday {data_type} data for device {device_id} successfully saved in intraday_metrics.")
-            except Exception as e:
-                print(f"Error inserting intraday data: {e}")
-                conn.rollback()
-            finally:
-                conn.close()
-
-
-def insert_sleep_log(user_id, start_time, end_time, **data):
-    """
-        Inserts a sleep record into the database.
-
-        Args:
-            user_id (int): User ID.
-            start_time (datetime): Sleep start time.
-            end_time (datetime): Sleep end time.
-            data (dict): Additional sleep data.
-    """
-
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO sleep_logs (
-                        user_id, start_time, end_time, duration_ms,
-                        efficiency, minutes_asleep, minutes_awake,
-                        minutes_in_rem, minutes_in_light, minutes_in_deep
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    user_id, start_time, end_time,
-                    data.get('duration_ms'),
-                    data.get('efficiency'),
-                    data.get('minutes_asleep'),
-                    data.get('minutes_awake'),
-                    data.get('minutes_in_rem'),
-                    data.get('minutes_in_light'),
-                    data.get('minutes_in_deep')
-                ))
-                conn.commit()
-                print(f"Sleep record inserted for user {user_id}")
-        except Exception as e:
-            print(f"Error inserting sleep record: {e}")
-            conn.rollback()
-        finally:
-            conn.close()
-
-def get_user_alerts(user_id, start_time=None, end_time=None, acknowledged=None):
-    """
-        Retrieves a user's alerts.
-
-        Args:
-            user_id (int): User ID.
-            start_time (datetime, optional): Start date to filter alerts.
-            end_time (datetime, optional): End date to filter alerts.
-            acknowledged (bool, optional): Filter by acknowledgment status.
-
-        Returns:
-            list: List of user alerts.
-    """
-
-    conn = connect_to_db()
-    if conn:
-        try:
-            with conn.cursor() as cursor:
-                query = """
-                    SELECT * FROM alerts
-                    WHERE user_id = %s
-                """
-                params = [user_id]
-
-                if start_time:
-                    query += " AND alert_time >= %s"
-                    params.append(start_time)
-                if end_time:
-                    query += " AND alert_time <= %s"
-                    params.append(end_time)
-                if acknowledged is not None:
-                    query += " AND acknowledged = %s"
-                    params.append(acknowledged)
-
-                query += " ORDER BY alert_time DESC"
-                cursor.execute(query, params)
-                alerts = cursor.fetchall()
-                return alerts
-        except Exception as e:
-            print(f"Error retrieving alerts: {e}")
-        finally:
-            conn.close()
-    return []
-
-def get_daily_summaries(user_id, start_date=None, end_date=None):
-    """
-        Retrieves a user's daily summaries within a date range.
-
-        Args:
-            user_id (int): User ID
-            start_date (datetime): Start date (inclusive)
-            end_date (datetime): End date (inclusive)
-
-        Returns:
-            list: List of tuples with daily data, ordered by date
-    """
-
-    db = DatabaseManager()
-    if not db.connect():
-        print("Database connection error")
-        return []
-
-    try:
-        query = """
-            SELECT * FROM daily_summaries
-            WHERE user_id = %s
-        """
-        params = [user_id]
-
-        if start_date:
-            query += " AND date >= %s"
-            params.append(start_date.date())
-        if end_date:
-            query += " AND date <= %s"
-            params.append(end_date.date())
-
-        query += " ORDER BY date ASC"
-
-        result = db.execute_query(query, params)
-        return result if result else []
-    except Exception as e:
-        print(f"Error retrieving daily summaries: {e}")
-        return []
-    finally:
-        db.close()
-
-def get_intraday_metrics(user_id, metric_type, start_time=None, end_time=None):
-    """
-        Retrieves a user's intraday metrics within a time range.
-
-        Args:
-            user_id (int): User ID.
-            metric_type (str): Type of metric ('heart_rate', 'steps', etc.).
-            start_time (datetime, optional): Start time.
-            end_time (datetime, optional): End time.
-
-        Returns:
-            list: List of tuples with the intraday metrics.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                SELECT time, value FROM intraday_metrics
-                WHERE device_id = %s AND type = %s
-                """
-                params = [user_id, metric_type]
-
-                if start_time:
-                    query += " AND time >= %s"
-                    params.append(start_time)
-
-                if end_time:
-                    query += " AND time <= %s"
-                    params.append(end_time)
-
-                query += " ORDER BY time;"
-
-                cursor.execute(query, params)
-                metrics = cursor.fetchall()
-                return metrics
-        except Exception as e:
-            print(f"Error retrieving intraday metrics: {e}")
-        finally:
-            connection.close()
-    return []
-
-def get_sleep_logs(user_id, start_date=None, end_date=None):
-    """
-        Retrieves a user's sleep records within a date range.
-
-        Args:
-            user_id (int): User ID.
-            start_date (str, optional): Start date (YYYY-MM-DD).
-            end_date (str, optional): End date (YYYY-MM-DD).
-
-        Returns:
-            list: List of tuples with the sleep records.
-    """
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                SELECT * FROM sleep_logs
-                WHERE user_id = %s
-                """
-                params = [user_id]
-
-                if start_date:
-                    query += " AND start_time >= %s"
-                    params.append(start_date)
-
-                if end_date:
-                    query += " AND start_time <= %s"
-                    params.append(end_date)
-
-                query += " ORDER BY start_time DESC;"
-
-                cursor.execute(query, params)
-                logs = cursor.fetchall()
-                return logs
-        except Exception as e:
-            print(f"Error retrieving sleep records: {e}")
-        finally:
-            connection.close()
-    return []
 
 def reset_database():
     """
@@ -1548,8 +861,9 @@ def reset_database():
                 cursor.execute("DROP TABLE IF EXISTS sleep_logs CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS devic_usages CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS device_usages CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS devices CASCADE;")
+                # cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS users CASCADE;")
 
                 connection.commit()
@@ -1559,30 +873,28 @@ def reset_database():
                 init_db()
                 print("Database reinitialized successfully.")
 
-                # Add the test user using DatabaseManager instance
+                # Add the test email using DatabaseManager instance
                 db = DatabaseManager()
                 if db.connect():
-                    db.add_device(
-                        name="Sense 2",
-                        email="Wearable2LivelyAgeign@gmail.com",
+                    db.add_email_address(
+                        address_name="Wearable2LivelyAgeign@gmail.com",
                         access_token="",
                         refresh_token=""
                     )
                     db.close()
 
-                print("Wearable2LivelyAgeign@gmail.com user device successfully.")
+                print("Wearable2LivelyAgeign@gmail.com email successfully.")
 
                 db = DatabaseManager()
                 if db.connect():
-                    db.add_device(
-                        name="Versa 4",
-                        email="Wearable1LivelyAgeign@gmail.com",
+                    db.add_email_address(
+                        address_name="Wearable1LivelyAgeign@gmail.com",
                         access_token="",
                         refresh_token=""
                     )
                     db.close()
 
-                print("Wearable1LivelyAgeign@gmail.com device added successfully.")
+                print("Wearable1LivelyAgeign@gmail.com email added successfully.")
 
         except Exception as e:
             print(f"Error resetting database: {e}")
@@ -1704,106 +1016,61 @@ def create_test_data():
         conn.close()
 
 def drop_intraday_data():
+    """Drops intraday data for email_id=3"""
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
 
-    connection = connect_to_db()
-    if connection:
         try:
-            with connection.cursor() as cursor:
                 print(f"Dropping intraday table")
-                query = "DELETE FROM intraday_metrics WHERE user_id=3;"
-
-                cursor.execute(query, [])
-                connection.commit()
-
+                query = "DELETE FROM intraday_metrics WHERE email_id=3;"
+        result = db.execute_query(query, [])
+        return result
         except Exception as e:
             print(f"Error while dropping intraday table: {e}")
+        return False
         finally:
-            connection.close()
+        db.close()
 
 
 def delete_access():
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
+    """Deletes access tokens from all email addresses"""
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
+    
+    try:
                 print(f"Dropping access")
-                query = "UPDATE devices SET access_token = NULL, refresh_token = NULL;"
-
-                cursor.execute(query, [])
-                connection.commit()
-
+                query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL;"
+        result = db.execute_query(query, [])
+        return result
         except Exception as e:
-            print(f"Error while dropping intraday table: {e}")
+        print(f"Error while dropping access tokens: {e}")
+        return False
         finally:
-            connection.close()
-
-
-
-def drop_useless_devices():
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                print(f"Dropping a device")
-                query = "DELETE FROM devices WHERE id=6;"
-
-                cursor.execute(query, [])
-                connection.commit()
-
-        except Exception as e:
-            print(f"Error while dropping useless devices: {e}")
-        finally:
-            connection.close()
+        db.close()
 
 
 def drop_authorizations():
+    """Drops pending authorizations table"""
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
 
-    connection = connect_to_db()
-    if connection:
         try:
-            with connection.cursor() as cursor:
                 print(f"Dropping authorizations")
-                query = "DELETE FROM devices WHERE 1=1;"
                 query = "DROP TABLE IF EXISTS pending_authorizations CASCADE;"
-
-                cursor.execute(query, [])
-                connection.commit()
-
+        result = db.execute_query(query, [])
+        return result
         except Exception as e:
-            print(f"Error authorizations: {e}")
+        print(f"Error dropping authorizations: {e}")
+        return False
         finally:
-            connection.close()
+        db.close()
 
-
-
-def add_authorizations_table():
-
-    connection = connect_to_db()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                    CREATE TABLE pending_authorizations (
-                            id SERIAL,
-                            state VARCHAR(500) UNIQUE NOT NULL,
-                            code_verifier VARCHAR(128) NOT NULL,
-                            email VARCHAR(255) NOT NULL,
-                            expires_at TIMESTAMP NOT NULL,
-                            created_at TIMESTAMP DEFAULT NOW()
-                    );
-
-                    CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
-                    CREATE INDEX idx_pending_auth_expires ON pending_authorizations(expires_at);
-                """
-
-                cursor.execute(query, [])
-                connection.commit()
-
-        except Exception as e:
-            print(f"Error creating pending authorizations: {e}")
-        finally:
-            connection.close()
 
 if __name__ == "__main__":
     # Reset and reinitialize the database
@@ -1811,7 +1078,4 @@ if __name__ == "__main__":
     # Create test data
     # create_test_data()
     # drop_intraday_data()
-
-    drop_authorizations()
-    add_authorizations_table()
     delete_access()

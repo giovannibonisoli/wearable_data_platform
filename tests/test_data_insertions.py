@@ -7,7 +7,7 @@ import numpy as np
 # Add the project root to the Python path so that we can import from db and alert_rules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from db import DatabaseManager, insert_daily_summary, insert_intraday_metric, insert_sleep_log, reset_database, get_daily_summaries, get_intraday_metrics, init_db
+from db import DatabaseManager, reset_database, init_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -79,8 +79,8 @@ def insert_test_data():
         date = base_date + timedelta(days=i)
         for user_id in user_ids:
             # Insert daily summary with normal values
-            insert_daily_summary(
-                user_id=user_id,
+            db.insert_daily_summary(
+                email_id=user_id,
                 date=date,
                 steps=11000,  # Increased from 10000 to make drop more significant
                 heart_rate=75,  # Normal heart rate
@@ -105,26 +105,26 @@ def insert_test_data():
             for hour in range(8, 20):  # 8 AM to 8 PM
                 timestamp = date.replace(hour=hour)
                 # Very low variance for normal heart rate (75 ± 1)
-                insert_intraday_metric(
-                    user_id=user_id,
+                db.insert_intraday_metric(
+                    email_id=user_id,
                     timestamp=timestamp,
-                    metric_type='heart_rate',
+                    data_type='heart_rate',
                     value=75 + np.random.uniform(-1, 1)  # Normal heart rate with minimal variation
                 )
                 
                 # Insert normal intraday steps
-                insert_intraday_metric(
-                    user_id=user_id,
+                db.insert_intraday_metric(
+                    email_id=user_id,
                     timestamp=timestamp,
-                    metric_type='steps',
+                    data_type='steps',
                     value=500 + (hour % 3) * 100  # Normal step count
                 )
             
             # Insert normal sleep log
             sleep_start = date.replace(hour=22, minute=0)
             sleep_end = (date + timedelta(days=1)).replace(hour=6, minute=0)
-            insert_sleep_log(
-                user_id=user_id,
+            db.insert_sleep_log(
+                email_id=user_id,
                 start_time=sleep_start,
                 end_time=sleep_end,
                 duration_ms=8 * 60 * 60 * 1000,  # 8 hours
@@ -148,8 +148,8 @@ def insert_test_data():
         for user_id in user_ids:  # Apply anomalies to all users
             if i == 0:  # May 14: Activity drop and sedentary increase
                 logger.info(f"Inserting data for May 14 to trigger activity drop and sedentary increase alerts for user {user_id}...")
-                insert_daily_summary(
-                    user_id=user_id,
+db.insert_daily_summary(
+                email_id=user_id,
                     date=current_date,
                     steps=2000,  # 82% drop from normal (11000)
                     heart_rate=90,
@@ -190,53 +190,53 @@ def insert_test_data():
                         floors = 1
                         elevation = 10
                     
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='steps',
+                        data_type='steps',
                         value=steps
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='heart_rate',
+                        data_type='heart_rate',
                         value=heart_rate
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='active_minutes',
+                        data_type='active_minutes',
                         value=active_minutes
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='calories',
+                        data_type='calories',
                         value=calories
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='distance',
+                        data_type='distance',
                         value=distance
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='floors',
+                        data_type='floors',
                         value=floors
                     )
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=current_date.replace(hour=hour),
-                        metric_type='elevation',
+                        data_type='elevation',
                         value=elevation
                     )
             
             elif i == 1:  # May 15: Sleep duration change and heart rate anomaly
                 logger.info(f"Inserting data for May 15 to trigger sleep duration change and heart rate anomaly alerts for user {user_id}...")
-                insert_daily_summary(
-                    user_id=user_id,
+db.insert_daily_summary(
+                email_id=user_id,
                     date=current_date,
                     steps=500,  # Changed from 0 to 500 to avoid data quality alert
                     heart_rate=75,
@@ -264,18 +264,18 @@ def insert_test_data():
                         value = 75 + np.random.uniform(-1, 1)  # Very low variance
                     else:  # Anomalous values for last 4 hours
                         value = 130 + np.random.uniform(-2, 2)  # Elevated heart rate (>2 std dev)
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=timestamp,
-                        metric_type='heart_rate',
+                        data_type='heart_rate',
                         value=value
                     )
                 
                 # Insert anomalous sleep log
                 sleep_start = current_date.replace(hour=23, minute=0)
                 sleep_end = (current_date + timedelta(days=1)).replace(hour=3, minute=0)
-                insert_sleep_log(
-                    user_id=user_id,
+db.insert_sleep_log(
+                email_id=user_id,
                     start_time=sleep_start,
                     end_time=sleep_end,
                     duration_ms=4 * 60 * 60 * 1000,  # 4 hours
@@ -289,8 +289,8 @@ def insert_test_data():
             
             else:  # May 16: Data quality and intraday activity drop
                 logger.info(f"Inserting data for May 16 to trigger data quality and intraday activity drop alerts for user {user_id}...")
-                insert_daily_summary(
-                    user_id=user_id,
+db.insert_daily_summary(
+                email_id=user_id,
                     date=current_date,
                     steps=10000,
                     heart_rate=None,  # Missing data to trigger data quality alert
@@ -318,10 +318,10 @@ def insert_test_data():
                         value = 500 + (hour % 3) * 100  # Normal step count
                     else:  # Last 8 hours: zero steps to trigger intraday activity drop alert
                         value = 0
-                    insert_intraday_metric(
-                        user_id=user_id,
+db.insert_intraday_metric(
+                    email_id=user_id,
                         timestamp=timestamp,
-                        metric_type='steps',
+                        data_type='steps',
                         value=value
                     )
     

@@ -7,7 +7,7 @@ import json
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from db import get_daily_summaries, get_intraday_metrics, get_sleep_logs
+from db import DatabaseManager
 from alert_rules import (
     check_activity_drop,
     check_sedentary_increase,
@@ -44,6 +44,10 @@ def test_activity_drop(user_id, current_date, expected=True):
         'details': {}
     }
     
+    db = DatabaseManager()
+    if not db.connect():
+        return result
+    
     try:
         # Use the actual alert_rules function
         triggered = check_activity_drop(user_id, current_date)
@@ -51,7 +55,7 @@ def test_activity_drop(user_id, current_date, expected=True):
         
         # Get data for logging purposes
         start_date = current_date - timedelta(days=7)
-        daily_summaries = get_daily_summaries(user_id, start_date, current_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, current_date)
         
         if daily_summaries:
             previous_days = [s for s in daily_summaries if s[2] < current_date.date()]
@@ -83,6 +87,8 @@ def test_activity_drop(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 
@@ -97,13 +103,17 @@ def test_sedentary_increase(user_id, current_date, expected=True):
         'details': {}
     }
     
+    db = DatabaseManager()
+    if not db.connect():
+        return result
+    
     try:
         triggered = check_sedentary_increase(user_id, current_date)
         result['triggered'] = triggered
         
         # Get data for logging purposes
         start_date = current_date - timedelta(days=7)
-        daily_summaries = get_daily_summaries(user_id, start_date, current_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, current_date)
         
         if daily_summaries:
             previous_days = [s for s in daily_summaries if s[2] < current_date.date()]
@@ -126,6 +136,8 @@ def test_sedentary_increase(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 
@@ -140,13 +152,17 @@ def test_sleep_duration_change(user_id, current_date, expected=True):
         'details': {}
     }
     
+    db = DatabaseManager()
+    if not db.connect():
+        return result
+    
     try:
         triggered = check_sleep_duration_change(user_id, current_date)
         result['triggered'] = triggered
         
         # Get data for logging purposes
         start_date = current_date - timedelta(days=7)
-        daily_summaries = get_daily_summaries(user_id, start_date, current_date)
+        daily_summaries = db.get_daily_summaries(user_id, start_date, current_date)
         
         if daily_summaries:
             previous_days = [s for s in daily_summaries if s[2] < current_date.date()]
@@ -169,6 +185,8 @@ def test_sleep_duration_change(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 
@@ -183,13 +201,17 @@ def test_heart_rate_anomaly(user_id, current_date, expected=True):
         'details': {}
     }
     
+    db = DatabaseManager()
+    if not db.connect():
+        return result
+    
     try:
         triggered = check_heart_rate_anomaly(user_id, current_date)
         result['triggered'] = triggered
         
         # Get data for logging purposes
         start_time = current_date - timedelta(hours=24)
-        heart_rate_data = get_intraday_metrics(user_id, 'heart_rate', start_time, current_date)
+        heart_rate_data = db.get_intraday_metrics(user_id, 'heart_rate', start_time, current_date)
         
         if heart_rate_data:
             values = [hr[1] for hr in heart_rate_data]
@@ -215,6 +237,8 @@ def test_heart_rate_anomaly(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 
@@ -239,7 +263,7 @@ def test_data_quality(user_id, current_date, expected=True):
         # Get data for logging purposes
         end_date = current_date
         start_date = current_date - timedelta(days=1)
-        summaries = get_daily_summaries(user_id, start_date, end_date)
+        summaries = db.get_daily_summaries(user_id, start_date, end_date)
         
         if summaries:
             current_data = summaries[-1]
@@ -271,6 +295,8 @@ def test_data_quality(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 
@@ -285,6 +311,10 @@ def test_intraday_activity_drop(user_id, current_date, expected=True):
         'details': {}
     }
     
+    db = DatabaseManager()
+    if not db.connect():
+        return result
+    
     try:
         triggered = check_intraday_activity_drop(user_id, current_date)
         result['triggered'] = triggered
@@ -292,7 +322,7 @@ def test_intraday_activity_drop(user_id, current_date, expected=True):
         # Get data for logging purposes
         start_time = current_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_time = start_time + timedelta(days=1)
-        steps_data = get_intraday_metrics(user_id, 'steps', start_time, end_time)
+        steps_data = db.get_intraday_metrics(user_id, 'steps', start_time, end_time)
         
         if steps_data:
             zero_streak = []
@@ -320,6 +350,8 @@ def test_intraday_activity_drop(user_id, current_date, expected=True):
         
     except Exception as e:
         result['reason'] = f'Error during test: {str(e)}'
+    finally:
+        db.close()
         
     return result
 

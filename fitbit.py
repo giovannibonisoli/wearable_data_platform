@@ -2,7 +2,7 @@ from base64 import b64encode
 from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
-from db import get_unique_emails, save_to_db, get_device_tokens, get_latest_device_id_by_email, update_device_tokens, insert_daily_summary, insert_intraday_metric, DatabaseManager
+from db import DatabaseManager
 import sys
 import os
 import json
@@ -63,8 +63,12 @@ def refresh_access_token(refresh_token):
 def get_fitbit_data(access_token, email):
     headers = {"Authorization": f"Bearer {access_token}"}
     def fetch_and_store(date_str):
-        device_id = get_latest_device_id_by_email(email)
         db = DatabaseManager()
+        if not db.connect():
+            logger.error("Failed to connect to database")
+            return False
+        
+        device_id = db.get_email_id_by_name(email)
         if not device_id:
             logger.error(f"Error: No device_id found for the email {email}")
             return False
@@ -163,8 +167,8 @@ def get_fitbit_data(access_token, email):
                 data['temperature'] = temperature_data.get('value', 0)
 
             # Save to the database
-            insert_daily_summary(
-                device_id=device_id,
+            db.insert_daily_summary(
+                email_id=device_id,
                 date=date_str,
                 **data
             )
@@ -194,6 +198,8 @@ def get_fitbit_data(access_token, email):
             for key, value in data.items():
                 logger.info(f"{key}: {value}")
             return True"""
+        finally:
+            db.close()
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 raise
@@ -225,7 +231,20 @@ def process_emails(emails):
     for email in valid_emails:
         logger.info(f"\n=== Processing user: {email} ===")
         # Obtener y desencriptar los tokens
-        access_token, refresh_token = get_device_tokens(email)
+        db = DatabaseManager()
+        if not db.connect():
+            logger.error("Failed to connect to database")
+            continue
+        
+        try:
+            device_id = db.get_email_id_by_name(email)
+            if not device_id:
+                logger.warning(f"No device_id found for email {email}")
+                continue
+            
+            access_token, refresh_token = db.get_email_tokens(device_id)
+        finally:
+            db.close()
         if not access_token or not refresh_token:
             logger.warning(f"No valid tokens were found for the email. {email}. Link the device again.")
             continue
@@ -270,7 +289,14 @@ def process_emails(emails):
                     logger.warning(f"Token expired for email {email}. Attempting to refresh the token...")
                     new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
                     if new_access_token and new_refresh_token:
-                        update_device_tokens(email, new_access_token, new_refresh_token)
+                        db = DatabaseManager()
+                        if db.connect():
+                            try:
+                                device_id = db.get_email_id_by_name(email)
+                                if device_id:
+                                    db.update_email_tokens(device_id, new_access_token, new_refresh_token)
+                            finally:
+                                db.close()
                         current_access_token = new_access_token
                         current_refresh_token = new_refresh_token
                         fetch_and_store = get_fitbit_data(current_access_token, email)
@@ -299,9 +325,17 @@ if __name__ == "__main__":
     # Create logs directory if it doesn't exist.
     os.makedirs("logs", exist_ok=True)
     # Get the list of unique emails.
-    unique_emails = get_unique_emails()
-    if not unique_emails:
-        logger.error("No emails were found in the database.")
+    db = DatabaseManager()
+    if not db.connect():
+        logger.error("Failed to connect to database")
         sys.exit(1)
+    
+    try:
+        unique_emails = db.get_unique_emails()
+        if not unique_emails:
+            logger.error("No emails were found in the database.")
+            sys.exit(1)
+    finally:
+        db.close()
     logger.info(f"Unique emails found in the database: {unique_emails}")
     process_emails(unique_emails)

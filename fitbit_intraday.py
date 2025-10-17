@@ -23,7 +23,7 @@ from base64 import b64encode
 from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
-from db import get_unique_emails, get_device_id_by_email, insert_intraday_metric, get_device_tokens
+from db import DatabaseManager
 import sys
 import os
 import json
@@ -114,10 +114,21 @@ def get_intraday_data(access_token, email, date_str=None):
         today = datetime.now().strftime("%Y-%m-%d")
     else:
         today = date_str
-    user_id = get_device_id_by_email(email)
-    if not user_id:
-        logger.error(f"Error: No device_id found for the email {email}")
+    db = DatabaseManager()
+    if not db.connect():
+        logger.error("Failed to connect to database")
         return False
+    
+    try:
+        user_id = db.get_email_id_by_name(email)
+        if not user_id:
+            logger.error(f"Error: No device_id found for the email {email}")
+            return False
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        return False
+    finally:
+        db.close()
     checkpoint = get_checkpoint(email)
     try:
         logger.info(f"\n=== INITIALIZING INTRADAY DATA COLLECTION FOR {email} ({today}) ===")
@@ -147,7 +158,12 @@ def get_intraday_data(access_token, email, date_str=None):
                         timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
                         if not last_hr_ts or timestamp > datetime.strptime(last_hr_ts, "%Y-%m-%d %H:%M:%S"):
                             # insert_intraday_metric(user_id, timestamp, 'heart_rate', value)
-                            insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=value)
+                            db = DatabaseManager()
+                            if db.connect():
+                                try:
+                                    db.insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=value)
+                                finally:
+                                    db.close()
                             total_heart_rate_points += 1
                             checkpoint["heart_rate"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -167,7 +183,12 @@ def get_intraday_data(access_token, email, date_str=None):
                         timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
                         if not last_steps_ts or timestamp > datetime.strptime(last_steps_ts, "%Y-%m-%d %H:%M:%S"):
                             # insert_intraday_metric(user_id, timestamp, 'steps', value)
-                            insert_intraday_metric(user_id, timestamp, data_type='steps', value=value)
+                            db = DatabaseManager()
+                            if db.connect():
+                                try:
+                                    db.insert_intraday_metric(user_id, timestamp, data_type='steps', value=value)
+                                finally:
+                                    db.close()
                             total_steps_points += 1
                             checkpoint["steps"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -186,7 +207,12 @@ def get_intraday_data(access_token, email, date_str=None):
                     if time_str and value is not None:
                         timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
                         if not last_calories_ts or timestamp > datetime.strptime(last_calories_ts, "%Y-%m-%d %H:%M:%S"):
-                            insert_intraday_metric(user_id, timestamp, data_type='calories', value=value)
+                            db = DatabaseManager()
+                            if db.connect():
+                                try:
+                                    db.insert_intraday_metric(user_id, timestamp, data_type='calories', value=value)
+                                finally:
+                                    db.close()
                             total_calories_points += 1
                             checkpoint["calories"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -205,7 +231,12 @@ def get_intraday_data(access_token, email, date_str=None):
                     if time_str and value is not None:
                         timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
                         if not last_distance_ts or timestamp > datetime.strptime(last_distance_ts, "%Y-%m-%d %H:%M:%S"):
-                            insert_intraday_metric(user_id, timestamp, data_type='distance', value=value)
+                            db = DatabaseManager()
+                            if db.connect():
+                                try:
+                                    db.insert_intraday_metric(user_id, timestamp, data_type='distance', value=value)
+                                finally:
+                                    db.close()
                             total_distance_points += 1
                             checkpoint["distance"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -262,16 +293,37 @@ BACKFILL_END_DATE = "2025-07-31"    # Last day to collect (inclusive)
 
 # --- MAIN WORKFLOW ---
 def process_all_users():
-    unique_emails = get_unique_emails()
-    if not unique_emails:
-        logger.error("No emails found in the database.")
+    db = DatabaseManager()
+    if not db.connect():
+        logger.error("Failed to connect to database")
         return
+    
+    try:
+        unique_emails = db.get_unique_emails()
+        if not unique_emails:
+            logger.error("No emails found in the database.")
+            return
+    finally:
+        db.close()
 
     today = datetime.now().date()
     for email in unique_emails:
         logger.info(f"\n=== Processing user: {email} ===")
         # access_token, refresh_token = get_user_tokens(email)
-        access_token, refresh_token = get_device_tokens(email)
+        db = DatabaseManager()
+        if not db.connect():
+            logger.error("Failed to connect to database")
+            continue
+        
+        try:
+            device_id = db.get_email_id_by_name(email)
+            if not device_id:
+                logger.warning(f"No device_id found for email {email}")
+                continue
+            
+            access_token, refresh_token = db.get_email_tokens(device_id)
+        finally:
+            db.close()
         if not access_token or not refresh_token:
             logger.warning(f"No valid tokens found for the email {email}. It is necessary to re-link the device.")
             continue
