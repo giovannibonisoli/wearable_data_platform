@@ -87,8 +87,8 @@ class DatabaseManager:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO email_address (address_name, access_token, refresh_token)
-            VALUES (%s, 'pending_auth_request', %s, %s)
+            INSERT INTO email_addresses (address_name, status, access_token, refresh_token)
+            VALUES (%s, 'inserted', %s, %s)
             RETURNING id
         """
         result = self.execute_query(query, (address_name, encrypted_access_token, encrypted_refresh_token))
@@ -267,9 +267,9 @@ class DatabaseManager:
             return {'code_verifier': result[0][0], 'email_id': result[0][1]}
         return None
 
-def delete_pending_auth(self, state):
-    """Delete used pending authorization"""
-    query = "DELETE FROM pending_authorizations WHERE state = %s"
+    def delete_pending_auth(self, state):
+        """Delete used pending authorization"""
+        query = "DELETE FROM pending_authorizations WHERE state = %s"
         return self.execute_query(query, (state,))
 
     def get_email_id_by_name(self, address_name):
@@ -518,32 +518,32 @@ def init_db():
             );
         """)
 
-        # Create daily summaries table
-        db.execute_query("""
-            CREATE TABLE IF NOT EXISTS daily_summaries (
-                id SERIAL,
-                email_id INTEGER REFERENCES email_addresses(id),
-                date DATE NOT NULL,
-                steps INTEGER,
-                heart_rate INTEGER,
-                sleep_minutes INTEGER,
-                calories INTEGER,
-                distance FLOAT,
-                floors INTEGER,
-                elevation FLOAT,
-                active_minutes INTEGER,
-                sedentary_minutes INTEGER,
-                nutrition_calories INTEGER,
-                water FLOAT,
-                weight FLOAT,
-                bmi FLOAT,
-                fat FLOAT,
-                oxygen_saturation FLOAT,
-                respiratory_rate FLOAT,
-                temperature FLOAT,
-                UNIQUE(device_id, date)
-            );
-        """)
+        # # Create daily summaries table
+        # db.execute_query("""
+        #     CREATE TABLE IF NOT EXISTS daily_summaries (
+        #         id SERIAL,
+        #         email_id INTEGER REFERENCES email_addresses(id),
+        #         date DATE NOT NULL,
+        #         steps INTEGER,
+        #         heart_rate INTEGER,
+        #         sleep_minutes INTEGER,
+        #         calories INTEGER,
+        #         distance FLOAT,
+        #         floors INTEGER,
+        #         elevation FLOAT,
+        #         active_minutes INTEGER,
+        #         sedentary_minutes INTEGER,
+        #         nutrition_calories INTEGER,
+        #         water FLOAT,
+        #         weight FLOAT,
+        #         bmi FLOAT,
+        #         fat FLOAT,
+        #         oxygen_saturation FLOAT,
+        #         respiratory_rate FLOAT,
+        #         temperature FLOAT,
+        #         UNIQUE(device_id, date)
+        #     );
+        # """)
 
         # Convert it to hypertable
         db.execute_query("""
@@ -628,13 +628,12 @@ def init_db():
         db.execute_query("""
             CREATE TABLE pending_authorizations (
                     id SERIAL,
-                    email_id int,
+                    email_id INTEGER REFERENCES email_addresses(id),
                     state VARCHAR(500) UNIQUE NOT NULL,
                     code_verifier VARCHAR(128) NOT NULL,
                     email VARCHAR(255) NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
-                    FOREIGN KEY (email_id) REFERENCES email_addresses(id)
                 );
 
                 CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
@@ -681,10 +680,10 @@ def insert_intraday_data(user_id, timestamp, heart_rate=0, steps=0, calories=0, 
         if distance > 0:
             db.insert_intraday_metric(user_id, timestamp, 'distance', distance)
         return True
-        except Exception as e:
-            print(f"Error inserting intraday data: {e}")
+    except Exception as e:
+        print(f"Error inserting intraday data: {e}")
         return False
-        finally:
+    finally:
         db.close()
 
 def save_to_db(user_id, date, **data):
@@ -705,12 +704,12 @@ def save_to_db(user_id, date, **data):
     try:
         result = db.insert_daily_summary(user_id, date, **data)
         if result:
-                print(f"Data of user {user_id} successfully saved to daily_summaries.")
+            print(f"Data of user {user_id} successfully saved to daily_summaries.")
         return result
-        except Exception as e:
-            print(f"Error saving data: {e}")
+    except Exception as e:
+        print(f"Error saving data: {e}")
         return False
-        finally:
+    finally:
         db.close()
 
 
@@ -859,12 +858,13 @@ def reset_database():
                 # Drop all tables in the correct order to handle foreign key constraints
                 cursor.execute("DROP TABLE IF EXISTS alerts CASCADE;")  # Drop alerts first
                 cursor.execute("DROP TABLE IF EXISTS sleep_logs CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
+                # cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
+                # cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS device_usages CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS devices CASCADE;")
-                # cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS users CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS pending_authorization CASCADE;")
 
                 connection.commit()
                 print("Database tables dropped successfully.")
@@ -1022,16 +1022,16 @@ def drop_intraday_data():
         print("Failed to connect to the database")
         return False
 
-        try:
-                print(f"Dropping intraday table")
-                query = "DELETE FROM intraday_metrics WHERE email_id=3;"
+    try:
+        print(f"Dropping intraday table")
+        query = "DELETE FROM intraday_metrics WHERE email_id=3;"
         result = db.execute_query(query, [])
         return result
-        except Exception as e:
-            print(f"Error while dropping intraday table: {e}")
+    except Exception as e:
+        print(f"Error while dropping intraday table: {e}")
         return False
-        finally:
-        db.close()
+    finally:
+            db.close()
 
 
 def delete_access():
@@ -1042,14 +1042,14 @@ def delete_access():
         return False
     
     try:
-                print(f"Dropping access")
-                query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL;"
+        print(f"Dropping access")
+        query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL;"
         result = db.execute_query(query, [])
         return result
-        except Exception as e:
+    except Exception as e:
         print(f"Error while dropping access tokens: {e}")
         return False
-        finally:
+    finally:
         db.close()
 
 
@@ -1060,22 +1060,23 @@ def drop_authorizations():
         print("Failed to connect to the database")
         return False
 
-        try:
-                print(f"Dropping authorizations")
-                query = "DROP TABLE IF EXISTS pending_authorizations CASCADE;"
+    try:
+        print(f"Dropping authorizations")
+        query = "DROP TABLE IF EXISTS pending_authorizations CASCADE;"
         result = db.execute_query(query, [])
         return result
-        except Exception as e:
+    except Exception as e:
         print(f"Error dropping authorizations: {e}")
         return False
-        finally:
+    finally:
         db.close()
 
 
 if __name__ == "__main__":
     # Reset and reinitialize the database
-    # reset_database()
+    drop_authorizations()
+    reset_database()
     # Create test data
     # create_test_data()
     # drop_intraday_data()
-    delete_access()
+    # delete_access()
