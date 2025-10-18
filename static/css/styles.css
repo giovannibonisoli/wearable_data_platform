@@ -20,6 +20,8 @@
     --gradient: linear-gradient(135deg, #2c5aa0 0%, #4a90a4 100%);
     --gradient-light: linear-gradient(135deg, #e8f4f8 0%, #f8f9fa 100%);
     --gradient-red: linear-gradient(135deg, #6a0000 0%, #fb2929 100%);
+
+    --gradient-green: linear-gradient(135deg, #1b5b04 0%, #44980c 100%);
 }
 
 /* Base Styles */
@@ -125,6 +127,8 @@ body {
 .btn-success {
     background-color: var(--success);
     border-color: var(--success);
+    color: var(--white);
+    background: var(--gradient-green);
 }
 
 .btn-warning {
@@ -136,6 +140,8 @@ body {
 .btn-danger {
     background-color: var(--danger);
     border-color: var(--danger);
+    color: var(--white);
+    background: var(--gradient-red);
 }
 
 .btn-outline-primary {
@@ -244,6 +250,10 @@ body {
 }
 
 .bg-success i {
+    color: var(--white)
+}
+
+.bg-dark i {
     color: var(--white)
 }
 
@@ -795,10 +805,14 @@ main {
     color: var(--white);
 }
 
-.btn-danger {
+.btn-success i {
     color: var(--white);
-    background: var(--gradient-red);
 }
+
+.btn-secondary i {
+    color: var(--white);
+}
+
 
 .add-btn:hover {
     background: linear-gradient(135deg, #1e3d73 0%, #3a7a8a 100%);
