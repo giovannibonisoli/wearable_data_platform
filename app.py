@@ -615,8 +615,13 @@ def callback():
 
                 # if existing_device:
                 #     user_id, existing_name, _, _, _ = existing_device
-                    db.update_device_tokens(email, access_token, refresh_token)
-                    app.logger.info(f"{address_name}'s tokens updated.")
+
+                email_id = db.get_email_id_by_name(address_name)
+                db.update_email_tokens(email_id, access_token, refresh_token)
+                app.logger.info(f"{address_name}'s tokens updated.")
+
+                db.change_email_status(email_id, 'authorized')
+                app.logger.info(f"{address_name}'s status updated.")
                 #     device_name = existing_name
                 # else:
                 #     db.add_device("New Device", email, access_token, refresh_token)
@@ -625,6 +630,7 @@ def callback():
 
                 # Delete the pending authorization
                 db.delete_pending_auth(state)
+                app.logger.info(f"Deleted prending request.")
 
                 return render_template('auth_confirmation.html',
                                      address_name=address_name,
@@ -653,6 +659,20 @@ def callback():
                              success=False,
                              error=str(e),
                              link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
+
+@app.route('/livelyageing/deactivate_email', methods=['POST'])
+@login_required
+def deactivate_email():
+    """ Deactivate authorized mail"""
+    email_id = request.form.get('DeactivateId')
+
+    db = DatabaseManager()
+    if db.connect():
+        db.change_email_status(email_id, 'non_active')
+
+        app.logger.error(f"Unexpected error: {e}")
+
+    return render_template(url_for('available_email_addresses'))
 
 # @app.route('/livelyageing/reassign', methods=['POST'])
 # @login_required

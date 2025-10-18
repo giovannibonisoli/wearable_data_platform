@@ -95,6 +95,22 @@ class DatabaseManager:
         return result[0][0] if result else None
 
 
+    def change_email_status(self, email_id, status):
+        """Change email status"""
+
+        assert status in ['inserted', 'authorized', 'non_active']
+
+        query = """
+            UPDATE email_addresses
+            SET status = %s
+            WHERE id = %s;
+        """
+        result = self.execute_query(query, (status, email_id))
+        if result:
+            print(f"Status changed to {status} for email {email_id}.")
+        return result
+
+
     def get_daily_summaries(self, email_id, start_date=None, end_date=None):
         """
         Gets the daily summaries of a user within a date range.
