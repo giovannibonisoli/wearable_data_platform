@@ -19,6 +19,7 @@
     /* Gradients */
     --gradient: linear-gradient(135deg, #2c5aa0 0%, #4a90a4 100%);
     --gradient-light: linear-gradient(135deg, #e8f4f8 0%, #f8f9fa 100%);
+    --gradient-red: linear-gradient(135deg, #6a0000 0%, #fb2929 100%);
 }
 
 /* Base Styles */
@@ -240,6 +241,14 @@ body {
 /* Icons */
 .fas, .bi {
     color: var(--primary);
+}
+
+.bg-success i {
+    color: var(--white)
+}
+
+.bg-dark i {
+    color: var(--white)
 }
 
 /* Main Content Area */
@@ -784,6 +793,11 @@ main {
 
 .btn-primary i {
     color: var(--white);
+}
+
+.btn-danger {
+    color: var(--white);
+    background: var(--gradient-red);
 }
 
 .add-btn:hover {

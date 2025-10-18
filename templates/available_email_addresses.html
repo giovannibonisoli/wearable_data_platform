@@ -16,16 +16,16 @@
             <div class="card-body">
                 <form id="addEmailForm" method="POST" action="{{ url_for('available_email_addresses') }}" class="device-form">
                     <div class="row g-4">
-                        <div class="col-md-5">
+                        <div class="col-md-9">
                             <div class="form-group">
                                 <label for="addressNameInsert" class="form-label form-label">
                                     <i class="fas fa-envelope me-2"></i>{{ _('Address Name') }}
                                 </label>
                                 <input type="email" class="form-control form-control" id="addressNameInsert" 
-                                    name="addressName" required placeholder="{{ _('Enter address name') }}">
+                                    name="addressName" required placeholder="{{ _('Enter email address name') }}">
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-success btn-lg w-100 add-btn">
                                 <i class="fas fa-plus me-2"></i>{{ _('Add Email address') }}
                             </button>
@@ -60,7 +60,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="device-icon me-3">
-                                            <i class="fas fa-watch text-primary"></i>
+                                            <i class="fas fa-user-circle text-primary"></i>
                                         </div>
                                         <div>
                                             <strong class="text-primary">{{ email_address.address_name }}</strong>
@@ -71,19 +71,19 @@
                                 <td>
                                     {% if email_address.status == 'inserted' %}
                                     <span class="badge bg-info">
-                                        <i class="fas fa-clock me-1"></i>{{ _('Not Authorized') }}
+                                        <i class="fas fa-clock me-1"></i>{{ _('Data Access Not Authorized') }}
                                     </span>
                                     {% elif email_address.status == 'pending_auth_request' %}
                                     <span class="badge bg-warning">
                                         <i class="fas fa-clock me-1"></i>{{ _('Pending Authorization Request') }}
                                     </span>
                                     {% elif email_address.status == 'authorized' %}
-                                    <span class="badge bg-warning">
-                                        <i class="fas fa-clock me-1"></i>{{ _('Authorized') }}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>{{ _('Data Access Authorized') }}
                                     </span>
                                     {% else %}
-                                    <span class="badge bg-warning">
-                                        <i class="fas fa-clock me-1"></i>{{ _('not_active') }}
+                                    <span class="badge bg-dark">
+                                        <i class="fas fa-times-circle me-1"></i>{{ _('Not Active') }}
                                     </span>
                                     {% endif %}
                                 </td>
@@ -97,11 +97,10 @@
                                         </button>
                                     </form>
                                     {% elif email_address.status == 'authorized' %}
-                                    <form action="{{ url_for('') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="id" value="{{ email_address.id }}">
-                                        <input type="hidden" name="" value="{{ email_address.address_name }}">
-                                        <button type="submit" class="btn btn-primary btn-sm action-btn">
-                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Deactivate Email') }}
+                                    <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm action-btn">
+                                            <i class="far fa-times-circle me-2"></i>{{ _('Deactivate Email') }}
                                         </button>
                                     </form>
                                     {% else %}
@@ -133,6 +132,8 @@
         {% endif %}
     </div>
 </div>
+
+
 
 {% block extra_css %}
 <style>
