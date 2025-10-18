@@ -33,7 +33,7 @@
             <h2 class="mb-0">
                 <i class="fas fa-check-circle me-2"></i>{{ _('Authorization Successful!') }}
             </h2>
-            <p class="mb-0 mt-2 opacity-90">{{ _('Wearable data access has been successfully obtained for {}') }}</p>
+            <p class="mb-0 mt-2 opacity-90">{{ _('Wearable data access has been successfully obtained for %(address_name)s', address_name=address_name)  }}</p>
         </div>
         
         <div class="confirmation-body">
@@ -53,7 +53,7 @@
 
                 <div class="user-detail">
                     <strong>{{ _('Email Address:') }}</strong>
-                    <span>{{ email }}</span>
+                    <span>{{ address_name }}</span>
                 </div>
                 <div class="user-detail">
                     <strong>{{ _('Link Date:') }}</strong>

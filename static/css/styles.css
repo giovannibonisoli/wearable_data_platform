@@ -261,6 +261,10 @@ body {
     color: var(--white)
 }
 
+.modal-header i {
+    color: var(--white)
+}
+
 /* Main Content Area */
 main {
     flex: 1;
@@ -409,6 +413,10 @@ main {
     padding: 2rem;
     text-align: center;
     position: relative;
+}
+
+.confirmation-header i {
+    color: var(--white);
 }
 
 .confirmation-header::after {
@@ -809,6 +817,11 @@ main {
 .btn-success i {
     color: var(--white);
 }
+
+.btn-danger i {
+    color: var(--white);
+}
+
 
 .btn-secondary i {
     color: var(--white);
