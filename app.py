@@ -318,6 +318,7 @@ def available_email_addresses():
                 result = db.execute_query("""
                     SELECT id, address_name, status
                     FROM email_addresses
+                    ORDER BY id DESC;
                 """)
 
                 email_addresses = []
