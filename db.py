@@ -1061,7 +1061,7 @@ def drop_intraday_data():
             db.close()
 
 
-def delete_access():
+def reset_emails_status():
     """Deletes access tokens from all email addresses"""
     db = DatabaseManager()
     if not db.connect():
@@ -1069,8 +1069,8 @@ def delete_access():
         return False
     
     try:
-        print(f"Dropping access")
-        query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL;"
+        print(f"Resetting status")
+        query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, status='inserted';"
         result = db.execute_query(query, [])
         return result
     except Exception as e:
@@ -1101,9 +1101,9 @@ def drop_authorizations():
 
 if __name__ == "__main__":
     # Reset and reinitialize the database
-    drop_authorizations()
-    reset_database()
+    # drop_authorizations()
+    # reset_database()
     # Create test data
     # create_test_data()
     # drop_intraday_data()
-    # delete_access()
+    reset_emails_status()
