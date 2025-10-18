@@ -532,37 +532,6 @@ def send_auth_email():
         return redirect(url_for('available_email_addresses'))
 
 
-# @app.route('/livelyageing/assign', methods=['GET', 'POST'])
-# @login_required
-# def assign_user():
-#     if request.method == 'POST':
-#         user_name = request.form.get('user_name')
-#         email = session.get('pending_email')  # Get email from session
-
-#         if not user_name:
-#             flash(_('Error: Missing user name.'), 'danger')
-#             return redirect(url_for('assign_user'))
-
-#         if not email:
-#             flash(_('Error: No email in session. Please start from device linking.'), 'danger')
-#             return redirect(url_for('link_device'))
-
-#         # Generate state and store it in the session.
-#         session['state'] = generate_state()
-#         session['new_user_name'] = user_name
-#         session['code_verifier'] = generate_code_verifier()
-
-#         code_challenge = generate_code_challenge(session['code_verifier'])
-#         auth_url = generate_auth_url(code_challenge, session['state'])
-
-#         app.logger.info(f"Generated auth URL for {email}: {auth_url}")
-#         app.logger.info(f"Session state: {session['state']}")
-#         app.logger.info(f"Session code_verifier: {session['code_verifier']}")
-
-#         return render_template('link_auth.html', auth_url=auth_url)
-
-#     return render_template('assign_user.html')
-
 @app.route('/livelyageing/callback')
 def callback():
     """
@@ -610,25 +579,13 @@ def callback():
                 if not access_token or not refresh_token:
                     raise Exception("Could not retrieve Fitbit tokens.")
 
-                # # Check if device exists
-                # existing_device = db.get_device_by_email(email)
-
-                # if existing_device:
-                #     user_id, existing_name, _, _, _ = existing_device
-
                 email_id = db.get_email_id_by_name(address_name)
                 db.update_email_tokens(email_id, access_token, refresh_token)
                 app.logger.info(f"{address_name}'s tokens updated.")
 
                 db.change_email_status(email_id, 'authorized')
                 app.logger.info(f"{address_name}'s status updated.")
-                #     device_name = existing_name
-                # else:
-                #     db.add_device("New Device", email, access_token, refresh_token)
-                #     app.logger.info(f"New device added for {email}")
-                #     device_name = "New Device"
 
-                # Delete the pending authorization
                 db.delete_pending_auth(state)
                 app.logger.info(f"Deleted prending request.")
 
@@ -673,64 +630,6 @@ def deactivate_email():
         app.logger.error(f"Unexpected error: {e}")
 
     return render_template(url_for('available_email_addresses'))
-
-# @app.route('/livelyageing/reassign', methods=['POST'])
-# @login_required
-# def reassign_device():
-#     """
-#     Handle the reassignment of a Fitbit device to a new user.
-#     """
-#     email = request.form['email']
-#     new_user_name = request.form['new_user_name']
-
-#     # Store the email and new user name in the session for later use
-#     session['pending_email'] = email
-#     session['new_user_name'] = new_user_name
-
-#     # Check if reauthorization is needed
-#     db = DatabaseManager()
-#     if db.connect():
-#         try:
-#             # Query to check if the email is already in use and has valid tokens
-#             existing_user = db.execute_query("SELECT access_token, refresh_token FROM users WHERE email = %s ORDER BY created_at DESC LIMIT 1", (email,))
-#             app.logger.info(f"Database query result for email {email}: {existing_user}")
-
-#             if existing_user:
-#                 if len(existing_user[0]) != 2:
-#                     app.logger.error(f"Unexpected result structure: {existing_user}")
-#                     return "Error: Unexpected database result structure.", 500
-
-#                 existing_access_token, existing_refresh_token = existing_user[0]
-#                 if not existing_access_token or not existing_refresh_token:
-#                     # If tokens are missing, require reauthorization
-#                     code_verifier = generate_code_verifier()
-#                     code_challenge = generate_code_challenge(code_verifier)
-#                     state = generate_state()
-#                     auth_url = generate_auth_url(code_challenge, state)  # Generar auth_url correctamente
-#                     app.logger.info(f"Generated valid state: {state}")
-#                     app.logger.info(f"Generated code verifier: {code_verifier}")
-#                     app.logger.info(f"Generated code challenge: {code_challenge}")
-#                     app.logger.info(f"Generated auth URL: {auth_url}")
-#                     session['code_verifier'] = code_verifier
-#                     session['state'] = state
-#                     return render_template('link_auth.html', auth_url=auth_url)  # Pasar auth_url al template
-#                 else:
-#                     # If tokens are valid, proceed to add the new user without reauthorization
-#                     db.add_user(new_user_name, email, existing_access_token, existing_refresh_token)
-#                     app.logger.info(f"Device reassigned to {new_user_name} ({email}) without reauthorization.")
-#                     return render_template('auth_confirmation.html', user_name=new_user_name, email=email, link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
-#             else:
-#                 app.logger.error(f"Email {email} is not in use.")
-#                 return "Error: The email is not in use.", 400
-
-#         except Exception as e:
-#             app.logger.error(f"Unexpected error during reassignment: {e}")
-#             return f"Error: {e}", 500
-#         finally:
-#             db.close()
-#     else:
-#         app.logger.error("Failed to connect to the database.")
-#         return "Error: Could not connect to the database.", 500
 
 # Template filters
 @app.template_filter('number')
