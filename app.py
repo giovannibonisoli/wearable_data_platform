@@ -310,7 +310,7 @@ def available_email_addresses():
     if db.connect():
         if request.method == 'POST':
             address_name = request.form['addressName']
-            db.add_email_address(addressName)
+            db.add_email_address(address_name)
             return redirect(url_for('available_email_addresses'))
         else:
             try:
