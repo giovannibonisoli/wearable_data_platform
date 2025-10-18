@@ -629,7 +629,7 @@ def deactivate_email():
 
         app.logger.error(f"Unexpected error: {e}")
 
-    return render_template(url_for('available_email_addresses'))
+    return redirect(render_template(url_for('available_email_addresses')))
 
 # Template filters
 @app.template_filter('number')
