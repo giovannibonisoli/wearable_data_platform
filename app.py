@@ -627,9 +627,9 @@ def deactivate_email():
     if db.connect():
         db.change_email_status(email_id, 'non_active')
 
-        app.logger.error(f"Unexpected error: {e}")
+        app.logger.error(f"Email {email_id} deactivated.")
 
-    return redirect(render_template(url_for('available_email_addresses')))
+    return redirect(url_for('available_email_addresses'))
 
 # Template filters
 @app.template_filter('number')
