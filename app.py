@@ -39,8 +39,7 @@ logging.basicConfig(
 
 # Get execution mode
 FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mode
-USERNAME = os.getenv('log_USERNAME')
-PASSWORD = os.getenv('PASSWORD')
+
 
 
 # Language settings
