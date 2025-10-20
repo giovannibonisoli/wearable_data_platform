@@ -107,6 +107,18 @@ class DatabaseManager:
         return None
 
 
+    def get_admin_user_by_id(self, admin_user_id):
+        """Get all email addresses owned by an admin user"""
+        query = """
+            SELECT username, full_name, created_at, last_login
+            FROM admin_users
+            WHERE id = %s
+        """
+        result = self.execute_query(query, (admin_user_id,))
+        return {"username": result[0][0], "full_name": result[0][1], "created_at": result[0][2], "last_login": result[0][3]} if result else None
+       
+
+
     def get_admin_user_email_addresses(self, admin_user_id):
         """Get all email addresses owned by an admin user"""
         query = """

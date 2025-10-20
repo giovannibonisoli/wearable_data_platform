@@ -41,7 +41,6 @@ logging.basicConfig(
 FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mode
 
 
-
 # Language settings
 LANGUAGES = {
     'es': 'Español',
@@ -106,26 +105,6 @@ class User(UserMixin):
 def load_user(user_id):
     return User(user_id)
 
-# # Login path
-# @app.route('/livelyageing/login', methods=['GET', 'POST'])
-# def login():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('home'))  # Redirect to home instead of index
-
-#     if request.method == 'POST':
-
-#         username = request.form['username']
-#         password = request.form['password']
-
-#         if username == USERNAME and password == PASSWORD:
-#             user = User(username)
-#             login_user(user)
-#             return redirect(url_for('home'))  # Redirect to home instead of index
-
-#         else:
-#             flash('Incorrect username or password.', 'danger')
-#     return render_template('login.html')
-
 
 @app.route('/livelyageing/login', methods=['GET', 'POST'])
 def login():
@@ -160,6 +139,21 @@ def login():
             flash('Database connection error.', 'danger')
     
     return render_template('login.html')
+
+
+@app.route('/livelyageing/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    
+    return redirect(render_template(url_for('admin_user_profile')))
+
+
+
+@app.route('/livelyageing/change_password', methods=['POST'])
+@login_required
+def change_password():
+    
+    return redirect(render_template(url_for('admin_user_profile')))
 
 
 # Logout path
@@ -331,8 +325,35 @@ def home():
     """
     Render the home page with recent activity.
     """
-    db = DatabaseManager()
     return render_template('home.html')
+    
+
+
+
+@app.route('/livelyageing/admin_user_profile')
+@login_required
+def admin_user_profile():
+    """
+    Render the profile page with recent activity.
+    """
+
+    db = DatabaseManager()
+    if db.connect():
+        try:
+            admin_user = {}
+            admin_user['id'] = int(current_user.id)
+
+            admin_user.update(db.get_admin_user_by_id(admin_user['id']))
+            admin_user['num_email_addresses'] = len(db.get_admin_user_email_addresses(admin_user['id']))
+
+            return render_template('admin_user_profile.html', admin_user=admin_user)
+
+        except Exception as e:
+            app.logger.error(f"Error while retrieving profile data: {e}")
+            return jsonify({'error': str(e)}), 500
+    else:
+        app.logger.error(f"Error while connecting to database: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 

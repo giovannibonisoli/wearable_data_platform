@@ -8,14 +8,27 @@
         <!-- Main Dashboard Cards -->
         <div class="row g-4">
             <!-- Patient Management -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
+            <!-- <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('admin_user_profile') }}">
                     <div class="card-body text-center p-3">
                         <div class="card-icon mb-3">
                             <i class="fas fa-user-md fa-3x text-primary"></i>
                         </div>
-                        <h5 class="card-title text-primary mb-2">{{ _('Patient Management') }}</h5>
-                        <p class="card-text text-muted small">{{ _('Monitor and manage patient health data from wearable devices') }}</p>
+                        <h5 class="card-title text-primary mb-2">{{ _('Profile') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Handle profile setting') }}</p>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Email Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-envelope fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title text-success mb-2">{{ _('Email Addresses') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Configure and monitor email addresses associate to wearable sensors') }}</p>
                     </div>
                 </div>
             </div>
@@ -29,19 +42,6 @@
                         </div>
                         <h5 class="card-title text-warning mb-2">{{ _('Medical Alerts') }}</h5>
                         <p class="card-text text-muted small">{{ _('Review and manage critical health alerts and anomalies') }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Device Management -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
-                    <div class="card-body text-center p-3">
-                        <div class="card-icon mb-3">
-                            <i class="fas fa-watch fa-3x text-success"></i>
-                        </div>
-                        <h5 class="card-title text-success mb-2">{{ _('Device Management') }}</h5>
-                        <p class="card-text text-muted small">{{ _('Configure and monitor wearable health devices') }}</p>
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
             </div>
 
             <!-- Patient Statistics -->
-            <div class="col-md-6 col-lg-4">
+            <!-- <div class="col-md-6 col-lg-4">
                 <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
                     <div class="card-body text-center p-3">
                         <div class="card-icon mb-3">
@@ -70,20 +70,7 @@
                         <p class="card-text text-muted small">{{ _('Detailed individual patient health statistics and trends') }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- System Status -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
-                    <div class="card-body text-center p-3">
-                        <div class="card-icon mb-3">
-                            <i class="fas fa-server fa-3x text-dark"></i>
-                        </div>
-                        <h5 class="card-title text-dark mb-2">{{ _('System Status') }}</h5>
-                        <p class="card-text text-muted small">{{ _('Monitor system health and device connectivity status') }}</p>
-                    </div>
-                </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>

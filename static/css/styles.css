@@ -938,6 +938,113 @@ main {
     background-color: var(--accent);
 }
 
+/* User Dropdown Styles - Add to styles.css */
+
+/* User dropdown button styling */
+.user-dropdown {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.user-dropdown:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.user-dropdown i {
+    font-size: 1.25rem;
+}
+
+/* Dropdown menu styling */
+.user-dropdown-menu {
+    min-width: 220px;
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 30px rgba(44, 90, 160, 0.2);
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    animation: dropdownFadeIn 0.3s ease;
+}
+
+/* Dropdown header styling */
+.user-dropdown-menu .dropdown-header {
+    background: var(--gradient);
+    color: var(--white);
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    margin: -0.5rem 0 0 0;
+}
+
+.user-dropdown-menu .dropdown-header i {
+    color: var(--white);
+}
+
+/* Dropdown items styling */
+.user-dropdown-menu .dropdown-item {
+    padding: 0.75rem 1.25rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.user-dropdown-menu .dropdown-item i {
+    width: 20px;
+    color: var(--primary);
+    transition: all 0.3s ease;
+}
+
+.user-dropdown-menu .dropdown-item:hover {
+    background-color: var(--accent);
+    padding-left: 1.5rem;
+}
+
+/* Logout item specific styling */
+.user-dropdown-menu .logout-item {
+    font-weight: 600;
+}
+
+.user-dropdown-menu .logout-item:hover {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+}
+
+.user-dropdown-menu .logout-item i {
+    color: var(--danger);
+}
+
+/* Divider styling */
+.user-dropdown-menu .dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: rgba(44, 90, 160, 0.1);
+}
+
+/* Dropdown animation */
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-dropdown-menu {
+        min-width: 200px;
+    }
+    
+    .user-dropdown span {
+        display: none;
+    }
+}
+
 /* Responsive Design for Login */
 @media (max-width: 768px) {
     .login-header {
