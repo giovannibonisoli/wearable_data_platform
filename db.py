@@ -139,6 +139,7 @@ class DatabaseManager:
             SET password_hash = %s
             WHERE id = %s
         """
+
         return self.execute_query(query, (password_hash, admin_user_id))
 
 

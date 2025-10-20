@@ -141,20 +141,6 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/livelyageing/update_profile', methods=['POST'])
-@login_required
-def update_profile():
-    
-    return redirect(render_template(url_for('admin_user_profile')))
-
-
-
-@app.route('/livelyageing/change_password', methods=['POST'])
-@login_required
-def change_password():
-    
-    return redirect(render_template(url_for('admin_user_profile')))
-
 
 # Logout path
 @app.route('/livelyageing/logout')
@@ -329,7 +315,6 @@ def home():
     
 
 
-
 @app.route('/livelyageing/admin_user_profile')
 @login_required
 def admin_user_profile():
@@ -355,6 +340,42 @@ def admin_user_profile():
         app.logger.error(f"Error while connecting to database: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/livelyageing/change_password', methods=['POST'])
+@login_required
+def change_password():
+    
+    current_password = request.form['current_password']
+    new_password = request.form['new_password']
+    confirm_password = request.form['confirm_password']
+
+
+    if len(new_password) >= 8:
+        admin_user_id = int(current_user.id)
+
+        db = DatabaseManager()
+
+        if db.connect():
+
+            username = db.get_admin_user_by_id(admin_user_id)['username']
+
+            if db.verify_admin_user(username, current_password):
+                if new_password == confirm_password:
+                    db.update_admin_user_password(admin_user_id, new_password)
+                    flash('Password changed correctly!', 'success')
+                else:
+                    flash('You didn\'t confirm correctly the new password!', 'danger')
+            else:
+                flash('The current password is wrong!', 'danger')
+            
+
+        else:
+            flash('Database connection error.', 'danger')
+    
+    else:
+        flash('The new password must be at least 8 characters!', 'warning')
+
+    return redirect(url_for('admin_user_profile'))
 
 
 # Route: List of all available devices

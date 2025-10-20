@@ -36,6 +36,7 @@
                     <i class="fas fa-shield-alt me-2"></i>{{ _('Account Status') }}
                 </div>
                 <div class="card-body">
+                    
                     <div class="status-item mb-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">{{ _('Member Since') }}</span>
@@ -60,6 +61,7 @@
                     <i class="fas fa-lock me-2"></i>{{ _('Change Password') }}
                 </div>
                 <div class="card-body">
+                    <div id="alert-container"></div>
                     <form method="POST" action="{{ url_for('change_password') }}" id="passwordForm">
                         <div class="row g-3">
                             <div class="col-12">
@@ -107,7 +109,7 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-end mt-3">
-                            <button type="submit" class="btn btn-warning">
+                            <button type="submit" id="password-submit-btn"class="btn btn-warning">
                                 <i class="fas fa-key me-1"></i>{{ _('Update Password') }}
                             </button>
                         </div>
@@ -193,45 +195,19 @@
 
 {% block extra_js %}
 <script>
-// Toggle password visibility
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const button = field.parentElement.querySelector('.password-toggle-btn i');
-    
-    if (field.type === 'password') {
-        field.type = 'text';
-        button.classList.remove('fa-eye');
-        button.classList.add('fa-eye-slash');
-    } else {
-        field.type = 'password';
-        button.classList.remove('fa-eye-slash');
-        button.classList.add('fa-eye');
-    }
-}
-
-// Password confirmation validation
-document.getElementById('passwordForm')?.addEventListener('submit', function(e) {
-    const newPassword = document.getElementById('new_password').value;
-    const confirmPassword = document.getElementById('confirm_password').value;
-    
-    if (newPassword !== confirmPassword) {
-        e.preventDefault();
-        alert('{{ _("Passwords do not match!") }}');
-        return false;
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = field.parentElement.querySelector('.password-toggle-btn i');
+        if (field.type === 'password') {
+            field.type = 'text';
+            button.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            field.type = 'password';
+            button.classList.replace('fa-eye-slash', 'fa-eye');
+        }
     }
     
-    if (newPassword.length < 8) {
-        e.preventDefault();
-        alert('{{ _("Password must be at least 8 characters long!") }}');
-        return false;
-    }
-});
-// Initialize tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
+    
 </script>
 {% endblock %}
