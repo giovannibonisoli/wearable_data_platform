@@ -4,6 +4,7 @@ from config import DB_CONFIG
 from encryption import encrypt_token, decrypt_token
 import random
 from datetime import datetime, timedelta
+import bcrypt
 
 class DatabaseManager:
     def __init__(self):
@@ -77,7 +78,69 @@ class DatabaseManager:
             self.rollback()
             return False
 
-    def add_email_address(self, address_name, access_token=None, refresh_token=None):
+
+    def verify_admin_user(self, username, password):
+        """Verify admin user credentials"""
+
+        query = """
+            SELECT id, username, password_hash, full_name
+            FROM admin_users
+            WHERE username = %s AND is_active = TRUE
+        """
+        result = self.execute_query(query, (username,))
+        
+        if result:
+            user_id, username, password_hash, full_name = result[0]
+            # Verify password
+            if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+                # Update last login
+                self.execute_query("""
+                    UPDATE admin_users 
+                    SET last_login = CURRENT_TIMESTAMP 
+                    WHERE id = %s
+                """, (user_id,))
+                return {
+                    'id': user_id,
+                    'username': username,
+                    'full_name': full_name
+                }
+        return None
+
+
+    def get_admin_user_email_addresses(self, admin_user_id):
+        """Get all email addresses owned by an admin user"""
+        query = """
+            SELECT id, address_name, status, created_at
+            FROM email_addresses
+            WHERE admin_user_id = %s
+            ORDER BY created_at DESC
+        """
+        return self.execute_query(query, (admin_user_id,))
+
+    
+    def update_admin_user_password(self, admin_user_id, new_password):
+        """Update admin user password"""
+        password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        query = """
+            UPDATE admin_users
+            SET password_hash = %s
+            WHERE id = %s
+        """
+        return self.execute_query(query, (password_hash, admin_user_id))
+
+
+    def get_all_admin_users(self):
+        """Get all admin users (for super admin management)"""
+        query = """
+            SELECT id, username, email, full_name, created_at, last_login, is_active
+            FROM admin_users
+            ORDER BY created_at DESC
+        """
+        return self.execute_query(query)
+
+
+    def add_email_address(self, admin_user_id, address_name, access_token=None, refresh_token=None):
         """Add a new email address to the database"""
         if access_token and refresh_token:
             encrypted_access_token = encrypt_token(access_token)
@@ -87,11 +150,11 @@ class DatabaseManager:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO email_addresses (address_name, status, access_token, refresh_token)
-            VALUES (%s, 'inserted', %s, %s)
+            INSERT INTO email_addresses (address_name, status, access_token, refresh_token, admin_user_id)
+            VALUES (%s, 'inserted', %s, %s, %s)
             RETURNING id
         """
-        result = self.execute_query(query, (address_name, encrypted_access_token, encrypted_refresh_token))
+        result = self.execute_query(query, (address_name, encrypted_access_token, encrypted_refresh_token, admin_user_id))
         return result[0][0] if result else None
 
 
@@ -532,6 +595,18 @@ def init_db():
         # Enable TimeScaleDB extension
         db.execute_query("CREATE EXTENSION IF NOT EXISTS timescaledb;")
 
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                full_name VARCHAR(255),
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMPTZ,
+                is_active BOOLEAN DEFAULT TRUE
+            );
+        """)
+
         db.execute_query("CREATE TYPE status_type AS ENUM ('inserted', 'authorized', 'non_active');")
 
         # Create email_addresses table
@@ -540,38 +615,39 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 address_name VARCHAR(255) NOT NULL,
                 status status_type NOT NULL DEFAULT 'inserted',
+                admin_user_id INTEGER REFERENCES admin_users(id),
                 access_token TEXT,
                 refresh_token TEXT,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         """)
 
-        # # Create daily summaries table
-        # db.execute_query("""
-        #     CREATE TABLE IF NOT EXISTS daily_summaries (
-        #         id SERIAL,
-        #         email_id INTEGER REFERENCES email_addresses(id),
-        #         date DATE NOT NULL,
-        #         steps INTEGER,
-        #         heart_rate INTEGER,
-        #         sleep_minutes INTEGER,
-        #         calories INTEGER,
-        #         distance FLOAT,
-        #         floors INTEGER,
-        #         elevation FLOAT,
-        #         active_minutes INTEGER,
-        #         sedentary_minutes INTEGER,
-        #         nutrition_calories INTEGER,
-        #         water FLOAT,
-        #         weight FLOAT,
-        #         bmi FLOAT,
-        #         fat FLOAT,
-        #         oxygen_saturation FLOAT,
-        #         respiratory_rate FLOAT,
-        #         temperature FLOAT,
-        #         UNIQUE(device_id, date)
-        #     );
-        # """)
+        # Create daily summaries table
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS daily_summaries (
+                id SERIAL,
+                email_id INTEGER REFERENCES email_addresses(id),
+                date DATE NOT NULL,
+                steps INTEGER,
+                heart_rate INTEGER,
+                sleep_minutes INTEGER,
+                calories INTEGER,
+                distance FLOAT,
+                floors INTEGER,
+                elevation FLOAT,
+                active_minutes INTEGER,
+                sedentary_minutes INTEGER,
+                nutrition_calories INTEGER,
+                water FLOAT,
+                weight FLOAT,
+                bmi FLOAT,
+                fat FLOAT,
+                oxygen_saturation FLOAT,
+                respiratory_rate FLOAT,
+                temperature FLOAT,
+                UNIQUE(device_id, date)
+            );
+        """)
 
         # Convert it to hypertable
         db.execute_query("""
@@ -890,7 +966,7 @@ def reset_database():
                 cursor.execute("DROP TABLE IF EXISTS device_usages CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS devices CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS users CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS admin_users CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS pending_authorization CASCADE;")
 
                 connection.commit()
@@ -1107,3 +1183,7 @@ if __name__ == "__main__":
     # create_test_data()
     # drop_intraday_data()
     reset_emails_status()
+
+
+
+# You see that right now the authentication reserved to a single admin account whose credential are in environment variables. I want to change this by including the possibility more users, each of wich handles its own email addresses. What the best way to do it?

@@ -107,25 +107,61 @@ class User(UserMixin):
 def load_user(user_id):
     return User(user_id)
 
-# Login path
+# # Login path
+# @app.route('/livelyageing/login', methods=['GET', 'POST'])
+# def login():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('home'))  # Redirect to home instead of index
+
+#     if request.method == 'POST':
+
+#         username = request.form['username']
+#         password = request.form['password']
+
+#         if username == USERNAME and password == PASSWORD:
+#             user = User(username)
+#             login_user(user)
+#             return redirect(url_for('home'))  # Redirect to home instead of index
+
+#         else:
+#             flash('Incorrect username or password.', 'danger')
+#     return render_template('login.html')
+
+
 @app.route('/livelyageing/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))  # Redirect to home instead of index
+        return redirect(url_for('home'))
 
     if request.method == 'POST':
-
         username = request.form['username']
         password = request.form['password']
 
-        if username == USERNAME and password == PASSWORD:
-            user = User(username)
-            login_user(user)
-            return redirect(url_for('home'))  # Redirect to home instead of index
-
+        db = DatabaseManager()
+        if db.connect():
+            try:
+                user_data = db.verify_admin_user(username, password)
+                if user_data:
+                    user = User(
+                        user_data['id']
+                    )
+                    login_user(user)
+                    
+                    # Store user info in session for easy access
+                    session['admin_user_id'] = user_data['id']
+                    session['username'] = user_data['username']
+                    
+                    flash(f'Welcome, {user_data["full_name"] or username}!', 'success')
+                    return redirect(url_for('home'))
+                else:
+                    flash('Incorrect username or password.', 'danger')
+            finally:
+                db.close()
         else:
-            flash('Incorrect username or password.', 'danger')
+            flash('Database connection error.', 'danger')
+    
     return render_template('login.html')
+
 
 # Logout path
 @app.route('/livelyageing/logout')
@@ -302,50 +338,105 @@ def home():
 
 
 # Route: List of all available devices
+# @app.route('/livelyageing/available_email_addresses', methods=['GET', 'POST'])
+# @login_required
+# def available_email_addresses():
+
+#     db = DatabaseManager()
+#     if db.connect():
+#         if request.method == 'POST':
+#             address_name = request.form['addressName']
+#             db.add_email_address(address_name)
+#             return redirect(url_for('available_email_addresses'))
+#         else:
+#             try:
+#                 # Get recent users with their latest activity (only users with names AND valid tokens)
+#                 result = db.execute_query("""
+#                     SELECT id, address_name, status
+#                     FROM email_addresses
+#                     ORDER BY id DESC;
+#                 """)
+
+#                 email_addresses = []
+#                 for email_address in result:
+
+#                     status = email_address[2]
+
+#                     if email_address[2] == 'inserted':
+#                         if db.check_pending_auth(email_address[0]):
+#                             status = 'pending_auth_request'
+
+#                     email_addresses.append({
+#                         "id": email_address[0],
+#                         "address_name": email_address[1],
+#                         "status": status
+#                     })
+
+#                 email_addresses.reverse()
+
+#                 return render_template('available_email_addresses.html', email_addresses=email_addresses)
+#             except Exception as e:
+#                 app.logger.error(f"Error fetching data about available email address: {e}")
+#                 return "Error! Error fetching data about available email address.", 500
+#             finally:
+#                 db.close()
+#     else:
+#         return "Error! Unable to connect with the database", 500
+
+
 @app.route('/livelyageing/available_email_addresses', methods=['GET', 'POST'])
 @login_required
 def available_email_addresses():
-
     db = DatabaseManager()
     if db.connect():
-        if request.method == 'POST':
-            address_name = request.form['addressName']
-            db.add_email_address(address_name)
-            return redirect(url_for('available_email_addresses'))
-        else:
-            try:
-                # Get recent users with their latest activity (only users with names AND valid tokens)
-                result = db.execute_query("""
-                    SELECT id, address_name, status
-                    FROM email_addresses
-                    ORDER BY id DESC;
-                """)
+        try:
+            if request.method == 'POST':
+                address_name = request.form['addressName']
+                # Add email address linked to current user
+                email_id = db.add_email_address(
+                    current_user.id, 
+                    address_name
+                )
 
+                print("EMAIL ID:", email_id)
+                if email_id:
+                    flash(f'Email address {address_name} added successfully!', 'success')
+                else:
+                    flash('Error adding email address.', 'danger')
+                return redirect(url_for('available_email_addresses'))
+            else:
+                # Get only the email addresses owned by current user
+                result = db.get_admin_user_email_addresses(current_user.id)
+                
                 email_addresses = []
                 for email_address in result:
-
                     status = email_address[2]
-
-                    if email_address[2] == 'inserted':
+                    
+                    if status == 'inserted':
                         if db.check_pending_auth(email_address[0]):
                             status = 'pending_auth_request'
-
+                    
                     email_addresses.append({
                         "id": email_address[0],
                         "address_name": email_address[1],
-                        "status": status
+                        "status": status,
+                        "created_at": email_address[3]
                     })
-
-                email_addresses.reverse()
-
-                return render_template('available_email_addresses.html', email_addresses=email_addresses)
-            except Exception as e:
-                app.logger.error(f"Error fetching data about available email address: {e}")
-                return "Error! Error fetching data about available email address.", 500
-            finally:
-                db.close()
+                
+                return render_template(
+                    'available_email_addresses.html', 
+                    email_addresses=email_addresses,
+                    user=current_user
+                )
+        except Exception as e:
+            app.logger.error(f"Error fetching email addresses: {e}")
+            flash('Error loading email addresses.', 'danger')
+            return redirect(url_for('home'))
+        finally:
+            db.close()
     else:
-        return "Error! Unable to connect with the database", 500
+        flash('Database connection error.', 'danger')
+        return redirect(url_for('home'))
 
 
 @app.route('/livelyageing/user_stats')
