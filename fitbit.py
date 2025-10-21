@@ -63,31 +63,31 @@ def refresh_access_token(refresh_token):
 def get_fitbit_data(access_token, email):
     headers = {"Authorization": f"Bearer {access_token}"}
     def fetch_and_store(date_str):
-        db = DatabaseManager()
-        if not db.connect():
-            logger.error("Failed to connect to database")
-            return False
+        # db = DatabaseManager()
+        # if not db.connect():
+        #     logger.error("Failed to connect to database")
+        #     return False
         
-        device_id = db.get_email_id_by_name(email)
-        if not device_id:
-            logger.error(f"Error: No device_id found for the email {email}")
-            return False
-        data = {
-            'steps': 0,
-            'distance': 0,
-            'calories': 0,
-            'floors': 0,
-            'elevation': 0,
-            'active_minutes': 0,
-            'sedentary_minutes': 0,
-            'heart_rate': 0,
-            'sleep_minutes': 0,
-            'nutrition_calories': 0,
-            'water': 0,
-            'spo2': 0,
-            'respiratory_rate': 0,
-            'temperature': 0
-        }
+        # device_id = db.get_email_id_by_name(email)
+        # if not device_id:
+        #     logger.error(f"Error: No device_id found for the email {email}")
+        #     return False
+        # data = {
+        #     'steps': 0,
+        #     'distance': 0,
+        #     'calories': 0,
+        #     'floors': 0,
+        #     'elevation': 0,
+        #     'active_minutes': 0,
+        #     'sedentary_minutes': 0,
+        #     'heart_rate': 0,
+        #     'sleep_minutes': 0,
+        #     'nutrition_calories': 0,
+        #     'water': 0,
+        #     'spo2': 0,
+        #     'respiratory_rate': 0,
+        #     'temperature': 0
+        # }
         try:
 
             # Daily activity data
@@ -168,7 +168,7 @@ def get_fitbit_data(access_token, email):
 
             # Save to the database
             db.insert_daily_summary(
-                email_id=device_id,
+                email_id=email_id,
                 date=date_str,
                 **data
             )
@@ -198,8 +198,7 @@ def get_fitbit_data(access_token, email):
             for key, value in data.items():
                 logger.info(f"{key}: {value}")
             return True"""
-        finally:
-            db.close()
+        
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 raise
@@ -215,127 +214,103 @@ def get_fitbit_data(access_token, email):
             return False
     return fetch_and_store
 
-def process_emails(emails):
+def process_emails():
 
-    # Filtrar correos electrónicos vacíos
-    valid_emails = [email for email in emails if email and email[0].strip()]
-    if not valid_emails:
-        logger.warning("No valid email addresses were provided for processing.")
-        return
-
-    # Rango de fechas
-    START_DATE = datetime(2025, 3, 31)
-    END_DATE = datetime.now()
-    # END_DATE = datetime(2025, 3, 31)
-
-    for email in valid_emails:
-        logger.info(f"\n=== Processing user: {email} ===")
-        # Obtener y desencriptar los tokens
-        db = DatabaseManager()
-        if not db.connect():
-            logger.error("Failed to connect to database")
-            continue
+    db = DatabaseManager()
+    if db.connect():
         
-        try:
-            device_id = db.get_email_id_by_name(email)
-            if not device_id:
-                logger.warning(f"No device_id found for email {email}")
-                continue
+        email_addresses = db.get_all_emails()
+
+        if len(email_addresses) > 0:
             
-            access_token, refresh_token = db.get_email_tokens(device_id)
-        finally:
-            db.close()
-        if not access_token or not refresh_token:
-            logger.warning(f"No valid tokens were found for the email. {email}. Link the device again.")
-            continue
+            # Date range
+            START_DATE = datetime(2025, 8, 20)
+            END_DATE = datetime.now()
+            # END_DATE = datetime(2025, 3, 31)
 
-        # Checkpoint path
-        checkpoint_path = f"logs/checkpoint_{email[0].replace('@','_at_')}.json"
-        # Leer checkpoint
-        if os.path.exists(checkpoint_path):
-            with open(checkpoint_path, 'r') as f:
-                checkpoint = json.load(f)
-            last_date_str = checkpoint.get('last_date')
-            if last_date_str:
-                current_date = datetime.strptime(last_date_str, "%Y-%m-%d")
-            else:
-                current_date = START_DATE
-        else:
-            current_date = START_DATE
+            for email_address in email_addresses:
+                logger.info(f"\n=== Processing email address: {email_address} ===")
 
-        #current_date = datetime(2025, 6, 1)
 
-        fetch_and_store = get_fitbit_data(access_token, email)
+                access_token, refresh_token = db.get_email_tokens(email_address['id'])
+                
+                if not access_token or not refresh_token:
+                    logger.warning(f"No valid tokens were found for the email: {email_address['address_name']}.")
+                
 
-        rate_limit_hit = False
-        current_access_token = access_token
-        current_refresh_token = refresh_token
-
-        while current_date <= END_DATE:
-            print("START DATE: ", current_date)
-            date_str = current_date.strftime("%Y-%m-%d")
-            logger.info(f"Processing {date_str} for {email}")
-            try:
-                print("fetch_and_store: IS IT?")
-                success = fetch_and_store(date_str)
-                print("THIS DOES NOT THROW THE EXCEPTION")
-                if success:
-                    logger.info(f"Data successfully collected for {email} on {date_str}.")
-                # Guardar checkpoint
-                with open(checkpoint_path, 'w') as f:
-                    json.dump({'last_date': date_str}, f)
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 401:
-                    logger.warning(f"Token expired for email {email}. Attempting to refresh the token...")
-                    new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                    if new_access_token and new_refresh_token:
-                        db = DatabaseManager()
-                        if db.connect():
-                            try:
-                                device_id = db.get_email_id_by_name(email)
-                                if device_id:
-                                    db.update_email_tokens(device_id, new_access_token, new_refresh_token)
-                            finally:
-                                db.close()
-                        current_access_token = new_access_token
-                        current_refresh_token = new_refresh_token
-                        fetch_and_store = get_fitbit_data(current_access_token, email)
-                        continue  # Reintentar el mismo día con el nuevo token
+                # Checkpoint path
+                checkpoint_path = f"logs/checkpoint_{email_address['address_name'].replace('@','_at_')}.json"
+                # Leer checkpoint
+                if os.path.exists(checkpoint_path):
+                    with open(checkpoint_path, 'r') as f:
+                        checkpoint = json.load(f)
+                    last_date_str = checkpoint.get('last_date')
+                    if last_date_str:
+                        current_date = datetime.strptime(last_date_str, "%Y-%m-%d")
                     else:
-                        logger.error(f"Failed to refresh the token for email {email}. It is necessary to link the device again.")
-                        break
-                elif e.response.status_code == 429:
-                    logger.warning(f"Rate limit reached for {email} on {date_str}. Saving checkpoint and skipping to the next user.")
-                    with open(checkpoint_path, 'w') as f:
-                        json.dump({'last_date': date_str}, f)
-                    rate_limit_hit = True
-                    break
+                        current_date = START_DATE
                 else:
-                    logger.error(f"HTTP error while fetching data from Fitbit for email {email}: {e}")
-            except Exception as e:
-                logger.error(f"Unexpected error while processing email {email} on {date_str}: {e}")
-            # Sleep para evitar rate limit
-            time.sleep(1)
-            current_date += timedelta(days=1)
+                    current_date = START_DATE
 
-        if not rate_limit_hit and current_date > END_DATE:
-            logger.info(f"User {email} is up to date. All data collected up to {END_DATE.strftime('%Y-%m-%d')}.")
+                #current_date = datetime(2025, 6, 1)
+
+                fetch_and_store = get_fitbit_data(access_token, email_address['address_name'])
+
+                rate_limit_hit = False
+                current_access_token = access_token
+                current_refresh_token = refresh_token
+
+                while current_date <= END_DATE:
+                    print("START DATE: ", current_date)
+                    date_str = current_date.strftime("%Y-%m-%d")
+                    logger.info(f"Processing {date_str} for {email_address['address_name']}")
+                    try:
+                        
+                        success = fetch_and_store(date_str)
+                        if success:
+                            logger.info(f"Data successfully collected for {email_address['address_name']} on {date_str}.")
+                        # Guardar checkpoint
+                        with open(checkpoint_path, 'w') as f:
+                            json.dump({'last_date': date_str}, f)
+                    except requests.exceptions.HTTPError as e:
+                        if e.response.status_code == 401:
+                            logger.warning(f"Token expired for email {email_address['address_name']}. Attempting to refresh the token...")
+                            new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
+                            
+                        elif e.response.status_code == 429:
+                            logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Saving checkpoint and skipping to the next user.")
+                            with open(checkpoint_path, 'w') as f:
+                                json.dump({'last_date': date_str}, f)
+                            rate_limit_hit = True
+                            break
+                        else:
+                            logger.error(f"HTTP error while fetching data from Fitbit for email {email_address['address_name']}: {e}")
+                    except Exception as e:
+                        logger.error(f"Unexpected error while processing email {email_address['address_name']} on {date_str}: {e}")
+                    # Sleep para evitar rate limit
+                    time.sleep(1)
+                    current_date += timedelta(days=1)
+
+                if not rate_limit_hit and current_date > END_DATE:
+                    logger.info(f"User {email_address['address_name']} is up to date. All data collected up to {END_DATE.strftime('%Y-%m-%d')}.")
+
+            
+            
+        else:
+            logger.error("No emails were found in the database.")
+            sys.exit(1)
+
+        db.close()
+
+    else:
+        logger.error("Failed to connect to database")
+        sys.exit(1)
+
+    
 
 if __name__ == "__main__":
     # Create logs directory if it doesn't exist.
     os.makedirs("logs", exist_ok=True)
     # Get the list of unique emails.
-    db = DatabaseManager()
-    if not db.connect():
-        logger.error("Failed to connect to database")
-        sys.exit(1)
     
-    try:
-        unique_emails = db.get_unique_emails()
-        if not unique_emails:
-            logger.error("No emails were found in the database.")
-            sys.exit(1)
-    finally:
-        db.close()
-    logger.info(f"Unique emails found in the database: {unique_emails}")
-    process_emails(unique_emails)
+    process_emails()

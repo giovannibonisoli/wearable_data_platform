@@ -547,22 +547,23 @@ class DatabaseManager:
         ))
         return result
 
-    def get_unique_emails(self):
+    def get_all_emails(self):
         """Retrieves a list of unique email addresses from the database"""
-        query = "SELECT DISTINCT address_name FROM email_addresses;"
-        result = self.execute_query(query)
-        return [row[0] for row in result] if result else []
 
-    def get_user_id_by_email(self, email):
-        """Retrieves the most recent user ID based on their email address"""
-        query = """
-            SELECT id FROM email_addresses
-            WHERE address_name = %s
-            ORDER BY created_at DESC, id DESC
-            LIMIT 1;
-        """
-        result = self.execute_query(query, (email,))
-        return result[0][0] if result else None
+        query = "SELECT id, address_name, status FROM email_addresses;"
+        result = self.execute_query(query)
+        return [{
+                    'id': row[0], 
+                    'address_name': row[1]
+                } for row in result if row[2] == 'authorized'] if result else []
+
+
+    # def get_unique_emails(self):
+    #     """Retrieves a list of unique email addresses from the database"""
+    #     query = "SELECT DISTINCT address_name FROM email_addresses;"
+    #     result = self.execute_query(query)
+    #     return [row[0] for row in result] if result else []
+
 
 
 def connect_to_db():
