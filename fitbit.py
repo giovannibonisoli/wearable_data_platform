@@ -214,6 +214,8 @@ def get_fitbit_data(access_token, email):
             return False
     return fetch_and_store
 
+
+
 def process_emails():
 
     db = DatabaseManager()
@@ -230,7 +232,6 @@ def process_emails():
 
             for email_address in email_addresses:
                 logger.info(f"\n=== Processing email address: {email_address} ===")
-
 
                 access_token, refresh_token = db.get_email_tokens(email_address['id'])
                 
@@ -252,7 +253,7 @@ def process_emails():
                 else:
                     current_date = START_DATE
 
-                #current_date = datetime(2025, 6, 1)
+                # current_date = datetime(2025, 6, 1)
 
                 fetch_and_store = get_fitbit_data(access_token, email_address['address_name'])
 

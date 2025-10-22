@@ -47,23 +47,23 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
 # --- CHECKPOINT HELPERS ---
-def get_checkpoint(email):
-    checkpoint_path = f"logs/checkpoint_intraday_{email}.json"
+def get_checkpoint(address_name):
+    checkpoint_path = f"logs/checkpoint_intraday_{address_name}.json"
     if os.path.exists(checkpoint_path):
         try:
             with open(checkpoint_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            logger.warning(f"Could not read checkpoint for {email}: {e}")
+            logger.warning(f"Could not read checkpoint for {address_name}: {e}")
     return {}
 
-def update_checkpoint(email, checkpoint):
-    checkpoint_path = f"logs/checkpoint_intraday_{email}.json"
+def update_checkpoint(address_name, checkpoint):
+    checkpoint_path = f"logs/checkpoint_intraday_{address_name}.json"
     try:
         with open(checkpoint_path, "w", encoding="utf-8") as f:
             json.dump(checkpoint, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.warning(f"Could not save the checkpoint for {email}: {e}")
+        logger.warning(f"Could not save the checkpoint for {address_name}: {e}")
 
 # --- TOKEN REFRESH ---
 def refresh_access_token(refresh_token):
@@ -108,7 +108,7 @@ def request_with_rate_limit(url, access_token, max_retries=5):
     raise RuntimeError(f"Exceeded {max_retries} retries due to rate limits")
 
 # --- INTRADAY DATA COLLECTION ---
-def get_intraday_data(access_token, email, date_str=None):
+def get_intraday_data(access_token, email_address, date_str=None):
     headers = {"Authorization": f"Bearer {access_token}"}
     if date_str is None:
         today = datetime.now().strftime("%Y-%m-%d")
@@ -119,19 +119,10 @@ def get_intraday_data(access_token, email, date_str=None):
         logger.error("Failed to connect to database")
         return False
     
+    
+    checkpoint = get_checkpoint(email_address['address_name'])
     try:
-        user_id = db.get_email_id_by_name(email)
-        if not user_id:
-            logger.error(f"Error: No device_id found for the email {email}")
-            return False
-    except Exception as e:
-        logger.error(f"Database error: {e}")
-        return False
-    finally:
-        db.close()
-    checkpoint = get_checkpoint(email)
-    try:
-        logger.info(f"\n=== INITIALIZING INTRADAY DATA COLLECTION FOR {email} ({today}) ===")
+        logger.info(f"\n=== INITIALIZING INTRADAY DATA COLLECTION FOR {email_address['address_name']} ({today}) ===")
         total_heart_rate_points = 0
         total_steps_points = 0
         total_calories_points = 0
@@ -161,7 +152,7 @@ def get_intraday_data(access_token, email, date_str=None):
                             db = DatabaseManager()
                             if db.connect():
                                 try:
-                                    db.insert_intraday_metric(user_id, timestamp, data_type='heart_rate', value=value)
+                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=value)
                                 finally:
                                     db.close()
                             total_heart_rate_points += 1
@@ -186,7 +177,7 @@ def get_intraday_data(access_token, email, date_str=None):
                             db = DatabaseManager()
                             if db.connect():
                                 try:
-                                    db.insert_intraday_metric(user_id, timestamp, data_type='steps', value=value)
+                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=value)
                                 finally:
                                     db.close()
                             total_steps_points += 1
@@ -210,7 +201,7 @@ def get_intraday_data(access_token, email, date_str=None):
                             db = DatabaseManager()
                             if db.connect():
                                 try:
-                                    db.insert_intraday_metric(user_id, timestamp, data_type='calories', value=value)
+                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=value)
                                 finally:
                                     db.close()
                             total_calories_points += 1
@@ -234,35 +225,13 @@ def get_intraday_data(access_token, email, date_str=None):
                             db = DatabaseManager()
                             if db.connect():
                                 try:
-                                    db.insert_intraday_metric(user_id, timestamp, data_type='distance', value=value)
+                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=value)
                                 finally:
                                     db.close()
                             total_distance_points += 1
                             checkpoint["distance"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
-        # # 5. INTRADAY ACTIVE ZONE MINUTES (Active Zone Minutes)
-        # azm_url = f"https://api.fitbit.com/1/user/-/activities/active-zone-minutes/date/{today}/1d/{detail_level}.json"
-        # azm_response = requests.get(azm_url, headers=headers)
-        # print(azm_response)
-        # last_azm_ts = checkpoint.get("active_zone_minutes")
-        # if azm_response.status_code == 200:
-        #     azm_data = azm_response.json()
-        #     intraday_key = 'activities-active-zone-minutes-intraday'
-        #     if intraday_key in azm_data:
-        #         intraday_data = azm_data[intraday_key]
-        #         print(intraday_data)
-        #         dataset = intraday_data.get('dataset', [])
-        #         for point in dataset:
-        #             time_str = point.get('time')
-        #             value = point.get('value')
-        #             if time_str and value is not None:
-        #                 timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
-        #                 if not last_azm_ts or timestamp > datetime.strptime(last_azm_ts, "%Y-%m-%d %H:%M:%S"):
-        #                     insert_intraday_metric(user_id, timestamp, data_type='active_zone_minutes', value=value)
-        #                     total_active_zone_points += 1
-        #                     checkpoint["active_zone_minutes"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
-        update_checkpoint(email, checkpoint)
+        update_checkpoint(email_address['address_name'], checkpoint)
         total_points = (total_heart_rate_points + total_steps_points + total_calories_points + total_distance_points + total_active_zone_points)
         logger.info(f"Total points collected: {total_points}")
         if total_points > 0:
@@ -288,156 +257,140 @@ def get_intraday_data(access_token, email, date_str=None):
 # If you don't want to backfill, leave both as None.
 
 BACKFILL_START_DATE = "2025-06-19"  # First day to collect (inclusive)
-BACKFILL_END_DATE = "2025-07-31"    # Last day to collect (inclusive)
+BACKFILL_END_DATE = "2025-10-22"    # Last day to collect (inclusive)
 
 
 # --- MAIN WORKFLOW ---
 def process_all_users():
     db = DatabaseManager()
-    if not db.connect():
-        logger.error("Failed to connect to database")
-        return
-    
-    try:
-        unique_emails = db.get_unique_emails()
-        if not unique_emails:
-            logger.error("No emails found in the database.")
-            return
-    finally:
-        db.close()
-
-    today = datetime.now().date()
-    for email in unique_emails:
-        logger.info(f"\n=== Processing user: {email} ===")
-        # access_token, refresh_token = get_user_tokens(email)
-        db = DatabaseManager()
-        if not db.connect():
-            logger.error("Failed to connect to database")
-            continue
+    if db.connect():
         
-        try:
-            device_id = db.get_email_id_by_name(email)
-            if not device_id:
-                logger.warning(f"No device_id found for email {email}")
-                continue
-            
-            access_token, refresh_token = db.get_email_tokens(device_id)
-        finally:
-            db.close()
-        if not access_token or not refresh_token:
-            logger.warning(f"No valid tokens found for the email {email}. It is necessary to re-link the device.")
-            continue
-        current_access_token = access_token
-        current_refresh_token = refresh_token
-        # Read checkpoint
-        checkpoint_path = f"logs/checkpoint_intraday_{email}.json"
-        if os.path.exists(checkpoint_path):
-            with open(checkpoint_path, 'r', encoding='utf-8') as f:
-                checkpoint_data = json.load(f)
-            last_date_str = checkpoint_data.get('last_date')
-            if last_date_str:
-                last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
-            else:
-                last_date = None
-        else:
-            last_date = None
+        email_addresses = db.get_all_emails()
 
-        # Determine the date range to process.
+        if len(email_addresses) > 0:
 
-        if BACKFILL_START_DATE and BACKFILL_END_DATE:
-            print("ENTERED" )
-            # Backfill mode: only collect data between those dates.
-            start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
-            end_date = datetime.strptime(BACKFILL_END_DATE, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            for email_address in email_addresses:
+                logger.info(f"\n=== Processing user: {email_address['address_name']} ===")
+                # access_token, refresh_token = get_user_tokens(email)
 
-            print("START DATE:", start_date, "END DATE:", end_date)
-            if last_date is not None and last_date >= start_date:
-                # If the checkpoint is already within the range, continue from the next day.
-                current_date = last_date + timedelta(days=1)
-            else:
-                current_date = start_date
-            # Only process up to end_date.
+                access_token, refresh_token = db.get_email_tokens(email_address['id'])
+                
+                if not access_token or not refresh_token:
+                    logger.warning(f"No valid tokens were found for the email: {email_address['address_name']}.")
+                
+                current_access_token = access_token
+                current_refresh_token = refresh_token
+                
 
-            print("START DATE:", start_date, "END DATE:", end_date, "CURRENT DATE:", current_date)
-            while current_date <= end_date:
-                print("CURRENT DATE:", current_date)
-                date_str = current_date.strftime('%Y-%m-%d')
-                try:
-                    logger.info(f"Collecting intraday data for {email} on {date_str}")
-                    success = get_intraday_data(current_access_token, email, date_str)
-                    # Save checkpoint
-                    with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                        json.dump({'last_date': date_str}, f)
-                    if not success:
-                        logger.warning(f"Could not collect data for {email} on {date_str}")
-                except requests.exceptions.HTTPError as e:
-                    if hasattr(e, 'response') and e.response and e.response.status_code == 401:
-                        logger.warning(f"Token expired for {email}. Attempting to refresh the token...")
-                        new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                        if new_access_token and new_refresh_token:
-                            update_users_tokens(email, new_access_token, new_refresh_token)
-                            current_access_token = new_access_token
-                            current_refresh_token = new_refresh_token
-                            try:
-                                success = get_intraday_data(current_access_token, email, date_str)
-                                with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                    json.dump({'last_date': date_str}, f)
-                                if not success:
-                                    logger.warning(f"Could not collect data after refreshing token for {email} on {date_str}.")
-                            except Exception as e2:
-                                logger.error(f"Error after refreshing token for {email}: {e2}")
-                        else:
-                            logger.error(f"Could not refresh token for {email}. Please reauthorize the device.")
-                            break
-                    elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
-                        logger.warning(f"Rate limit reached for {email} on {date_str}. Stopping processing.")
-                        break
+                # Checkpoint path
+                checkpoint_path = f"logs/checkpoint_{email_address['address_name'].replace('@','_at_')}.json"
+                # Leer checkpoint
+                if os.path.exists(checkpoint_path):
+                    with open(checkpoint_path, 'r') as f:
+                        checkpoint = json.load(f)
+                    last_date_str = checkpoint.get('last_date')
+                    if last_date_str:
+                        last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
                     else:
-                        logger.error(f"HTTP error while fetching intraday data for {email}: {e}")
-                except Exception as e:
-                    logger.error(f"Unexpected error while processing {email} on {date_str}: {e}", exc_info=True)
-                time.sleep(1)
-                current_date += timedelta(days=1)
-            logger.info(f"User {email} processed up to {end_date} (backfill mode).")
-        else:
-            # Normal mode: collect only the current day if already up to date.
-            if last_date is None or last_date < today:
-                current_date = today
-                date_str = current_date.strftime('%Y-%m-%d')
-                try:
-                    logger.info(f"Collecting intraday data for {email} on {date_str}")
-                    success = get_intraday_data(current_access_token, email, date_str)
-                    with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                        json.dump({'last_date': date_str}, f)
-                    if not success:
-                        logger.warning(f"Could not collect data for {email} on {date_str}")
-                except requests.exceptions.HTTPError as e:
-                    if hasattr(e, 'response') and e.response and e.response.status_code == 401:
-                        logger.warning(f"Token expired for {email}. Attempting to refresh the token...")
-                        new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                        if new_access_token and new_refresh_token:
-                            update_users_tokens(email, new_access_token, new_refresh_token)
-                            current_access_token = new_access_token
-                            current_refresh_token = new_refresh_token
-                            try:
-                                success = get_intraday_data(current_access_token, email, date_str)
-                                with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                    json.dump({'last_date': date_str}, f)
-                                if not success:
-                                    logger.warning(f"Could not collect data after refreshing token for {email} on {date_str}.")
-                            except Exception as e2:
-                                logger.error(f"Error after refreshing token for {email}: {e2}")
-                        else:
-                            logger.error(f"Could not refresh the token for {email}. Please reauthorize the device.")
-                    elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
-                        logger.warning(f"Rate limit reached for {email} on {date_str}. Stopping processing.")
+                        last_date = None
+                else:
+                    last_date = None
+                    
+
+                # Determine the date range to process.
+                if BACKFILL_START_DATE and BACKFILL_END_DATE:
+                    
+                    start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
+                    end_date = datetime.strptime(BACKFILL_END_DATE, "%Y-%m-%d").date()
+
+                    print("START DATE:", start_date, "END DATE:", end_date)
+                    if last_date is not None and last_date >= start_date:
+                        # If the checkpoint is already within the range, continue from the next day.
+                        current_date = last_date + timedelta(days=1)
                     else:
-                        logger.error(f"HTTP error while fetching intraday data for {email}: {e}")
-                except Exception as e:
-                    logger.error(f"Unexpected error while processing {email} on {date_str}: {e}", exc_info=True)
-                time.sleep(1)
-            logger.info(f"User {email} processed for the day {today} (normal mode).")
-    logger.info("=== END OF FITBIT INTRADAY EXECUTION ===")
+                        current_date = start_date
+                    # Only process up to end_date.
+
+                    while current_date <= end_date:
+                        print("CURRENT DATE:", current_date)
+                        date_str = current_date.strftime('%Y-%m-%d')
+                        try:
+                            logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
+                            success = get_intraday_data(current_access_token, email_address, date_str)
+                            # Save checkpoint
+                            with open(checkpoint_path, 'w', encoding='utf-8') as f:
+                                json.dump({'last_date': date_str}, f)
+                            if not success:
+                                logger.warning(f"Could not collect data for {email_address['address_name']} on {date_str}")
+                        except requests.exceptions.HTTPError as e:
+                            if hasattr(e, 'response') and e.response and e.response.status_code == 401:
+                                logger.warning(f"Token expired for {email_address['address_name']}. Attempting to refresh the token...")
+                                new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
+                                if new_access_token and new_refresh_token:
+                                    update_users_tokens(email_address['address_name'], new_access_token, new_refresh_token)
+                                    current_access_token = new_access_token
+                                    current_refresh_token = new_refresh_token
+                                    try:
+                                        success = get_intraday_data(current_access_token, email_address, date_str)
+                                        with open(checkpoint_path, 'w', encoding='utf-8') as f:
+                                            json.dump({'last_date': date_str}, f)
+                                        if not success:
+                                            logger.warning(f"Could not collect data after refreshing token for {email_address['address_name']} on {date_str}.")
+                                    except Exception as e2:
+                                        logger.error(f"Error after refreshing token for {email_address['address_name']}: {e2}")
+                                else:
+                                    logger.error(f"Could not refresh token for {email_address['address_name']}. Please reauthorize the device.")
+                                    break
+                            elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
+                                logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Stopping processing.")
+                                break
+                            else:
+                                logger.error(f"HTTP error while fetching intraday data for {email_address['address_name']}: {e}")
+                        except Exception as e:
+                            logger.error(f"Unexpected error while processing {email_address['address_name']} on {date_str}: {e}", exc_info=True)
+                        time.sleep(1)
+                        current_date += timedelta(days=1)
+                    logger.info(f"User {email_address['address_name']} processed up to {end_date} (backfill mode).")
+                else:
+                    # Normal mode: collect only the current day if already up to date.
+                    if last_date is None or last_date < today:
+                        current_date = today
+                        date_str = current_date.strftime('%Y-%m-%d')
+                        try:
+                            logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
+                            success = get_intraday_data(current_access_token, email_address, date_str)
+                            with open(checkpoint_path, 'w', encoding='utf-8') as f:
+                                json.dump({'last_date': date_str}, f)
+                            if not success:
+                                logger.warning(f"Could not collect data for {email_address['address_name']} on {date_str}")
+                        except requests.exceptions.HTTPError as e:
+                            if hasattr(e, 'response') and e.response and e.response.status_code == 401:
+                                logger.warning(f"Token expired for {email_address['address_name']}. Attempting to refresh the token...")
+                                new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
+                                if new_access_token and new_refresh_token:
+                                    update_users_tokens(email_address['address_name'], new_access_token, new_refresh_token)
+                                    current_access_token = new_access_token
+                                    current_refresh_token = new_refresh_token
+                                    try:
+                                        success = get_intraday_data(current_access_token, email_address, date_str)
+                                        with open(checkpoint_path, 'w', encoding='utf-8') as f:
+                                            json.dump({'last_date': date_str}, f)
+                                        if not success:
+                                            logger.warning(f"Could not collect data after refreshing token for {email_address['address_name']} on {date_str}.")
+                                    except Exception as e2:
+                                        logger.error(f"Error after refreshing token for {email_address['address_name']}: {e2}")
+                                else:
+                                    logger.error(f"Could not refresh the token for {email_address['address_name']}. Please reauthorize the device.")
+                            elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
+                                logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Stopping processing.")
+                            else:
+                                logger.error(f"HTTP error while fetching intraday data for {email_address['address_name']}: {e}")
+                        except Exception as e:
+                            logger.error(f"Unexpected error while processing {email_address['address_name']} on {date_str}: {e}", exc_info=True)
+                        time.sleep(1)
+                    logger.info(f"User {email_address['address_name']} processed for the day {today} (normal mode).")
+            logger.info("=== END OF FITBIT INTRADAY EXECUTION ===")
 
 
 if __name__ == "__main__":
