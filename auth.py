@@ -11,7 +11,7 @@ TOKEN_URL = "https://api.fitbit.com/oauth2/token"
 
 def get_tokens(code, code_verifier):
     """
-    Intercambia el código de autorización por tokens usando PKCE.
+    Exchange auth code with tokens by using PKCE.
     """
     auth_header = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
     headers = {
