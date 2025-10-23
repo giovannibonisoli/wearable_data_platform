@@ -34,14 +34,14 @@ def get_tokens(code, code_verifier):
     print(f"Token response body: {response.text}")  # Debug log
 
     if response.status_code != 200:
-        raise Exception(f"Error de Fitbit: {response.text}")
+        raise Exception(f"Fitbit error: {response.text}")
 
     tokens = response.json()
     return tokens.get("access_token"), tokens.get("refresh_token")
 
 def generate_state(length=16):
     """
-    Genera un parámetro state aleatorio.
+    Generate a random state parameter.
     """
     characters = string.ascii_letters + string.digits
     state = ''.join(random.choice(characters) for i in range(length))
@@ -49,7 +49,7 @@ def generate_state(length=16):
 
 def generate_code_verifier():
     """
-    Genera un code_verifier aleatorio.
+    Generate a random code verifier.
     """
     code_verifier = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b'=').decode('utf-8')
     return code_verifier
@@ -57,9 +57,9 @@ def generate_code_verifier():
 
 def generate_code_challenge(code_verifier):
     """
-    Genera el code_challenge usando SHA-256.
+    Generate the code challenge with SHA-256.
     """
-    # Asegurar que el code_verifier es una cadena
+    # Make sure that code_verifier is a chain
     if isinstance(code_verifier, bytes):
         code_verifier = code_verifier.decode('utf-8')
 
@@ -67,7 +67,7 @@ def generate_code_challenge(code_verifier):
     code_challenge = base64.urlsafe_b64encode(sha256).rstrip(b'=').decode('utf-8')
     return code_challenge
 
-def refresh_token(refresh_token):
+def refresh_tokens(refresh_token):
     payload = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
