@@ -722,6 +722,9 @@ def callback():
                 db.delete_pending_auth(state)
                 app.logger.info(f"Deleted prending request.")
 
+                db.initialize_intraday_checkpoint(email_id)
+                app.logger.info(f"Initialize intraday checkpoint.")
+
                 return render_template('auth_confirmation.html',
                                      address_name=address_name,
                                      success=True,

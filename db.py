@@ -239,6 +239,55 @@ class DatabaseManager:
 
         return self.execute_query(query, params)
 
+
+    def initialize_intraday_checkpoint(self, email_id):
+
+        query = """
+            INSERT INTO intraday_checkpoints (
+                email_id, timestamp 
+            ) VALUES (%s, %s)
+        """
+        self.execute_query(query, (email_id, None))
+
+        return None
+
+
+
+    def get_intraday_checkpoint(self, email_id):
+        """
+        Get the last date for which intraday data was collected.
+        Returns a date object or None.
+        """
+        query = """
+            SELECT timestamp
+            FROM intraday_checkpoints
+            WHERE email_id = %s
+        """
+        result = self.execute_query(query, (email_id,))
+            
+        if result:
+            return result[0][0]
+        return None
+
+    
+    def update_intraday_checkpoint(self, email_id, timestamp):
+        """
+        Get the last date for which intraday data was collected.
+        Returns a date object or None.
+        """
+
+        query = """
+                UPDATE intraday_checkpoints
+                SET timestamp = %s
+                WHERE email_id = %s;
+        """
+        result = self.execute_query(query, (timestamp, email_id))
+                
+        if result:
+            print(f"Intraday checkpoint {timestamp} for email_id {email_id} successfully updated in intraday_checkpoint.")
+        return result
+
+
     def get_sleep_logs(self, email_id, start_date=None, end_date=None):
         """Gets the sleep records associated to an email address."""
         query = """
@@ -547,6 +596,24 @@ class DatabaseManager:
         ))
         return result
 
+    def get_daily_summary_checkpoint(self, email_id):
+        """
+        Get the last date for which daily summary was collected.
+        Returns a date object or None.
+        """
+        query = """
+            SELECT MAX(date) as last_date
+            FROM daily_summaries
+            WHERE email_id = %s
+        """
+
+
+        self.cursor.execute(query, (email_id,))
+        result = self.cursor.fetchone()
+        if result:
+            return result[0]
+        return None
+
     def get_all_emails(self):
         """Retrieves a list of unique email addresses from the database"""
 
@@ -556,14 +623,6 @@ class DatabaseManager:
                     'id': row[0], 
                     'address_name': row[1]
                 } for row in result if row[2] == 'authorized'] if result else []
-
-
-    # def get_unique_emails(self):
-    #     """Retrieves a list of unique email addresses from the database"""
-    #     query = "SELECT DISTINCT address_name FROM email_addresses;"
-    #     result = self.execute_query(query)
-    #     return [row[0] for row in result] if result else []
-
 
 
 def connect_to_db():
@@ -636,6 +695,20 @@ def init_db():
             );
         """)
 
+        db.execute_query("""
+            CREATE TABLE pending_authorizations (
+                    id SERIAL,
+                    email_id INTEGER REFERENCES email_addresses(id),
+                    state VARCHAR(500) UNIQUE NOT NULL,
+                    code_verifier VARCHAR(128) NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+
+                CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
+                CREATE INDEX idx_pending_auth_expires ON pending_authorizations(expires_at);
+        """)
+
         # Create daily summaries table
         db.execute_query("""
             CREATE TABLE IF NOT EXISTS daily_summaries (
@@ -659,7 +732,7 @@ def init_db():
                 oxygen_saturation FLOAT,
                 respiratory_rate FLOAT,
                 temperature FLOAT,
-                UNIQUE(device_id, date)
+                UNIQUE(email_id, date)
             );
         """)
 
@@ -684,12 +757,20 @@ def init_db():
             );
         """)
 
+
         # Convert it to hypertable
         db.execute_query("""
             SELECT create_hypertable('intraday_metrics', 'time',
                 if_not_exists => TRUE,
                 migrate_data => TRUE
             );
+        """)
+
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS intraday_checkpoints(
+                    email_id INTEGER REFERENCES email_addresses(id),
+                    timestamp TIMESTAMPTZ
+                );
         """)
 
         # Crear sleep log table
@@ -743,19 +824,7 @@ def init_db():
             );
         """)
 
-        db.execute_query("""
-            CREATE TABLE pending_authorizations (
-                    id SERIAL,
-                    email_id INTEGER REFERENCES email_addresses(id),
-                    state VARCHAR(500) UNIQUE NOT NULL,
-                    code_verifier VARCHAR(128) NOT NULL,
-                    expires_at TIMESTAMP NOT NULL,
-                    created_at TIMESTAMP DEFAULT NOW()
-                );
-
-                CREATE INDEX idx_pending_auth_state ON pending_authorizations(state);
-                CREATE INDEX idx_pending_auth_expires ON pending_authorizations(expires_at);
-        """)
+        
 
         print("Database successfully initialized with TimeScaleDB.")
         return True
@@ -975,43 +1044,54 @@ def reset_database():
                 # Drop all tables in the correct order to handle foreign key constraints
                 cursor.execute("DROP TABLE IF EXISTS alerts CASCADE;")  # Drop alerts first
                 cursor.execute("DROP TABLE IF EXISTS sleep_logs CASCADE;")
-                # cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
-                # cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS device_usages CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS devices CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS intraday_checkpoints CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS admin_users CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS pending_authorization CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS pending_authorizations CASCADE;")
 
                 connection.commit()
                 print("Database tables dropped successfully.")
 
                 # Reinitialize the database
                 init_db()
-                print("Database reinitialized successfully.")
-
-                # Add the test email using DatabaseManager instance
-                db = DatabaseManager()
-                if db.connect():
-                    db.add_email_address(
-                        address_name="Wearable2LivelyAgeign@gmail.com",
-                        access_token="",
-                        refresh_token=""
-                    )
-                    db.close()
-
-                print("Wearable2LivelyAgeign@gmail.com email successfully.")
+                # print("Database reinitialized successfully.")
 
                 db = DatabaseManager()
                 if db.connect():
-                    db.add_email_address(
-                        address_name="Wearable1LivelyAgeign@gmail.com",
-                        access_token="",
-                        refresh_token=""
-                    )
-                    db.close()
+                    print("\nEnter new admin user details:")
+                    password = input("Password: ").strip()
+                    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-                print("Wearable1LivelyAgeign@gmail.com email added successfully.")
+                    result = db.execute_query("""
+                                INSERT INTO admin_users (username, password_hash, full_name)
+                                VALUES (%s, %s, %s)
+                                RETURNING id
+                            """, ('admin', password_hash, 'UNIMORE Administrator'))
+
+                # # Add the test email using DatabaseManager instance
+                # db = DatabaseManager()
+                # if db.connect():
+                #     db.add_email_address(
+                #         address_name="Wearable2LivelyAgeign@gmail.com",
+                #         access_token="",
+                #         refresh_token=""
+                #     )
+                #     db.close()
+
+                # print("Wearable2LivelyAgeign@gmail.com email successfully.")
+
+                # db = DatabaseManager()
+                # if db.connect():
+                #     db.add_email_address(
+                #         address_name="Wearable1LivelyAgeign@gmail.com",
+                #         access_token="",
+                #         refresh_token=""
+                #     )
+                #     db.close()
+
+                # print("Wearable1LivelyAgeign@gmail.com email added successfully.")
 
         except Exception as e:
             print(f"Error resetting database: {e}")
@@ -1162,6 +1242,10 @@ def reset_emails_status():
         print(f"Resetting status")
         query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, status='inserted';"
         result = db.execute_query(query, [])
+
+        query = "DELETE FROM intraday_checkpoints;"
+        result = db.execute_query(query, [])
+
         return result
     except Exception as e:
         print(f"Error while dropping access tokens: {e}")
@@ -1189,6 +1273,33 @@ def drop_authorizations():
         db.close()
 
 
+def drop_fitbit_data():
+
+    """Drops all fitbit data table"""
+    db = DatabaseManager()
+    if not db.connect():
+        print("Failed to connect to the database")
+        return False
+
+    try:
+        print(f"Dropping all fitbit data")
+        query = "DELETE FROM daily_summaries;"
+        result = db.execute_query(query, [])
+
+        query = "DELETE FROM intraday_metrics;"
+        result = db.execute_query(query, [])
+
+        query = "UPDATE intraday_checkpoints SET timestamp = NULL;"
+        result = db.execute_query(query, [])
+
+        return result
+    except Exception as e:
+        print(f"Error dropping all fitbit data: {e}")
+        return False
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     # Reset and reinitialize the database
     # drop_authorizations()
@@ -1196,7 +1307,8 @@ if __name__ == "__main__":
     # Create test data
     # create_test_data()
     # drop_intraday_data()
-    reset_emails_status()
+    # reset_emails_status()
+    drop_fitbit_data() 
 
 
 

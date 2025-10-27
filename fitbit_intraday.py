@@ -1,34 +1,32 @@
 """
-FITBIT INTRADAY - MODULAR BACKFILL & CHECKPOINT
+FITBIT INTRADAY - CONTINUOUS BACKGROUND LOOP
 
-This script collects intraday Fitbit data for multiple users, with robust checkpoint and backfill logic.
+This script continuously collects intraday Fitbit data for multiple users in the background.
 
-FUNCIONALIDAD PRINCIPAL:
-- For each user, it uses a checkpoint to know up to which date data has been collected.
-- If you set BACKFILL_START_DATE and BACKFILL_END_DATE, it only collects data between those dates (both inclusive), useful for historical backfill.
-- If both variables are set to None, the script works in normal mode: it only collects data for the current day if the user is already up to date
-(ideal for periodic execution like cron jobs).
-- The checkpoint is saved per user and allows resuming if execution is interrupted.
-- The backfill range can be easily modified by editing the variables at the beginning of the script.
-- When you finish backfilling, set both variables to None to return to normal mode.
+MAIN FUNCTIONALITY:
+- Runs continuously in a loop until it reaches datetime.now().date()
+- If a user hits rate limit (429), skip to next user
+- If all users hit rate limit, sleep for 10 minutes
+- Uses database checkpoint (no individual metric checkpoints)
+- Automatically updates checkpoint using db.update_intraday_checkpoints()
 
 Key variables to modify:
-    BACKFILL_START_DATE = "2025-05-21"  # First day to collect (inclusive)
-    BACKFILL_END_DATE = "2025-05-28"    # Last day to collect (inclusive)
-
-If you have questions, review this block or search for 'BACKFILL' in the code.
+    BACKFILL_START_DATE = "2025-01-20"  # First day to collect (inclusive)
 """
 
 from base64 import b64encode
 from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
-from db import DatabaseManager
+
 import sys
 import os
 import json
 import time
 import logging
+
+from db import DatabaseManager
+from auth import refresh_tokens
 
 # Logs configuration
 logging.basicConfig(
@@ -46,356 +44,226 @@ load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
-# --- CHECKPOINT HELPERS ---
-def get_checkpoint(address_name):
-    checkpoint_path = f"logs/checkpoint_intraday_{address_name}.json"
-    if os.path.exists(checkpoint_path):
-        try:
-            with open(checkpoint_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            logger.warning(f"Could not read checkpoint for {address_name}: {e}")
-    return {}
+# === BACKFILL CONFIGURATION ===
+BACKFILL_START_DATE = "2025-01-25"  # First day to collect (inclusive)
+SLEEP_ON_RATE_LIMIT = 600  # 10 minutes in seconds
 
-def update_checkpoint(address_name, checkpoint):
-    checkpoint_path = f"logs/checkpoint_intraday_{address_name}.json"
-    try:
-        with open(checkpoint_path, "w", encoding="utf-8") as f:
-            json.dump(checkpoint, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.warning(f"Could not save the checkpoint for {address_name}: {e}")
 
-# --- TOKEN REFRESH ---
-def refresh_access_token(refresh_token):
-    url = "https://api.fitbit.com/oauth2/token"
-    auth_header = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {auth_header}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    data = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token
-    }
-    logger.info(f"Refreshing token for refresh_token: {refresh_token[:10]}...")
-    response = requests.post(url, headers=headers, data=data)
-    if response.status_code == 200:
-        new_tokens = response.json()
-        logger.info(f"Token refreshed successfully")
-        return new_tokens.get("access_token"), new_tokens.get("refresh_token")
-    else:
-        logger.error(f"Error refreshing token: {response.status_code}, {response.text}")
-        return None, None
-
-def request_with_rate_limit(url, access_token, max_retries=5):
+def request_with_rate_limit(url, access_token, max_retries=3):
+    """Make request with rate limit handling. Returns (data, hit_limit)"""
     headers = {"Authorization": f"Bearer {access_token}"}
     for attempt in range(1, max_retries + 1):
         resp = requests.get(url, headers=headers)
         limit = resp.headers.get('Fitbit-Rate-Limit-Limit')
         remaining = resp.headers.get('Fitbit-Rate-Limit-Remaining')
         reset = resp.headers.get('Fitbit-Rate-Limit-Reset')
-        print(f"Rate‑limit: {remaining}/{limit}, resets in {reset}s")
+        logger.debug(f"Rate-limit: {remaining}/{limit}, resets in {reset}s")
 
         if resp.status_code == 429:
-            wait = int(reset) if reset else (60 * (1.5 ** (attempt-1)))
-            print(f"429 hit, waiting {wait:.1f}s before retrying (attempt {attempt})")
-            time.sleep(wait)
-            continue
+            logger.warning(f"429 Rate limit hit (attempt {attempt})")
+            return None, True  # Signal rate limit hit
+        
+        if resp.status_code == 401:
+            raise requests.exceptions.HTTPError("401 Unauthorized", response=resp)
 
         resp.raise_for_status()
-        return resp.json()
+        return resp.json(), False
 
-    raise RuntimeError(f"Exceeded {max_retries} retries due to rate limits")
+    return None, True  # Exceeded retries
 
-# --- INTRADAY DATA COLLECTION ---
-def get_intraday_data(access_token, email_address, date_str=None):
-    headers = {"Authorization": f"Bearer {access_token}"}
-    if date_str is None:
-        today = datetime.now().strftime("%Y-%m-%d")
-    else:
-        today = date_str
+
+def get_intraday_data(access_token, email_address, date_str):
+    """Collect intraday data for a specific date. Returns (success, hit_rate_limit)"""
     db = DatabaseManager()
     if not db.connect():
         logger.error("Failed to connect to database")
-        return False
+        return False, False
     
-    
-    checkpoint = get_checkpoint(email_address['address_name'])
     try:
-        logger.info(f"\n=== INITIALIZING INTRADAY DATA COLLECTION FOR {email_address['address_name']} ({today}) ===")
-        total_heart_rate_points = 0
-        total_steps_points = 0
-        total_calories_points = 0
-        total_active_zone_points = 0
-        total_distance_points = 0
+        logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
+        total_points = 0
         detail_level = "1min"
+        hit_rate_limit = False
 
-        # 1. INTRADAY HEART RATE (Heart Rate)
-        heart_rate_url = f"https://api.fitbit.com/1/user/-/activities/heart/date/{today}/1d/{detail_level}.json"
-        request_with_rate_limit(heart_rate_url, access_token)
-        heart_response = requests.get(heart_rate_url, headers=headers)
-        last_hr_ts = checkpoint.get("heart_rate")
-
-        if heart_response.status_code == 200:
-            heart_data = heart_response.json()
-
-            if 'activities-heart-intraday' in heart_data:
-                intraday_data = heart_data['activities-heart-intraday']
-                dataset = intraday_data.get('dataset', [])
-                for point in dataset:
-                    time_str = point.get('time')
-                    value = point.get('value')
-                    if time_str and value is not None:
-                        timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        if not last_hr_ts or timestamp > datetime.strptime(last_hr_ts, "%Y-%m-%d %H:%M:%S"):
-                            # insert_intraday_metric(user_id, timestamp, 'heart_rate', value)
-                            db = DatabaseManager()
-                            if db.connect():
-                                try:
-                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=value)
-                                finally:
-                                    db.close()
-                            total_heart_rate_points += 1
-                            checkpoint["heart_rate"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
-        # 2. INTRADAY STEPS (Steps)
-        steps_url = f"https://api.fitbit.com/1/user/-/activities/steps/date/{today}/1d/{detail_level}.json"
-        steps_response = requests.get(steps_url, headers=headers)
-        last_steps_ts = checkpoint.get("steps")
-        if steps_response.status_code == 200:
-            steps_data = steps_response.json()
-            if 'activities-steps-intraday' in steps_data:
-                intraday_data = steps_data['activities-steps-intraday']
-                dataset = intraday_data.get('dataset', [])
-                for point in dataset:
-                    time_str = point.get('time')
-                    value = point.get('value')
-                    if time_str and value is not None:
-                        timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        if not last_steps_ts or timestamp > datetime.strptime(last_steps_ts, "%Y-%m-%d %H:%M:%S"):
-                            # insert_intraday_metric(user_id, timestamp, 'steps', value)
-                            db = DatabaseManager()
-                            if db.connect():
-                                try:
-                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=value)
-                                finally:
-                                    db.close()
-                            total_steps_points += 1
-                            checkpoint["steps"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
-        # 3. INTRADAY CALORIES (Calories)
-        calories_url = f"https://api.fitbit.com/1/user/-/activities/calories/date/{today}/1d/{detail_level}.json"
-        calories_response = requests.get(calories_url, headers=headers)
-        last_calories_ts = checkpoint.get("calories")
-        if calories_response.status_code == 200:
-            calories_data = calories_response.json()
-            if 'activities-calories-intraday' in calories_data:
-                intraday_data = calories_data['activities-calories-intraday']
-                dataset = intraday_data.get('dataset', [])
-                for point in dataset:
-                    time_str = point.get('time')
-                    value = point.get('value')
-                    if time_str and value is not None:
-                        timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        if not last_calories_ts or timestamp > datetime.strptime(last_calories_ts, "%Y-%m-%d %H:%M:%S"):
-                            db = DatabaseManager()
-                            if db.connect():
-                                try:
-                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=value)
-                                finally:
-                                    db.close()
-                            total_calories_points += 1
-                            checkpoint["calories"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
-        # 4. INTRADAY DISTANCE (Distance)
-        distance_url = f"https://api.fitbit.com/1/user/-/activities/distance/date/{today}/1d/{detail_level}.json"
-        distance_response = requests.get(distance_url, headers=headers)
-        last_distance_ts = checkpoint.get("distance")
-        if distance_response.status_code == 200:
-            distance_data = distance_response.json()
-            if 'activities-distance-intraday' in distance_data:
-                intraday_data = distance_data['activities-distance-intraday']
-                dataset = intraday_data.get('dataset', [])
-                for point in dataset:
-                    time_str = point.get('time')
-                    value = point.get('value')
-                    if time_str and value is not None:
-                        timestamp = datetime.strptime(f"{today} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        if not last_distance_ts or timestamp > datetime.strptime(last_distance_ts, "%Y-%m-%d %H:%M:%S"):
-                            db = DatabaseManager()
-                            if db.connect():
-                                try:
-                                    db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=value)
-                                finally:
-                                    db.close()
-                            total_distance_points += 1
-                            checkpoint["distance"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
-        update_checkpoint(email_address['address_name'], checkpoint)
-        total_points = (total_heart_rate_points + total_steps_points + total_calories_points + total_distance_points + total_active_zone_points)
-        logger.info(f"Total points collected: {total_points}")
-        if total_points > 0:
-            # logger.info("\n✅ INTRADAY DATA COLLECTION SUCCESSFUL")
-            logger.info("\n INTRADAY DATA COLLECTION SUCCESSFUL")
-            return True
-        else:
-            # logger.warning("\n❌ COULD NOT COLLECT INTRADAY DATA")
-            logger.warning("\n COULD NOT COLLECT INTRADAY DATA")
-            return False
-    except requests.exceptions.HTTPError as e:
-        if hasattr(e, 'response') and e.response and e.response.status_code == 401:
-            logger.error(f"Authentication error (401): {str(e)}")
-            raise
-        logger.error(f"HTTP error while fetching intraday data: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error while fetching intraday data: {str(e)}", exc_info=True)
-        return False
-
-# === BACKFILL CONFIGURATION ===
-# If you want to backfill a specific range, set the dates in 'YYYY-MM-DD' format.
-# If you don't want to backfill, leave both as None.
-
-BACKFILL_START_DATE = "2025-06-19"  # First day to collect (inclusive)
-BACKFILL_END_DATE = "2025-10-22"    # Last day to collect (inclusive)
-
-
-# --- MAIN WORKFLOW ---
-def process_all_users():
-    db = DatabaseManager()
-    if db.connect():
+        # Get checkpoint from database
+        # checkpoint_date = db.get_intraday_checkpoint(email_address['id'])
         
-        email_addresses = db.get_all_emails()
+        metrics = [
+            ('heart_rate', f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d/{detail_level}.json", 'activities-heart-intraday'),
+            ('steps', f"https://api.fitbit.com/1/user/-/activities/steps/date/{date_str}/1d/{detail_level}.json", 'activities-steps-intraday'),
+            ('calories', f"https://api.fitbit.com/1/user/-/activities/calories/date/{date_str}/1d/{detail_level}.json", 'activities-calories-intraday'),
+            ('distance', f"https://api.fitbit.com/1/user/-/activities/distance/date/{date_str}/1d/{detail_level}.json", 'activities-distance-intraday'),
+        ]
 
-        if len(email_addresses) > 0:
-
-            today = datetime.now().date()
-            for email_address in email_addresses:
-                logger.info(f"\n=== Processing user: {email_address['address_name']} ===")
-                # access_token, refresh_token = get_user_tokens(email)
-
-                access_token, refresh_token = db.get_email_tokens(email_address['id'])
+        for data_type, url, key in metrics:
+            data, rate_limited = request_with_rate_limit(url, access_token)
+            
+            if rate_limited:
+                logger.warning(f"Rate limit hit for {email_address['address_name']} on {data_type}")
+                return False, True
+            
+            if data and key in data:
+                intraday_data = data[key]
+                dataset = intraday_data.get('dataset', [])
                 
-                if not access_token or not refresh_token:
-                    logger.warning(f"No valid tokens were found for the email: {email_address['address_name']}.")
-                
-                current_access_token = access_token
-                current_refresh_token = refresh_token
-                
+                for point in dataset:
+                    time_str = point.get('time')
+                    value = point.get('value')
+                    if time_str and value is not None:
+                        timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+                        db.insert_intraday_metric(email_address['id'], timestamp, data_type=data_type, value=value)
+                        total_points += 1
 
-                # Checkpoint path
-                checkpoint_path = f"logs/checkpoint_{email_address['address_name'].replace('@','_at_')}.json"
-                # Leer checkpoint
-                if os.path.exists(checkpoint_path):
-                    with open(checkpoint_path, 'r') as f:
-                        checkpoint = json.load(f)
-                    last_date_str = checkpoint.get('last_date')
-                    if last_date_str:
-                        last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
-                    else:
-                        last_date = None
+        # Update checkpoint in database
+        if total_points > 0:
+            db.update_intraday_checkpoint(email_address['id'], date_str)
+            logger.info(f"✓ Collected {total_points} points for {email_address['address_name']} on {date_str}")
+            return True, False
+        else:
+            logger.warning(f"No data collected for {email_address['address_name']} on {date_str}")
+            return False, False
+            
+    except requests.exceptions.HTTPError as e:
+        if bool(hasattr(e, 'response') and e.response.status_code == 401):
+            logger.error(f"Authentication error (401) for {email_address['address_name']}")
+            raise
+        logger.error(f"HTTP error: {e}")
+        return False, False
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        return False, False
+    finally:
+        db.close()
+
+
+def process_all_emails_continuous():
+    """Main continuous loop that processes all emails until current date"""
+    db = DatabaseManager()
+    if not db.connect():
+        logger.error("Failed to connect to database")
+        return
+    
+    email_addresses = db.get_all_emails()
+    db.close()
+    
+    if len(email_addresses) == 0:
+        logger.error("No email addresses found")
+        return
+
+    start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
+    
+    logger.info(f"Starting continuous processing from {start_date} to current date")
+    
+    while True:
+        today = datetime.now().date()
+        all_emails_rate_limited = True
+        any_email_processed = False
+        
+        for email_address in email_addresses:
+            db = DatabaseManager()
+            if not db.connect():
+                continue
+                
+            # Get checkpoint from database
+            intraday_checkpoints = db.get_intraday_checkpoint(email_address['id'])
+  
+            if intraday_checkpoints:
+                current_date = intraday_checkpoints + timedelta(days=1)
+                current_date = current_date.date()
+                print("GOT CHECKPOINT:", current_date)
+            else:
+                current_date = start_date
+                print("NEW START DATE:", current_date)
+                db.update_intraday_checkpoint(email_address['id'], start_date)
+
+            db.close()
+            
+            # Check if email is up to date
+            if current_date > today:
+                logger.info(f"Email {email_address['address_name']} is up to date (last: {last_date if checkpoint_date_str else 'none'})")
+                continue
+
+            # Process this email's next day
+            date_str = current_date.strftime('%Y-%m-%d')
+            
+            # Get tokens
+            db = DatabaseManager()
+            if not db.connect():
+                continue
+            access_token, refresh_token = db.get_email_tokens(email_address['id'])
+            db.close()
+            
+            if not access_token or not refresh_token:
+                logger.warning(f"No valid tokens for {email_address['address_name']}")
+                continue
+            
+            try:
+                success, hit_rate_limit = get_intraday_data(access_token, email_address, date_str)
+                
+                if hit_rate_limit:
+                    logger.warning(f"Rate limit hit for {email_address['address_name']}, skipping to next user")
+                    continue  # Skip to next email
                 else:
-                    last_date = None
-                    
-
-                # Determine the date range to process.
-                if BACKFILL_START_DATE and BACKFILL_END_DATE:
-                    
-                    start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
-                    end_date = datetime.strptime(BACKFILL_END_DATE, "%Y-%m-%d").date()
-
-                    print("START DATE:", start_date, "END DATE:", end_date)
-                    if last_date is not None and last_date >= start_date:
-                        # If the checkpoint is already within the range, continue from the next day.
-                        current_date = last_date + timedelta(days=1)
+                    all_emails_rate_limited = False
+                    any_email_processed = True
+                
+                time.sleep(1)  # Small delay between requests
+                
+            except requests.exceptions.HTTPError as e:
+                if hasattr(e, 'response') and e.response and e.response.status_code == 401:
+                    logger.warning(f"Token expired for {email_address['address_name']}, attempting refresh...")
+                    new_access_token, new_refresh_token = refresh_tokens(refresh_token)
+                    if new_access_token and new_refresh_token:
+                        db = DatabaseManager()
+                        if db.connect():
+                            db.update_tokens(email_address['id'], new_access_token, new_refresh_token)
+                            db.close()
+                        # Retry with new token
+                        try:
+                            success, hit_rate_limit = get_intraday_data(new_access_token, email_address, date_str)
+                            if not hit_rate_limit:
+                                all_emails_rate_limited = False
+                                any_email_processed = True
+                        except Exception as e2:
+                            logger.error(f"Error after token refresh: {e2}")
                     else:
-                        current_date = start_date
-                    # Only process up to end_date.
-
-                    while current_date <= end_date:
-                        print("CURRENT DATE:", current_date)
-                        date_str = current_date.strftime('%Y-%m-%d')
-                        try:
-                            logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
-                            success = get_intraday_data(current_access_token, email_address, date_str)
-                            # Save checkpoint
-                            with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                json.dump({'last_date': date_str}, f)
-                            if not success:
-                                logger.warning(f"Could not collect data for {email_address['address_name']} on {date_str}")
-                        except requests.exceptions.HTTPError as e:
-                            if hasattr(e, 'response') and e.response and e.response.status_code == 401:
-                                logger.warning(f"Token expired for {email_address['address_name']}. Attempting to refresh the token...")
-                                new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                                if new_access_token and new_refresh_token:
-                                    update_users_tokens(email_address['address_name'], new_access_token, new_refresh_token)
-                                    current_access_token = new_access_token
-                                    current_refresh_token = new_refresh_token
-                                    try:
-                                        success = get_intraday_data(current_access_token, email_address, date_str)
-                                        with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                            json.dump({'last_date': date_str}, f)
-                                        if not success:
-                                            logger.warning(f"Could not collect data after refreshing token for {email_address['address_name']} on {date_str}.")
-                                    except Exception as e2:
-                                        logger.error(f"Error after refreshing token for {email_address['address_name']}: {e2}")
-                                else:
-                                    logger.error(f"Could not refresh token for {email_address['address_name']}. Please reauthorize the device.")
-                                    break
-                            elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
-                                logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Stopping processing.")
-                                break
-                            else:
-                                logger.error(f"HTTP error while fetching intraday data for {email_address['address_name']}: {e}")
-                        except Exception as e:
-                            logger.error(f"Unexpected error while processing {email_address['address_name']} on {date_str}: {e}", exc_info=True)
-                        time.sleep(1)
-                        current_date += timedelta(days=1)
-                    logger.info(f"User {email_address['address_name']} processed up to {end_date} (backfill mode).")
+                        logger.error(f"Could not refresh token for {email_address['address_name']}")
                 else:
-                    # Normal mode: collect only the current day if already up to date.
-                    if last_date is None or last_date < today:
-                        current_date = today
-                        date_str = current_date.strftime('%Y-%m-%d')
-                        try:
-                            logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
-                            success = get_intraday_data(current_access_token, email_address, date_str)
-                            with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                json.dump({'last_date': date_str}, f)
-                            if not success:
-                                logger.warning(f"Could not collect data for {email_address['address_name']} on {date_str}")
-                        except requests.exceptions.HTTPError as e:
-                            if hasattr(e, 'response') and e.response and e.response.status_code == 401:
-                                logger.warning(f"Token expired for {email_address['address_name']}. Attempting to refresh the token...")
-                                new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                                if new_access_token and new_refresh_token:
-                                    update_users_tokens(email_address['address_name'], new_access_token, new_refresh_token)
-                                    current_access_token = new_access_token
-                                    current_refresh_token = new_refresh_token
-                                    try:
-                                        success = get_intraday_data(current_access_token, email_address, date_str)
-                                        with open(checkpoint_path, 'w', encoding='utf-8') as f:
-                                            json.dump({'last_date': date_str}, f)
-                                        if not success:
-                                            logger.warning(f"Could not collect data after refreshing token for {email_address['address_name']} on {date_str}.")
-                                    except Exception as e2:
-                                        logger.error(f"Error after refreshing token for {email_address['address_name']}: {e2}")
-                                else:
-                                    logger.error(f"Could not refresh the token for {email_address['address_name']}. Please reauthorize the device.")
-                            elif hasattr(e, 'response') and e.response and e.response.status_code == 429:
-                                logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Stopping processing.")
-                            else:
-                                logger.error(f"HTTP error while fetching intraday data for {email_address['address_name']}: {e}")
-                        except Exception as e:
-                            logger.error(f"Unexpected error while processing {email_address['address_name']} on {date_str}: {e}", exc_info=True)
-                        time.sleep(1)
-                    logger.info(f"User {email_address['address_name']} processed for the day {today} (normal mode).")
-            logger.info("=== END OF FITBIT INTRADAY EXECUTION ===")
+                    all_emails_rate_limited = False
+            except Exception as e:
+                logger.error(f"Unexpected error processing {email_address['address_name']}: {e}", exc_info=True)
+                all_emails_rate_limited = False
+        
+        # Check if all emails hit rate limit
+        if all_emails_rate_limited and any_email_processed:
+            logger.info(f"All emails hit rate limit. Sleeping for {SLEEP_ON_RATE_LIMIT/60} minutes...")
+            time.sleep(SLEEP_ON_RATE_LIMIT)
+        elif not any_email_processed:
+            # All emails are up to date, check again in 10 minutes
+            logger.info("All emails up to date. Sleeping for 10 minutes before checking again...")
+            time.sleep(SLEEP_ON_RATE_LIMIT)
+        else:
+            # Continue processing
+            time.sleep(2)
+
+        db = DatabaseManager()
+    if not db.connect():
+        logger.error("Failed to connect to database")
+        return
+    
+    email_addresses = db.get_all_emails()
+    db.close()
 
 
 if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
-    logger.info("=== START OF FITBIT INTRADAY EXECUTION (MULTI-USER DB MODE) ===")
+    logger.info("=== START OF FITBIT INTRADAY CONTINUOUS LOOP ===")
     logger.info(f"Python version: {sys.version}")
     logger.info(f"Working directory: {os.getcwd()}")
-    process_all_users()
+    
+    try:
+        process_all_emails_continuous()
+    except KeyboardInterrupt:
+        logger.info("\n=== STOPPED BY USER (Ctrl+C) ===")
+    except Exception as e:
+        logger.error(f"Fatal error: {e}", exc_info=True)

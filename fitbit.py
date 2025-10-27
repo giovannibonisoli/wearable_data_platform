@@ -1,317 +1,211 @@
-from base64 import b64encode
-from dotenv import load_dotenv
+"""
+FITBIT DAILY SUMMARY COLLECTOR
+
+Runs continuously in background.
+For each email: fetch daily summary from checkpoint date up to yesterday.
+Uses one checkpoint per email for summaries only.
+Only sleeps when ALL emails are rate-limited.
+"""
+
+import os
+import time
+import logging
 import requests
 from datetime import datetime, timedelta
-from db import DatabaseManager
-import sys
-import os
-import json
-import time
-# from alert_rules import evaluate_all_alerts
+from dotenv import load_dotenv
 
-# Logs configuration
-import logging
+from db import DatabaseManager
+from auth import refresh_tokens
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.FileHandler("logs/fitbit.log"),
+        logging.FileHandler("logs/fitbit_summary.log"),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
-def refresh_access_token(refresh_token):
-    """
-    Refresh the access token using the refresh token according to the OAuth 2.0 standard (RFC 6749).
-    """
-    url = "https://api.fitbit.com/oauth2/token"
-    CLIENT_ID = os.getenv("CLIENT_ID")
-    CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+MAX_BACKOFF_RETRIES = 0
+INITIAL_BACKOFF_SECONDS = 30
 
-    # Client authentication using Basic Auth
-    auth_header = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {auth_header}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
+def safe_request(url, headers, params=None):
+    """Make request with exponential backoff for 429 errors."""
+    backoff = INITIAL_BACKOFF_SECONDS
+    retries = 0
+    while True:
+        resp = requests.get(url, headers=headers, params=params)
+        if resp.status_code == 200:
+            return resp.json(), False  # success, not rate-limited
+        elif resp.status_code == 401:
+            resp.raise_for_status()
+        elif resp.status_code == 429:
+            if retries >= MAX_BACKOFF_RETRIES:
+                logger.warning(f"Exceeded max backoff retries for URL {url}")
+                return None, True  # rate-limited, skip this email for now
+            else:
+                logger.warning(f"Rate limit hit (429) for URL {url}. Backing off {backoff}s …")
+                time.sleep(backoff)
+                retries += 1
+                backoff *= 2
+        else:
+            resp.raise_for_status()
 
-    # Request parameters
-    data = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token
-    }
-
-    # Make the POST request
-    response = requests.post(url, headers=headers, data=data)
-
-    # Check the response
-    if response.status_code == 200:
-        # If the request is successful, return the new tokens.
-        new_tokens = response.json()
-        print(f"Token refreshed successfully: {new_tokens}")
-        return new_tokens.get("access_token"), new_tokens.get("refresh_token")
-    else:
-        # If the request fails, print the error and return None.
-        print(f"Error refreshing token: {response.status_code}, {response.text}")
-        return None, None
-
-
-
-def get_fitbit_data(access_token, email):
+def fetch_daily_summary(access_token, email_id, name, date_obj, db):
+    """Fetch and store daily summary. Returns (success, rate_limited)."""
+    date_str = date_obj.strftime("%Y-%m-%d")
     headers = {"Authorization": f"Bearer {access_token}"}
-    def fetch_and_store(date_str):
-        # db = DatabaseManager()
-        # if not db.connect():
-        #     logger.error("Failed to connect to database")
-        #     return False
+    try:
+        url = f"https://api.fitbit.com/1/user/-/activities/date/{date_str}.json"
+        resp, rate_limited = safe_request(url, headers)
         
-        # device_id = db.get_email_id_by_name(email)
-        # if not device_id:
-        #     logger.error(f"Error: No device_id found for the email {email}")
-        #     return False
-        # data = {
-        #     'steps': 0,
-        #     'distance': 0,
-        #     'calories': 0,
-        #     'floors': 0,
-        #     'elevation': 0,
-        #     'active_minutes': 0,
-        #     'sedentary_minutes': 0,
-        #     'heart_rate': 0,
-        #     'sleep_minutes': 0,
-        #     'nutrition_calories': 0,
-        #     'water': 0,
-        #     'spo2': 0,
-        #     'respiratory_rate': 0,
-        #     'temperature': 0
-        # }
+        if rate_limited:
+            return False, True  # not successful, rate-limited
+        
+        if resp is None:
+            return False, False  # not successful, other error
+            
+        summary = resp.get('summary', {})
+        db.insert_daily_summary(email_id=email_id, date=date_str, **{
+            'steps': summary.get('steps', 0),
+            'distance': summary.get('distances', [{}])[0].get('distance', 0),
+            'calories': summary.get('caloriesOut', 0),
+            # ... other fields
+        })
+        logger.info(f"Daily summary collected for {name} on {date_str}")
+        return True, False  # success, not rate-limited
+        
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+            raise
+        if e.response.status_code == 429:
+            return False, True  # rate-limited
+        logger.error(f"HTTP error fetching summary for {name} on {date_str}: {e}")
+        return False, False
+    except Exception as e:
+        logger.error(f"Unexpected error fetching summary for {name} on {date_str}: {e}")
+        return False, False
+
+def process_email_summary(email_record, db):
+    """
+    Process daily summaries for one email.
+    Returns: ('success'|'rate_limited'|'error')
+    """
+    email_id = email_record['id']
+    name = email_record['address_name']
+
+    logger.info(f"Processing daily summary for email {name}")
+    access_token, refresh_token = db.get_email_tokens(email_id)
+    if not access_token or not refresh_token:
+        logger.warning(f"No tokens for {name}")
+        return 'error'
+        
+    last_date = db.get_daily_summary_checkpoint(email_id)
+    if last_date:
+        start_date = last_date + timedelta(days=1)
+    else:
+        start_date = datetime(2025,1,25).date()
+    end_date = (datetime.now().date() - timedelta(days=1))
+
+    if start_date > end_date:
+        logger.info(f"{name} is up to date for summaries")
+        return 'success'
+    
+    current_date = start_date
+    
+    while current_date <= end_date:
         try:
-
-            # Daily activity data
-            activity_url = f"https://api.fitbit.com/1/user/-/activities/date/{date_str}.json"
-            response = requests.get(activity_url, headers=headers)
-            response.raise_for_status()
-            activity_data = response.json()
-            if 'summary' in activity_data:
-                summary = activity_data['summary']
-                data.update({
-                    'steps': summary.get('steps', 0),
-                    'distance': summary.get('distances', [{}])[0].get('distance', 0),
-                    'calories': summary.get('caloriesOut', 0),
-                    'floors': summary.get('floors', 0),
-                    'elevation': summary.get('elevation', 0),
-                    'active_minutes': summary.get('veryActiveMinutes', 0),
-                    'sedentary_minutes': summary.get('sedentaryMinutes', 0)
-                })
-
-            # Heart rate
-            heart_rate_url = f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d.json"
-            response = requests.get(heart_rate_url, headers=headers)
-            response.raise_for_status()
-            heart_rate_data = response.json()
-            if 'activities-heart' in heart_rate_data and heart_rate_data['activities-heart']:
-                data['heart_rate'] = heart_rate_data['activities-heart'][0].get('value', {}).get('restingHeartRate', 0)
-
-            # Sleep
-            sleep_url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
-            response = requests.get(sleep_url, headers=headers)
-            response.raise_for_status()
-            sleep_data = response.json()
-            if 'sleep' in sleep_data:
-                data['sleep_minutes'] = sum(log.get('minutesAsleep', 0) for log in sleep_data['sleep'])
-
-            # Nutrition
-            nutrition_url = f"https://api.fitbit.com/1/user/-/foods/log/date/{date_str}.json"
-            response = requests.get(nutrition_url, headers=headers)
-            response.raise_for_status()
-            nutrition_data = response.json()
-
-            if 'summary' in nutrition_data:
-                data['nutrition_calories'] = nutrition_data['summary'].get('calories', 0)
-
-            water_url = f"https://api.fitbit.com/1/user/-/foods/log/water/date/{date_str}.json"
-            response = requests.get(water_url, headers=headers)
-            response.raise_for_status()
-            water_data = response.json()
-            if 'summary' in water_data:
-                data['water'] = water_data['summary'].get('water', 0)
-
-            # SpO2
-            spo2_url = f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}.json"
-            response = requests.get(spo2_url, headers=headers)
-            if response.status_code == 200:
-                spo2_data = response.json()
-                if isinstance(spo2_data.get('value'), dict):
-                    data['spo2'] = float(spo2_data['value'].get('avg', 0))
-                else:
-                    data['spo2'] = float(spo2_data.get('value', 0))
-
-            # Respiratory rate
-            respiratory_rate_url = f"https://api.fitbit.com/1/user/-/br/date/{date_str}.json"
-            response = requests.get(respiratory_rate_url, headers=headers)
-            if response.status_code == 200:
-                respiratory_data = response.json()
-                if isinstance(respiratory_data.get('value'), dict):
-                    data['respiratory_rate'] = float(respiratory_data['value'].get('breathingRate', 0))
-                else:
-                    data['respiratory_rate'] = float(respiratory_data.get('value', 0))
-
-            # Temperature
-            temperature_url = f"https://api.fitbit.com/1/user/-/temp/core/date/{date_str}.json"
-            response = requests.get(temperature_url, headers=headers)
-            if response.status_code == 200:
-                temperature_data = response.json()
-                data['temperature'] = temperature_data.get('value', 0)
-
-            # Save to the database
-            db.insert_daily_summary(
-                email_id=email_id,
-                date=date_str,
-                **data
-            )
-
-            # Evaluar alertas después de guardar los datos
-            current_date = datetime.strptime(date_str, "%Y-%m-%d")
-            """alerts = evaluate_all_alerts(user_id, current_date)
-            if alerts:
-                logger.info(f"Alertas generadas para {email}: {alerts}")
-
-            # Verificar calidad de datos
-            if any(v == 0 for v in [data['steps'], data['active_minutes'], data['heart_rate']]):
-                if db.connect():
-                    try:
-                        db.insert_alert(
-                            user_id=user_id,
-                            alert_type='data_quality',
-                            priority='high',
-                            triggering_value=0,
-                            threshold='30',
-                            timestamp=current_date,
-                            details="alerts.data_quality.zero_values"
-                        )
-                    finally:
-                        db.close()
-            logger.info(f"Data collected for {email} in {date_str}:")
-            for key, value in data.items():
-                logger.info(f"{key}: {value}")
-            return True"""
-        
+            success, rate_limited = fetch_daily_summary(access_token, email_id, name, current_date, db)
+            
+            if rate_limited:
+                logger.info(f"Rate limit reached for {name} on {current_date}. Skipping to next email.")
+                return 'rate_limited'
+            
+            if not success:
+                # Other error, skip this date and continue
+                logger.warning(f"Failed to fetch summary for {name} on {current_date}, continuing...")
+                current_date += timedelta(days=1)
+                continue
+                
+            current_date += timedelta(days=1)
+            time.sleep(1)  # minimal sleep to buffer
+            
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
-                raise
-            elif e.response.status_code == 429:
-                logger.warning(f"Rate limit (429) reached for {email} on {date_str}.")
-                print(response.headers)
-
-                raise
-            logger.error(f"HTTP error while fetching data from Fitbit: {e}")
-            return False
-        except Exception as e:
-            logger.error(f"Unexpected error while fetching data from Fitbit. {e}")
-            return False
-    return fetch_and_store
-
-
-
-def process_emails():
-
-    db = DatabaseManager()
-    if db.connect():
-        
-        email_addresses = db.get_all_emails()
-
-        if len(email_addresses) > 0:
-            
-            # Date range
-            START_DATE = datetime(2025, 8, 20)
-            END_DATE = datetime.now()
-            # END_DATE = datetime(2025, 3, 31)
-
-            for email_address in email_addresses:
-                logger.info(f"\n=== Processing email address: {email_address} ===")
-
-                access_token, refresh_token = db.get_email_tokens(email_address['id'])
-                
-                if not access_token or not refresh_token:
-                    logger.warning(f"No valid tokens were found for the email: {email_address['address_name']}.")
-                
-
-                # Checkpoint path
-                checkpoint_path = f"logs/checkpoint_{email_address['address_name'].replace('@','_at_')}.json"
-                # Leer checkpoint
-                if os.path.exists(checkpoint_path):
-                    with open(checkpoint_path, 'r') as f:
-                        checkpoint = json.load(f)
-                    last_date_str = checkpoint.get('last_date')
-                    if last_date_str:
-                        current_date = datetime.strptime(last_date_str, "%Y-%m-%d")
-                    else:
-                        current_date = START_DATE
+                logger.warning(f"Token expired for {name}, refreshing …")
+                new_access, new_refresh = refresh_tokens(refresh_token)
+                if new_access and new_refresh:
+                    db.update_email_tokens(email_id, new_access, new_refresh)
+                    access_token = new_access
+                    refresh_token = new_refresh
+                    logger.info(f"Token refreshed for {name}")
+                    continue  # retry same date
                 else:
-                    current_date = START_DATE
-
-                # current_date = datetime(2025, 6, 1)
-
-                fetch_and_store = get_fitbit_data(access_token, email_address['address_name'])
-
-                rate_limit_hit = False
-                current_access_token = access_token
-                current_refresh_token = refresh_token
-
-                while current_date <= END_DATE:
-                    print("START DATE: ", current_date)
-                    date_str = current_date.strftime("%Y-%m-%d")
-                    logger.info(f"Processing {date_str} for {email_address['address_name']}")
-                    try:
-                        
-                        success = fetch_and_store(date_str)
-                        if success:
-                            logger.info(f"Data successfully collected for {email_address['address_name']} on {date_str}.")
-                        # Guardar checkpoint
-                        with open(checkpoint_path, 'w') as f:
-                            json.dump({'last_date': date_str}, f)
-                    except requests.exceptions.HTTPError as e:
-                        if e.response.status_code == 401:
-                            logger.warning(f"Token expired for email {email_address['address_name']}. Attempting to refresh the token...")
-                            new_access_token, new_refresh_token = refresh_access_token(current_refresh_token)
-                            
-                        elif e.response.status_code == 429:
-                            logger.warning(f"Rate limit reached for {email_address['address_name']} on {date_str}. Saving checkpoint and skipping to the next user.")
-                            with open(checkpoint_path, 'w') as f:
-                                json.dump({'last_date': date_str}, f)
-                            rate_limit_hit = True
-                            break
-                        else:
-                            logger.error(f"HTTP error while fetching data from Fitbit for email {email_address['address_name']}: {e}")
-                    except Exception as e:
-                        logger.error(f"Unexpected error while processing email {email_address['address_name']} on {date_str}: {e}")
-                    # Sleep para evitar rate limit
-                    time.sleep(1)
-                    current_date += timedelta(days=1)
-
-                if not rate_limit_hit and current_date > END_DATE:
-                    logger.info(f"User {email_address['address_name']} is up to date. All data collected up to {END_DATE.strftime('%Y-%m-%d')}.")
-
+                    logger.error(f"Failed token refresh for {name}")
+                    return 'error'
+            else:
+                logger.error(f"HTTP error for {name} on {current_date}: {e}")
+                return 'error'
+        except Exception as e:
+            logger.error(f"Unexpected error for {name} on {current_date}: {e}")
+            return 'error'
             
+    logger.info(f"Completed summaries for {name} up to {end_date}")
+    return 'success'
+
+def main_loop():
+    logger.info("=== DAILY SUMMARY COLLECTOR STARTED ===")
+    while True:
+        try:
+            db = DatabaseManager()
+            if not db.connect():
+                logger.error("DB connection failed")
+                time.sleep(60)
+                continue
+
+            emails = db.get_all_emails()
+            if not emails:
+                logger.warning("No emails found")
+                db.close()
+                time.sleep(60)
+                continue
+
+            results = {
+                'success': 0,
+                'rate_limited': 0,
+                'error': 0
+            }
             
-        else:
-            logger.error("No emails were found in the database.")
-            sys.exit(1)
+            for email in emails:
+                result = process_email_summary(email, db)
+                results[result] += 1
+                
+            db.close()
 
-        db.close()
+            # Log summary
+            logger.info(f"Cycle complete: {results['success']} successful, "
+                       f"{results['rate_limited']} rate-limited, {results['error']} errors")
 
-    else:
-        logger.error("Failed to connect to database")
-        sys.exit(1)
-
-    
+            # Only sleep if ALL emails are rate-limited
+            if results['rate_limited'] == len(emails) and results['rate_limited'] > 0:
+                logger.info("ALL emails are rate-limited. Sleeping 30 minutes before retry.")
+                time.sleep(30*60)
+            else:
+                # At least one email processed successfully or had errors
+                logger.info("At least one email processed. Sleeping 1 hour before next cycle.")
+                time.sleep(3600)
+                
+        except KeyboardInterrupt:
+            logger.info("=== STOPPED BY USER ===")
+            break
+        except Exception as e:
+            logger.error(f"Unexpected error in main loop: {e}", exc_info=True)
+            time.sleep(60)
 
 if __name__ == "__main__":
-    # Create logs directory if it doesn't exist.
-    os.makedirs("logs", exist_ok=True)
-    # Get the list of unique emails.
-    
-    process_emails()
+    main_loop()
