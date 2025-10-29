@@ -31,60 +31,73 @@ load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
-MAX_BACKOFF_RETRIES = 0
-INITIAL_BACKOFF_SECONDS = 30
-
-def safe_request(url, headers, params=None):
-    """Make request with exponential backoff for 429 errors."""
-    backoff = INITIAL_BACKOFF_SECONDS
-    retries = 0
-    while True:
-        resp = requests.get(url, headers=headers, params=params)
-        if resp.status_code == 200:
-            return resp.json(), False  # success, not rate-limited
-        elif resp.status_code == 401:
-            resp.raise_for_status()
-        elif resp.status_code == 429:
-            if retries >= MAX_BACKOFF_RETRIES:
-                logger.warning(f"Exceeded max backoff retries for URL {url}")
-                return None, True  # rate-limited, skip this email for now
-            else:
-                logger.warning(f"Rate limit hit (429) for URL {url}. Backing off {backoff}s …")
-                time.sleep(backoff)
-                retries += 1
-                backoff *= 2
-        else:
-            resp.raise_for_status()
+def fetch_endpoint(url, headers, optional=False):
+    """Fetch data from endpoint. Returns (data, rate_limited)."""
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json(), False
+    elif resp.status_code == 429:
+        return None, True
+    elif optional:
+        return None, False
+    else:
+        resp.raise_for_status()
+        return None, False
 
 def fetch_daily_summary(access_token, email_id, name, date_obj, db):
     """Fetch and store daily summary. Returns (success, rate_limited)."""
     date_str = date_obj.strftime("%Y-%m-%d")
     headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Define all endpoints and their data extractors
+    endpoints = [
+        (f"https://api.fitbit.com/1/user/-/activities/date/{date_str}.json", False, 
+         lambda d: {
+             'steps': d.get('summary', {}).get('steps', 0),
+             'distance': d.get('summary', {}).get('distances', [{}])[0].get('distance', 0),
+             'calories': d.get('summary', {}).get('caloriesOut', 0),
+             'floors': d.get('summary', {}).get('floors', 0),
+             'elevation': d.get('summary', {}).get('elevation', 0),
+             'active_minutes': d.get('summary', {}).get('veryActiveMinutes', 0),
+             'sedentary_minutes': d.get('summary', {}).get('sedentaryMinutes', 0)
+         }),
+        (f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d.json", False,
+         lambda d: {'heart_rate': d.get('activities-heart', [{}])[0].get('value', {}).get('restingHeartRate', 0)}),
+        (f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json", False,
+         lambda d: {'sleep_minutes': sum(log.get('minutesAsleep', 0) for log in d.get('sleep', []))}),
+        (f"https://api.fitbit.com/1/user/-/foods/log/date/{date_str}.json", False,
+         lambda d: {'nutrition_calories': d.get('summary', {}).get('calories', 0)}),
+        (f"https://api.fitbit.com/1/user/-/foods/log/water/date/{date_str}.json", False,
+         lambda d: {'water': d.get('summary', {}).get('water', 0)}),
+        (f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}.json", True,
+         lambda d: {'spo2': float(d.get('value', {}).get('avg', 0) if isinstance(d.get('value'), dict) else d.get('value', 0))}),
+        (f"https://api.fitbit.com/1/user/-/br/date/{date_str}.json", True,
+         lambda d: {'respiratory_rate': float(d.get('value', {}).get('breathingRate', 0) if isinstance(d.get('value'), dict) else d.get('value', 0))}),
+        (f"https://api.fitbit.com/1/user/-/temp/core/date/{date_str}.json", True,
+         lambda d: {'temperature': d.get('value', 0)})
+    ]
+    
+    data = {k: 0 for k in ['steps', 'distance', 'calories', 'floors', 'elevation', 'active_minutes', 
+                            'sedentary_minutes', 'heart_rate', 'sleep_minutes', 'nutrition_calories', 
+                            'water', 'spo2', 'respiratory_rate', 'temperature']}
+    
     try:
-        url = f"https://api.fitbit.com/1/user/-/activities/date/{date_str}.json"
-        resp, rate_limited = safe_request(url, headers)
+        for url, optional, extractor in endpoints:
+            response_data, rate_limited = fetch_endpoint(url, headers, optional)
+            if rate_limited:
+                return False, True
+            if response_data:
+                data.update(extractor(response_data))
         
-        if rate_limited:
-            return False, True  # not successful, rate-limited
-        
-        if resp is None:
-            return False, False  # not successful, other error
-            
-        summary = resp.get('summary', {})
-        db.insert_daily_summary(email_id=email_id, date=date_str, **{
-            'steps': summary.get('steps', 0),
-            'distance': summary.get('distances', [{}])[0].get('distance', 0),
-            'calories': summary.get('caloriesOut', 0),
-            # ... other fields
-        })
+        db.insert_daily_summary(email_id=email_id, date=date_str, **data)
         logger.info(f"Daily summary collected for {name} on {date_str}")
-        return True, False  # success, not rate-limited
+        return True, False
         
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 401:
             raise
         if e.response.status_code == 429:
-            return False, True  # rate-limited
+            return False, True
         logger.error(f"HTTP error fetching summary for {name} on {date_str}: {e}")
         return False, False
     except Exception as e:
@@ -193,8 +206,9 @@ def main_loop():
 
             # Only sleep if ALL emails are rate-limited
             if results['rate_limited'] == len(emails) and results['rate_limited'] > 0:
-                logger.info("ALL emails are rate-limited. Sleeping 30 minutes before retry.")
-                time.sleep(30*60)
+                sleep_interval = 10
+                logger.info(f"ALL emails are rate-limited. Sleeping {sleep_interval} minutes before retry.")
+                time.sleep(sleep_interval*60)
             else:
                 # At least one email processed successfully or had errors
                 logger.info("At least one email processed. Sleeping 1 hour before next cycle.")
