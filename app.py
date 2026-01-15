@@ -43,7 +43,7 @@ FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mod
 
 # Language settings
 LANGUAGES = {
-    'es': 'Español',
+    'it': 'Italiano',
     'en': 'English'
 }
 DEFAULT_LANGUAGE = 'en'
@@ -129,14 +129,15 @@ def login():
                     session['admin_user_id'] = user_data['id']
                     session['username'] = user_data['username']
                     
-                    flash(f'Welcome, {user_data["full_name"] or username}!', 'success')
+                    name = user_data["full_name"] or username
+                    flash_translated('flash.welcome_user', 'success', name=name)
                     return redirect(url_for('home'))
                 else:
-                    flash('Incorrect username or password.', 'danger')
+                    flash_translated('flash.incorrect_credentials', 'danger')
             finally:
                 db.close()
         else:
-            flash('Database connection error.', 'danger')
+            flash_translated('flash.database_connection_error', 'danger')
     
     return render_template('login.html')
 
@@ -362,18 +363,18 @@ def change_password():
             if db.verify_admin_user(username, current_password):
                 if new_password == confirm_password:
                     db.update_admin_user_password(admin_user_id, new_password)
-                    flash('Password changed correctly!', 'success')
+                    flash_translated('flash.password_changed_success', 'success')
                 else:
-                    flash('You didn\'t confirm correctly the new password!', 'danger')
+                    flash_translated('flash.password_confirm_mismatch', 'danger')
             else:
-                flash('The current password is wrong!', 'danger')
+                flash_translated('flash.current_password_wrong', 'danger')
             
 
         else:
-            flash('Database connection error.', 'danger')
+            flash_translated('flash.database_connection_error', 'danger')
     
     else:
-        flash('The new password must be at least 8 characters!', 'warning')
+        flash_translated('flash.password_min_length', 'warning')
 
     return redirect(url_for('admin_user_profile'))
 
@@ -441,9 +442,9 @@ def available_email_addresses():
 
                 print("EMAIL ID:", email_id)
                 if email_id:
-                    flash(f'Email address {address_name} added successfully!', 'success')
+                    flash_translated('flash.email_added_success', 'success', address=address_name)
                 else:
-                    flash('Error adding email address.', 'danger')
+                    flash_translated('flash.email_add_error', 'danger')
                 return redirect(url_for('available_email_addresses'))
             else:
                 # Get only the email addresses owned by current user
@@ -471,12 +472,12 @@ def available_email_addresses():
                 )
         except Exception as e:
             app.logger.error(f"Error fetching email addresses: {e}")
-            flash('Error loading email addresses.', 'danger')
+            flash_translated('flash.email_load_error', 'danger')
             return redirect(url_for('home'))
         finally:
             db.close()
     else:
-        flash('Database connection error.', 'danger')
+        flash_translated('flash.database_connection_error', 'danger')
         return redirect(url_for('home'))
 
 
@@ -601,7 +602,7 @@ def send_auth_email():
     email_id = request.form.get('addressIdAuth')
     address_name = request.form.get('addressNameAuth')
     if not address_name:
-        flash('Please select an email.', 'danger')
+        flash_translated('flash.select_email', 'danger')
         return redirect(url_for('available_email_addresses'))
 
     # Generate code_verifier and store it temporarily with email as key
@@ -661,7 +662,7 @@ def send_auth_email():
                 db.close()
         return render_template('auth_email_sent_confirmation.html', address_name=address_name)
     else:
-        flash('Error sending email. Please try again.', 'danger')
+        flash_translated('flash.email_send_error', 'danger')
         return redirect(url_for('available_email_addresses'))
 
 
@@ -678,7 +679,7 @@ def callback():
 
         if not code or not state:
             app.logger.error("Missing code or state parameter")
-            flash("Error: Missing authorization information.", "danger")
+            flash_translated('flash.missing_auth_info', 'danger')
             return redirect(url_for('available_email_addresses'))
 
         # Decode state to get email
@@ -687,12 +688,12 @@ def callback():
             address_name = state_data.get('email')
         except Exception as e:
             app.logger.error(f"Invalid state parameter: {e}")
-            flash("Error: Invalid authorization link.", "danger")
+            flash_translated('flash.invalid_auth_link', 'danger')
             return redirect(url_for('available_email_addresses'))
 
         if not address_name:
             app.logger.error("No email found in state")
-            flash("Error: Invalid authorization link.", "danger")
+            flash_translated('flash.invalid_auth_link', 'danger')
             return redirect(url_for('available_email_addresses'))
 
         db = DatabaseManager()
@@ -702,7 +703,7 @@ def callback():
                 pending_auth = db.get_pending_auth(state)
                 if not pending_auth:
                     app.logger.error("No pending authorization found or expired")
-                    flash("Error: Authorization link expired. Please request a new one.", "danger")
+                    flash_translated('flash.auth_link_expired', 'danger')
                     return redirect(url_for('available_email_addresses'))
 
                 code_verifier = pending_auth['code_verifier']
@@ -722,8 +723,8 @@ def callback():
                 db.delete_pending_auth(state)
                 app.logger.info(f"Deleted prending request.")
 
-                db.initialize_intraday_checkpoint(email_id)
-                app.logger.info(f"Initialize intraday checkpoint.")
+                # db.initialize_intraday_checkpoint(email_id)
+                # app.logger.info(f"Initialize intraday checkpoint.")
 
                 return render_template('auth_confirmation.html',
                                      address_name=address_name,
@@ -803,6 +804,90 @@ def get_text(key):
         value = value.get(k, '')
     return value if value else key
 
+def translate_text(key):
+    """Custom translation function that uses TRANSLATIONS dictionary."""
+    lang = str(get_locale())
+    
+    if lang not in TRANSLATIONS:
+        return key
+    
+    translations = TRANSLATIONS[lang]
+    
+    # Helper function to recursively search in a dictionary
+    def search_in_dict(d, search_key, case_insensitive=False):
+        """Search for a key in a nested dictionary."""
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    result = search_in_dict(v, search_key, case_insensitive)
+                    if result is not None:
+                        return result
+                elif isinstance(v, str):
+                    compare_key = k.lower() if case_insensitive else k
+                    compare_search = search_key.lower() if case_insensitive else search_key
+                    if compare_key == compare_search:
+                        return v
+        return None
+    
+    # Strategy 1: Try with dots first (for nested keys like 'flash.welcome_user' or 'common.welcome')
+    if '.' in key:
+        parts = key.split('.')
+        value = translations
+        for part in parts:
+            if isinstance(value, dict):
+                value = value.get(part) or value.get(part.lower())
+            else:
+                value = None
+                break
+        if isinstance(value, str):
+            return value
+    
+    # Strategy 2: Try exact key match in all sections (case-sensitive)
+    result = search_in_dict(translations, key, case_insensitive=False)
+    if result:
+        return result
+    
+    # Strategy 3: Try case-insensitive match
+    result = search_in_dict(translations, key, case_insensitive=True)
+    if result:
+        return result
+    
+    # Strategy 4: Try with spaces replaced by underscores
+    key_underscore = key.replace(' ', '_').lower()
+    result = search_in_dict(translations, key_underscore, case_insensitive=True)
+    if result:
+        return result
+    
+    # Strategy 5: Try lowercase version
+    key_lower = key.lower()
+    result = search_in_dict(translations, key_lower, case_insensitive=True)
+    if result:
+        return result
+    
+    # Fallback: try Flask-Babel's translation
+    try:
+        from flask_babel import gettext as babel_gettext
+        translated = babel_gettext(key)
+        if translated != key:
+            return translated
+    except:
+        pass
+    
+    # Last resort: return the key itself
+    return key
+
+def flash_translated(message_key, category='info', **kwargs):
+    """Flash a translated message. Supports format strings with kwargs."""
+    translated = translate_text(message_key)
+    # Replace placeholders if kwargs are provided
+    if kwargs:
+        try:
+            translated = translated.format(**kwargs)
+        except (KeyError, ValueError):
+            # If formatting fails, return the translated message as-is
+            pass
+    flash(translated, category)
+
 @app.context_processor
 def utility_processor():
     """Make translation function and static URL function available in templates."""
@@ -810,8 +895,14 @@ def utility_processor():
         """Generate full URL for static files."""
         # Use the complete path including /livelyageing prefix
         return url_for('static', filename=filename)
+    
+    # Override _() to use our custom translation function
+    def custom_gettext(key):
+        return translate_text(key)
+    
     return {
         'get_text': get_text,
+        '_': custom_gettext,  # Override Flask-Babel's _() with our custom function
         'current_language': get_locale,
         'static_url': static_url
     }
@@ -1787,7 +1878,7 @@ def unlink_user():
     """
     user_id = request.form.get('user_id')
     if not user_id:
-        flash('User ID not provided', 'danger')
+        flash_translated('flash.user_id_not_provided', 'danger')
         return redirect(url_for('user_stats'))
 
     db = DatabaseManager()
@@ -1799,7 +1890,7 @@ def unlink_user():
             """, (user_id,))
 
             if not user_email:
-                flash('User not found', 'danger')
+                flash_translated('flash.user_not_found', 'danger')
                 return redirect(url_for('user_stats'))
 
             email = user_email[0][0]
@@ -1825,21 +1916,21 @@ def unlink_user():
                 # Commit the transaction
                 db.execute_query("COMMIT")
 
-                flash('Device successfully unlinked. User and historical data are preserved.', 'success')
+                flash_translated('flash.device_unlinked_success', 'success')
             except Exception as e:
                 # If anything fails, rollback the transaction
                 db.execute_query("ROLLBACK")
                 app.logger.error(f"Error in unlink transaction: {e}")
-                flash('Failed to unlink user', 'danger')
+                flash_translated('flash.unlink_user_failed', 'danger')
                 raise
 
         except Exception as e:
             app.logger.error(f"Failed to unlink user: {e}")
-            flash('Failed to unlink user', 'danger')
+            flash_translated('flash.unlink_user_failed', 'danger')
         finally:
             db.close()
     else:
-        flash('Database connection error', 'danger')
+        flash_translated('flash.database_connection_error', 'danger')
 
     return redirect(url_for('user_stats'))
 
