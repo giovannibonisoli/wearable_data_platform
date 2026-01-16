@@ -18,7 +18,7 @@
                         <div class="tick-animation mb-4"></div>
                         
                         <!-- Success Message -->
-                        <h5 class="text-success mb-3">{{ _('Authorization Email Sent') }}</h5>
+                        <h5 class="text-success mb-3">{{ _('Authorization Request Sent') }}</h5>
                         <p class="text-muted mb-4">
                             {{ _('We have sent the Fitbit authorization link to:') }}
                         </p>
@@ -36,17 +36,17 @@
                                 <li>{{ _('Check your email inbox') }}</li>
                                 <li>{{ _('Click on the authorization link') }}</li>
                                 <li>{{ _('Complete the Fitbit authorization process') }}</li>
-                                <li>{{ _('Return to the platform to see your email status') }}</li>
+                                <li>{{ _('Return to the devices page') }}</li>
                             </ol>
                         </div>
                         
                         <!-- Action Buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
                             <a href="{{ url_for('available_email_addresses') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-left me-2"></i>{{ _('Back to Email Management') }}
+                                <i class="fas fa-arrow-left me-2"></i>{{ _('Back to Device Management') }}
                             </a>
                             <a href="{{ url_for('home') }}" class="btn btn-outline-secondary btn-lg">
-                                <i class="fas fa-home me-2"></i>{{ _('Go to Dashboard') }}
+                                <i class="fas fa-home me-2"></i>{{ _('Go to Home') }}
                             </a>
                         </div>
                         

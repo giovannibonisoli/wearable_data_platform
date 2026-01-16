@@ -11,7 +11,7 @@ from emails import send_email
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
-from flask_babel import Babel, get_locale, gettext as _
+from flask_babel import Babel, get_locale, gettext as babel_gettext
 
 import os
 import logging
@@ -46,7 +46,8 @@ LANGUAGES = {
     'it': 'Italiano',
     'en': 'English'
 }
-DEFAULT_LANGUAGE = 'en'
+
+DEFAULT_LANGUAGE = 'it'
 
 # Initialize Babel
 babel = Babel(app)
@@ -379,53 +380,6 @@ def change_password():
     return redirect(url_for('admin_user_profile'))
 
 
-# Route: List of all available devices
-# @app.route('/livelyageing/available_email_addresses', methods=['GET', 'POST'])
-# @login_required
-# def available_email_addresses():
-
-#     db = DatabaseManager()
-#     if db.connect():
-#         if request.method == 'POST':
-#             address_name = request.form['addressName']
-#             db.add_email_address(address_name)
-#             return redirect(url_for('available_email_addresses'))
-#         else:
-#             try:
-#                 # Get recent users with their latest activity (only users with names AND valid tokens)
-#                 result = db.execute_query("""
-#                     SELECT id, address_name, status
-#                     FROM email_addresses
-#                     ORDER BY id DESC;
-#                 """)
-
-#                 email_addresses = []
-#                 for email_address in result:
-
-#                     status = email_address[2]
-
-#                     if email_address[2] == 'inserted':
-#                         if db.check_pending_auth(email_address[0]):
-#                             status = 'pending_auth_request'
-
-#                     email_addresses.append({
-#                         "id": email_address[0],
-#                         "address_name": email_address[1],
-#                         "status": status
-#                     })
-
-#                 email_addresses.reverse()
-
-#                 return render_template('available_email_addresses.html', email_addresses=email_addresses)
-#             except Exception as e:
-#                 app.logger.error(f"Error fetching data about available email address: {e}")
-#                 return "Error! Error fetching data about available email address.", 500
-#             finally:
-#                 db.close()
-#     else:
-#         return "Error! Unable to connect with the database", 500
-
-
 @app.route('/livelyageing/available_email_addresses', methods=['GET', 'POST'])
 @login_required
 def available_email_addresses():
@@ -754,6 +708,7 @@ def callback():
                              error=str(e),
                              link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
+
 @app.route('/livelyageing/deactivate_email', methods=['POST'])
 @login_required
 def deactivate_email():
@@ -767,6 +722,7 @@ def deactivate_email():
         app.logger.error(f"Email {email_id} deactivated.")
 
     return redirect(url_for('available_email_addresses'))
+
 
 # Template filters
 @app.template_filter('number')
@@ -897,8 +853,26 @@ def utility_processor():
         return url_for('static', filename=filename)
     
     # Override _() to use our custom translation function
-    def custom_gettext(key):
-        return translate_text(key)
+    # This wrapper handles both Flask-Babel's gettext and our custom translation
+    class CustomGettextWrapper:
+        """Wrapper class that handles Flask-Babel gettext calls with parameters"""
+        def __call__(self, message, **kwargs):
+            """Handle gettext calls with keyword arguments"""
+            translated = translate_text(message)
+            if kwargs:
+                try:
+                    # Use % formatting for Flask-Babel syntax %(variable)s
+                    translated = translated % kwargs
+                except (KeyError, ValueError, TypeError):
+                    # If % formatting fails, try .format() for {variable} syntax
+                    try:
+                        translated = translated.format(**kwargs)
+                    except (KeyError, ValueError):
+                        # If both fail, return translated message as-is
+                        pass
+            return translated
+    
+    custom_gettext = CustomGettextWrapper()
     
     return {
         'get_text': get_text,

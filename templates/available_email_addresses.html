@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Email Management') }} - Lively Ageing Medical Platform{% endblock %}
+{% block title %}{{ _('Device Management') }} - Lively Ageing Medical Platform{% endblock %}
 
 {% block content %}
 <div class="dashboard">
@@ -123,13 +123,13 @@
                                     {#<form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
                                         <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
                                         <button type="submit" class="btn btn-danger btn-sm action-btn">
-                                            <i class="far fa-times-circle me-2"></i>{{ _('Deactivate Email') }}
+                                            <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
                                         </button>
                                     </form>#}
                                     <button type="button" class="btn btn-danger btn-sm action-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deactivateModal{{ email_address.id }}">
-                                        <i class="far fa-times-circle me-2"></i>{{ _('Deactivate Email') }}
+                                        <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
                                     </button>
                                 
                                     {% else %}
@@ -184,7 +184,7 @@
                 </div>
                 
                 <h6 class="text-center mb-3" style="color: #343a40; font-weight: 600;">
-                    {{ _('Are you sure you want to deactivate this email address?') }}
+                    {{ _('Are you sure you want to disable this device?') }}
                 </h6>
                 
                 <div class="alert alert-warning" style="border-radius: 0.75rem; border-left: 4px solid #ffc107; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
@@ -205,7 +205,7 @@
                 <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
                     <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
                     <button type="submit" class="btn btn-danger" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
-                        <i class="fas fa-check me-2"></i>{{ _('Yes, Deactivate') }}
+                        <i class="fas fa-check me-2"></i>{{ _('confirm') }}
                     </button>
                 </form>
             </div>
