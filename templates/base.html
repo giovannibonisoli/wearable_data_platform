@@ -21,6 +21,32 @@
             display: flex;
             flex-direction: column;
         }
+        
+        /* Increase container width on large screens for better space utilization */
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1400px;
+            }
+        }
+        
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1600px;
+            }
+        }
+        
+        @media (min-width: 1920px) {
+            .container {
+                max-width: 1800px;
+            }
+        }
+        
+        /* For very large screens, use more of the available width */
+        @media (min-width: 2560px) {
+            .container {
+                max-width: 2400px;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
