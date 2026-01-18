@@ -77,7 +77,7 @@
                                     <i class="fas fa-shield-alt me-2"></i>{{ _('Status') }}
                                 </th>
                                 <th class="table-header">
-                                    <i class="bi bi-cloud-arrow-down-fill me-2"></i>{{ _('Data Reception') }}
+                                    <i class="bi bi-cloud-download-fill me-2"></i>{{ _('Data Reception') }}
                                 </th>
                                 <th class="table-header">
                                     <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
@@ -99,6 +99,10 @@
                                     </div>
                                 </td>
                                 <td>
+                                    <div>
+                                        <strong class="text-primary">{{ email_address.device_type }}</strong>
+                                        <br>
+                                    </div>
                                 </td>
                                 <td>
                                     {% if email_address.status == 'inserted' %}

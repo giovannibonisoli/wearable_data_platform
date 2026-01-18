@@ -781,6 +781,7 @@ TRANSLATIONS = {
             'login_to_account': 'Accedi al tuo account',
             'sign_in': 'Accedi'
         },
+
         'dashboard': {
             'daily_summary': 'Riepilogo giornaliero',
             'steps': 'Passi',
@@ -891,6 +892,8 @@ TRANSLATIONS = {
             'This action will make the email address no longer usable in this service': 'Questa azione renderà il dispositivo non più usabile in questo servizio',
             'state': 'Stato',
             'actions': 'Azioni',
+            'Device Type': 'Tipo di dispositivo',
+            'Data Reception': 'Ricezione dei dati'
 
             'sync_status': {
                 'ok': 'OK',

@@ -17,6 +17,7 @@ import os
 import logging
 import json
 import base64
+import requests
 
 
 # Initialize Flask app
@@ -416,7 +417,8 @@ def available_email_addresses():
                         "id": email_address[0],
                         "address_name": email_address[1],
                         "status": status,
-                        "created_at": email_address[3]
+                        "created_at": email_address[3],
+                        "device_type": email_address[4] if email_address[4] else ""
                     })
                 
                 return render_template(
@@ -667,7 +669,15 @@ def callback():
                 if not access_token or not refresh_token:
                     raise Exception("Could not retrieve Fitbit tokens.")
 
+
+                headers = {"Authorization": f"Bearer {access_token}"}
+                url = "https://api.fitbit.com/1/user/-/devices.json"
+                resp = requests.get(url, headers=headers)
+
+                device_type = resp.json()[0]['deviceVersion']
+
                 email_id = db.get_email_id_by_name(address_name)
+                db.update_device_type(email_id, device_type)
                 db.update_email_tokens(email_id, access_token, refresh_token)
                 app.logger.info(f"{address_name}'s tokens updated.")
 

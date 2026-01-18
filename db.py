@@ -122,7 +122,7 @@ class DatabaseManager:
     def get_admin_user_email_addresses(self, admin_user_id):
         """Get all email addresses owned by an admin user"""
         query = """
-            SELECT id, address_name, status, created_at
+            SELECT id, address_name, status, created_at, device_type
             FROM email_addresses
             WHERE admin_user_id = %s
             ORDER BY created_at DESC
@@ -456,6 +456,7 @@ class DatabaseManager:
 
     def update_email_tokens(self, email_id, access_token, refresh_token):
         """Updates the access and refresh tokens of an email address"""
+
         # Encrypt the tokens before storing them
         encrypted_access_token = encrypt_token(access_token)
         encrypted_refresh_token = encrypt_token(refresh_token)
@@ -467,6 +468,18 @@ class DatabaseManager:
         """
         result = self.execute_query(query, (encrypted_access_token, encrypted_refresh_token, email_id))
         return result
+
+    def update_device_type(self, email_id, device_type):
+        """Updates the device_type of a device"""
+
+        query = """
+            UPDATE email_addresses
+            SET device_type = %s
+            WHERE id = %s;
+        """
+        result = self.execute_query(query, (device_type, email_id))
+        return result
+
 
     def check_intraday_timestamp(self, email_id, timestamp):
         """Checks if intraday timestamp is already present"""
@@ -687,6 +700,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS email_addresses (
                 id SERIAL PRIMARY KEY,
                 address_name VARCHAR(255) NOT NULL,
+                device_type VARCHAR(50),
                 status status_type NOT NULL DEFAULT 'inserted',
                 admin_user_id INTEGER REFERENCES admin_users(id),
                 access_token TEXT,
@@ -1286,11 +1300,11 @@ def drop_fitbit_data():
         query = "DELETE FROM daily_summaries;"
         result = db.execute_query(query, [])
 
-        query = "DELETE FROM intraday_metrics;"
-        result = db.execute_query(query, [])
+        # query = "DELETE FROM intraday_metrics;"
+        # result = db.execute_query(query, [])
 
-        query = "UPDATE intraday_checkpoints SET timestamp = NULL;"
-        result = db.execute_query(query, [])
+        # query = "UPDATE intraday_checkpoints SET timestamp = NULL;"
+        # result = db.execute_query(query, [])
 
         return result
     except Exception as e:
@@ -1308,7 +1322,18 @@ if __name__ == "__main__":
     # create_test_data()
     # drop_intraday_data()
     # reset_emails_status()
-    drop_fitbit_data() 
+    # drop_fitbit_data() 
+
+    db = DatabaseManager()
+    if not db.connect():
+       print("Failed to connect to the database")
+    else:
+
+        try:
+            query = "DELETE FROM pending_authorizations WHERE 1=1;"
+            result = db.execute_query(query, [])
+        finally:
+            db.close()
 
 
 
