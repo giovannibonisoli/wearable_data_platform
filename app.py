@@ -412,13 +412,69 @@ def available_email_addresses():
                     if status == 'inserted':
                         if db.check_pending_auth(email_address[0]):
                             status = 'pending_auth_request'
+
+                    # Get data reception status
+                    data_reception_status = None
+                    data_reception_details = None
+                    
+                    if status == 'authorized':
+                        # Check last sync (assuming last_sync is available in email_address)
+
+                        issues = []
+
+                        last_sync = db.get_last_synch(email_address[0])
+                        now = datetime.now()
+
+                        last_sync = last_sync.replace(tzinfo=now.tzinfo)
+                        days_since_sync = (now - last_sync).days
+                                      
+                        if days_since_sync > 7:
+                            issues.append(('sync', days_since_sync))
+                        
+
+                        # Check 2: Gap in intraday data > 3 days
+                        intraday_checkpoint = db.get_intraday_checkpoint(email_address[0])
+
+                        # Check last intraday data
+                        result = db.execute_query("""
+                            SELECT MAX(time) 
+                            FROM intraday_metrics 
+                            WHERE id = %s
+                        """, (email_address[0],))
+                            
+                        last_intraday_datetime = result[0][0]
+                            
+                        if intraday_checkpoint and last_intraday_datetime:
+
+                            last_intraday_datetime = last_intraday_datetime.replace(tzinfo=intraday_checkpoint.tzinfo)
+                          
+                            gap_days = (intraday_checkpoint - last_intraday_datetime).days
+                            if gap_days > 3:
+                                issues.append(('gap', gap_days))
+                            
+                        # Determine overall status
+                        if not issues:
+                            data_reception_status = 'ok'
+                        elif len(issues) == 2:
+                            data_reception_status = 'both'
+                            data_reception_details = {'sync_days': issues[0][1], 'gap_days': issues[1][1]}
+                        elif issues[0][0] == 'sync':
+                            data_reception_status = 'sync_warning'
+                            data_reception_details = {'days': issues[0][1]}
+                        else:
+                            data_reception_status = 'gap_warning'
+                            data_reception_details = {'days': issues[0][1]}
+                    else:
+                        data_reception_status = 'no_data'
                     
                     email_addresses.append({
                         "id": email_address[0],
                         "address_name": email_address[1],
                         "status": status,
                         "created_at": email_address[3],
-                        "device_type": email_address[4] if email_address[4] else ""
+                        "device_type": email_address[4] if email_address[4] else "",
+                        "data_reception_status": data_reception_status,
+                        "data_reception_details": data_reception_details
                     })
                 
                 return render_template(
