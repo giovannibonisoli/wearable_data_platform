@@ -893,7 +893,7 @@ TRANSLATIONS = {
             'state': 'Stato',
             'actions': 'Azioni',
             'Device Type': 'Tipo di dispositivo',
-            'Data Reception': 'Ricezione dei dati'
+            'Data Reception': 'Ricezione dei dati',
 
             'sync_status': {
                 'ok': 'OK',
