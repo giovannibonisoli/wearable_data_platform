@@ -5,6 +5,8 @@ import random
 from shlex import quote
 import string
 import requests
+
+from datetime import datetime, timedelta, timezone, time
 from config import AUTH_URL, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 TOKEN_URL = "https://api.fitbit.com/oauth2/token"
@@ -103,3 +105,47 @@ def generate_auth_url(code_challenge, state):
 
     print(f"Generated auth URL: {auth_url}")  # Debug log
     return auth_url
+
+
+def get_device_info(access_token):
+    headers = {"Authorization": f"Bearer {access_token}"}
+    url = "https://api.fitbit.com/1/user/-/devices.json"
+    
+    resp = requests.get(url, headers=headers)
+    
+    # Raise an exception for non-200 status codes
+    if resp.status_code != 200:
+        error_msg = f"Fitbit API request failed with status {resp.status_code}"
+        
+        # Try to get more detailed error message from response
+        try:
+            error_data = resp.json()
+            if 'errors' in error_data:
+                error_msg += f": {error_data['errors']}"
+        except:
+            # If response isn't JSON, include the raw text
+            if resp.text:
+                error_msg += f": {resp.text}"
+        
+        raise Exception(error_msg)  # Or create a custom exception class
+    
+    try:
+        device_data = resp.json()
+        
+        # Check if we got any device data
+        if not device_data:
+            raise Exception("No devices found in response")
+        
+        # Parse the first device
+        first_device = device_data[0]
+        first_device['lastSyncTime'] = datetime.strptime(
+            first_device['lastSyncTime'], 
+            '%Y-%m-%dT%H:%M:%S.%f'
+        )
+        
+        return first_device
+        
+    except (IndexError, KeyError) as e:
+        raise Exception(f"Unexpected response structure: {str(e)}")
+    except ValueError as e:
+        raise Exception(f"Failed to parse date: {str(e)}")

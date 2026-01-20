@@ -1,7 +1,7 @@
 from logging.handlers import RotatingFileHandler
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 from rich import _console
-from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url
+from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
 from db import DatabaseManager
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
@@ -669,15 +669,12 @@ def callback():
                 if not access_token or not refresh_token:
                     raise Exception("Could not retrieve Fitbit tokens.")
 
-
-                headers = {"Authorization": f"Bearer {access_token}"}
-                url = "https://api.fitbit.com/1/user/-/devices.json"
-                resp = requests.get(url, headers=headers)
-
-                device_type = resp.json()[0]['deviceVersion']
+                device_data = get_device_info(access_token)
 
                 email_id = db.get_email_id_by_name(address_name)
-                db.update_device_type(email_id, device_type)
+                db.update_device_type(email_id, device_data['deviceVersion'])
+                # db.update_last_synch(email_id, device_data['lastSyncTime'])
+
                 db.update_email_tokens(email_id, access_token, refresh_token)
                 app.logger.info(f"{address_name}'s tokens updated.")
 
@@ -686,9 +683,6 @@ def callback():
 
                 db.delete_pending_auth(state)
                 app.logger.info(f"Deleted prending request.")
-
-                # db.initialize_intraday_checkpoint(email_id)
-                # app.logger.info(f"Initialize intraday checkpoint.")
 
                 return render_template('auth_confirmation.html',
                                      address_name=address_name,

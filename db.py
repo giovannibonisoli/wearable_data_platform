@@ -239,18 +239,39 @@ class DatabaseManager:
 
         return self.execute_query(query, params)
 
-
-    def initialize_intraday_checkpoint(self, email_id):
+    
+    def get_last_synch(self, email_id):
+        """
+        """
 
         query = """
-            INSERT INTO intraday_checkpoints (
-                email_id, timestamp 
-            ) VALUES (%s, %s)
+            SELECT last_synch
+            FROM email_addresses
+            WHERE id = %s
         """
-        self.execute_query(query, (email_id, None))
 
+        result = self.execute_query(query, (email_id,))
+            
+        if result:
+            return result[0][0]
         return None
 
+
+    def get_daily_summary_checkpoint(self, email_id):
+        """
+        Get the last date for which a daily summary was collected.
+        Returns a date object or None.
+        """
+        query = """
+            SELECT daily_summaries_checkpoint
+            FROM email_addresses
+            WHERE id = %s
+        """
+        result = self.execute_query(query, (email_id,))
+            
+        if result:
+            return result[0][0]
+        return None
 
 
     def get_intraday_checkpoint(self, email_id):
@@ -259,15 +280,49 @@ class DatabaseManager:
         Returns a date object or None.
         """
         query = """
-            SELECT timestamp
-            FROM intraday_checkpoints
-            WHERE email_id = %s
+            SELECT intraday_checkpoint
+            FROM email_addresses
+            WHERE id = %s
         """
         result = self.execute_query(query, (email_id,))
             
         if result:
             return result[0][0]
         return None
+
+
+    def update_last_synch(self, email_id, timestamp):
+        """
+        """
+
+        query = """
+                UPDATE email_addresses
+                SET last_synch = %s
+                WHERE id = %s;
+        """
+        result = self.execute_query(query, (timestamp, email_id))
+                
+        if result:
+            print(f"Last synch date {timestamp} for email_id {email_id} successfully updated.")
+        return result
+
+    
+    def update_daily_summaries_checkpoint(self, email_id, date):
+        """
+        Get the last date for which intraday data was collected.
+        Returns a date object or None.
+        """
+
+        query = """
+                UPDATE email_addresses
+                SET daily_summaries_checkpoint = %s
+                WHERE id = %s;
+        """
+        result = self.execute_query(query, (date, email_id))
+                
+        if result:
+            print(f"Daily summaries chechpoint {date} for email_id {email_id} successfully updated.")
+        return result
 
     
     def update_intraday_checkpoint(self, email_id, timestamp):
@@ -277,14 +332,14 @@ class DatabaseManager:
         """
 
         query = """
-                UPDATE intraday_checkpoints
-                SET timestamp = %s
-                WHERE email_id = %s;
+                UPDATE email_addresses
+                SET intraday_checkpoint = %s
+                WHERE id = %s;
         """
         result = self.execute_query(query, (timestamp, email_id))
                 
         if result:
-            print(f"Intraday checkpoint {timestamp} for email_id {email_id} successfully updated in intraday_checkpoint.")
+            print(f"Intraday checkpoint {timestamp} for email_id {email_id} successfully updated.")
         return result
 
 
@@ -609,23 +664,7 @@ class DatabaseManager:
         ))
         return result
 
-    def get_daily_summary_checkpoint(self, email_id):
-        """
-        Get the last date for which daily summary was collected.
-        Returns a date object or None.
-        """
-        query = """
-            SELECT MAX(date) as last_date
-            FROM daily_summaries
-            WHERE email_id = %s
-        """
 
-
-        self.cursor.execute(query, (email_id,))
-        result = self.cursor.fetchone()
-        if result:
-            return result[0]
-        return None
 
     def get_all_emails(self):
         """Retrieves a list of unique email addresses from the database"""
@@ -705,6 +744,9 @@ def init_db():
                 admin_user_id INTEGER REFERENCES admin_users(id),
                 access_token TEXT,
                 refresh_token TEXT,
+                daily_summaries_checkpoint DATE,
+                intraday_checkpoint TIMESTAMPTZ,
+                last_synch TIMESTAMPTZ,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -778,13 +820,6 @@ def init_db():
                 if_not_exists => TRUE,
                 migrate_data => TRUE
             );
-        """)
-
-        db.execute_query("""
-            CREATE TABLE IF NOT EXISTS intraday_checkpoints(
-                    email_id INTEGER REFERENCES email_addresses(id),
-                    timestamp TIMESTAMPTZ
-                );
         """)
 
         # Crear sleep log table
@@ -1059,7 +1094,6 @@ def reset_database():
                 cursor.execute("DROP TABLE IF EXISTS alerts CASCADE;")  # Drop alerts first
                 cursor.execute("DROP TABLE IF EXISTS sleep_logs CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS intraday_metrics CASCADE;")
-                cursor.execute("DROP TABLE IF EXISTS intraday_checkpoints CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS email_addresses CASCADE;")
                 cursor.execute("DROP TABLE IF EXISTS admin_users CASCADE;")
@@ -1254,10 +1288,7 @@ def reset_emails_status():
     
     try:
         print(f"Resetting status")
-        query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, status='inserted';"
-        result = db.execute_query(query, [])
-
-        query = "DELETE FROM intraday_checkpoints;"
+        query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, device_type = NULL, status='inserted';"
         result = db.execute_query(query, [])
 
         return result
@@ -1300,12 +1331,6 @@ def drop_fitbit_data():
         query = "DELETE FROM daily_summaries;"
         result = db.execute_query(query, [])
 
-        # query = "DELETE FROM intraday_metrics;"
-        # result = db.execute_query(query, [])
-
-        # query = "UPDATE intraday_checkpoints SET timestamp = NULL;"
-        # result = db.execute_query(query, [])
-
         return result
     except Exception as e:
         print(f"Error dropping all fitbit data: {e}")
@@ -1330,10 +1355,24 @@ if __name__ == "__main__":
     else:
 
         try:
-            query = "DELETE FROM pending_authorizations WHERE 1=1;"
+            query = "ALTER TABLE email_addresses DROP COLUMN daily_summaries_checkpoint;"
             result = db.execute_query(query, [])
+
+            print("ATTRIBUTO CADUTO!")
+
+            query = "ALTER TABLE email_addresses ADD last_synch TIMESTAMPTZ;"
+            result = db.execute_query(query, [])
+
+            print("ATTRIBUTO INSERITO!")
+
+            query = "DELETE FROM daily_summaries WHERE ;"
+            result = db.execute_query(query, [])
+
+            print("DATI FILTRATI!")
+            
         finally:
             db.close()
+
 
 
 

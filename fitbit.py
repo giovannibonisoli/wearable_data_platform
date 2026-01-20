@@ -88,10 +88,14 @@ def fetch_daily_summary(access_token, email_id, name, date_obj, db):
                 return False, True
             if response_data:
                 data.update(extractor(response_data))
+
+        if not (data['steps'] == 0 and data['heart_rate'] == 0 and data['distance'] == 0 and data['sedentary_minutes'] == 1440):
         
-        db.insert_daily_summary(email_id=email_id, date=date_str, **data)
-        logger.info(f"Daily summary collected for {name} on {date_str}")
-        return True, False
+            db.insert_daily_summary(email_id=email_id, date=date_str, **data)
+            logger.info(f"Daily summary collected for {name} on {date_str}")
+            return True, False
+
+        db.update_daily_summaries_checkpoint(email_id, date_str)
         
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 401:
@@ -117,13 +121,15 @@ def process_email_summary(email_record, db):
     if not access_token or not refresh_token:
         logger.warning(f"No tokens for {name}")
         return 'error'
-        
+
     last_date = db.get_daily_summary_checkpoint(email_id)
     if last_date:
         start_date = last_date + timedelta(days=1)
     else:
-        start_date = datetime(2025,1,25).date()
-    end_date = (datetime.now().date() - timedelta(days=1))
+        start_date = datetime(2025,11,1).date()
+
+    last_synch_date = db.get_last_synch(email_id)
+    end_date = (last_synch_date.date() - timedelta(days=1))
 
     if start_date > end_date:
         logger.info(f"{name} is up to date for summaries")
@@ -211,8 +217,8 @@ def main_loop():
                 time.sleep(sleep_interval*60)
             else:
                 # At least one email processed successfully or had errors
-                logger.info("At least one email processed. Sleeping 1 hour before next cycle.")
-                time.sleep(3600)
+                logger.info("At least one email processed. Sleeping 30 minutes before next cycle.")
+                time.sleep(1800)
                 
         except KeyboardInterrupt:
             logger.info("=== STOPPED BY USER ===")
