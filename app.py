@@ -673,7 +673,7 @@ def callback():
 
                 email_id = db.get_email_id_by_name(address_name)
                 db.update_device_type(email_id, device_data['deviceVersion'])
-                # db.update_last_synch(email_id, device_data['lastSyncTime'])
+                db.update_last_synch(email_id, device_data['lastSyncTime'])
 
                 db.update_email_tokens(email_id, access_token, refresh_token)
                 app.logger.info(f"{address_name}'s tokens updated.")

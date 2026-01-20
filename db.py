@@ -1347,7 +1347,7 @@ if __name__ == "__main__":
     # create_test_data()
     # drop_intraday_data()
     # reset_emails_status()
-    # drop_fitbit_data() 
+    # drop_fitbit_data()
 
     db = DatabaseManager()
     if not db.connect():
@@ -1355,25 +1355,33 @@ if __name__ == "__main__":
     else:
 
         try:
-            query = "ALTER TABLE email_addresses DROP COLUMN daily_summaries_checkpoint;"
+ 
+            # query = "DELETE FROM daily_summaries WHERE 1=1;"
+            # result = db.execute_query(query, [])
+
+            # print("Daily summaries eliminati!")
+
+
+            # query = "DELETE FROM intraday_metrics WHERE 1=1;"
+            # result = db.execute_query(query, [])
+
+            # print("Dati intraday eliminati!")
+
+            query = """
+                UPDATE email_addresses SET intraday_checkpoint = '2025-01-24 00:00:00' WHERE id < 3;
+            """
             result = db.execute_query(query, [])
 
-            print("ATTRIBUTO CADUTO!")
+            # for email_id in [1, 2]:
 
-            query = "ALTER TABLE email_addresses ADD last_synch TIMESTAMPTZ;"
-            result = db.execute_query(query, [])
+            #     access_token, refresh_tokens = db.get_email_tokens(email_id)
+            #     device_data = get_device_info(access_token)
+            #     db.update_last_synch(email_id, device_data['lastSyncTime'])
 
-            print("ATTRIBUTO INSERITO!")
+            print("Dati aggiornati!")
 
-            query = "DELETE FROM daily_summaries WHERE ;"
-            result = db.execute_query(query, [])
-
-            print("DATI FILTRATI!")
-            
         finally:
             db.close()
-
-
 
 
 # You see that right now the authentication reserved to a single admin account whose credential are in environment variables. I want to change this by including the possibility more users, each of wich handles its own email addresses. What the best way to do it?

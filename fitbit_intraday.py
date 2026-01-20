@@ -8,7 +8,7 @@ MAIN FUNCTIONALITY:
 - If a user hits rate limit (429), skip to next user
 - If all users hit rate limit, sleep for 10 minutes
 - Uses database checkpoint (no individual metric checkpoints)
-- Automatically updates checkpoint using db.update_intraday_checkpoints()
+- Automatically updates checkpoint using db.update_intraday_checkpoint()
 
 Key variables to modify:
     BACKFILL_START_DATE = "2025-01-20"  # First day to collect (inclusive)
@@ -45,7 +45,7 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
 # === BACKFILL CONFIGURATION ===
-BACKFILL_START_DATE = "2025-11-01"  # First day to collect (inclusive)
+BACKFILL_START_DATE = "2025-01-24"  # First day to collect (inclusive)
 SLEEP_ON_RATE_LIMIT = 600  # 10 minutes in seconds
 
 
@@ -72,7 +72,7 @@ def request_with_rate_limit(url, access_token, max_retries=3):
     return None, True  # Exceeded retries
 
 
-def get_intraday_data(access_token, email_address, date_str, checkpoint):
+def get_intraday_data(access_token, email_address, date_str, last_synch_date):
     """Collect intraday data for a specific date. Returns (success, hit_rate_limit)"""
     db = DatabaseManager()
     if not db.connect():
@@ -111,7 +111,7 @@ def get_intraday_data(access_token, email_address, date_str, checkpoint):
                     value = point.get('value')
                     if time_str and value is not None:
                         timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        checkpoint = checkpoint.replace(tzinfo=timestamp.tzinfo)
+                        last_synch_date = last_synch_date.replace(tzinfo=timestamp.tzinfo)
 
                         if timestamp not in data_points:
                             data_points[timestamp] = {}
@@ -122,17 +122,20 @@ def get_intraday_data(access_token, email_address, date_str, checkpoint):
                         total_points += 1
 
 
-        timestamps = list(data_points.keys())
+        timestamps = [timestamp for timestamp in list(data_points.keys()) if timestamp <= last_synch_date]
         timestamps.sort()
 
         for timestamp in timestamps:
 
             values = data_points[timestamp]
-            if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0) and timestamp <= checkpoint:
+            if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values['heart_rate'])
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=values['steps'])
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=values['distance'])
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=values['calories'])
+
+            else:
+                print(f"Empty point or checkpoint reached for timestamp {timestamp}")
 
             db.update_intraday_checkpoint(email_address['id'], timestamp)
 
@@ -188,10 +191,10 @@ def process_all_emails_continuous():
                 continue
                 
             # Get checkpoint from database
-            intraday_checkpoints = db.get_intraday_checkpoint(email_address['id'])
+            intraday_checkpoint = db.get_intraday_checkpoint(email_address['id'])
   
-            if intraday_checkpoints:
-                current_date = intraday_checkpoints + timedelta(minutes=1)
+            if intraday_checkpoint:
+                current_date = intraday_checkpoint + timedelta(minutes=1)
                 print("GOT CHECKPOINT:", current_date)
             else:
                 current_date = start_date
@@ -211,24 +214,33 @@ def process_all_emails_continuous():
                 if not db.connect():
                     continue
 
-                device_data = get_device_info(access_token)
+                last_synch_date = db.get_last_synch(email_address['id'])
 
-                last_synch_date = device_data['lastSyncTime']
-                last_synch_date = last_synch_date.replace(tzinfo=current_date.tzinfo)
+                if current_date >= last_synch_date:
+                
+                    device_data = get_device_info(access_token)
+                    new_last_synch_date = device_data['lastSyncTime']
+                    new_last_synch_date = new_last_synch_date.replace(tzinfo=current_date.tzinfo)
 
-                db.update_last_synch(email_address['id'], device_data['lastSyncTime'].strftime('%Y-%m-%d %H:%M:%S'))
+                    logger.info(f"Checking last synch date for email {email_address['address_name']}")
+                    
+                    if new_last_synch_date == last_synch_date:
+                        logger.info(f"Email {email_address['address_name']} is up to date (last: {new_last_synch_date})")
+                    else:
+                        logger.info(f"Updating last synch date for {email_address['address_name']} to:{new_last_synch_date}")
+                        db.update_last_synch(email_address['id'], new_last_synch_date.strftime('%Y-%m-%d %H:%M:%S'))
+                        last_synch_date = new_last_synch_date
 
                 db.close()
 
                 # Check if email is up to date
                 if current_date >= last_synch_date:
-                    logger.info(f"Email {email_address['address_name']} is up to date (last: {last_synch_date})")
                     continue
 
                 # Process this email's next day
                 date_str = current_date.strftime('%Y-%m-%d')
             
-                success, hit_rate_limit = get_intraday_data(access_token, email_address, date_str, intraday_checkpoints)
+                success, hit_rate_limit = get_intraday_data(access_token, email_address, date_str, last_synch_date)
                 
                 if hit_rate_limit:
                     logger.warning(f"Rate limit hit for {email_address['address_name']}, skipping to next user")
@@ -250,7 +262,7 @@ def process_all_emails_continuous():
                             db.close()
                         # Retry with new token
                         try:
-                            success, hit_rate_limit = get_intraday_data(new_access_token, email_address, date_str, intraday_checkpoints)
+                            success, hit_rate_limit = get_intraday_data(new_access_token, email_address, date_str, last_synch_date)
                             if not hit_rate_limit:
                                 all_emails_rate_limited = False
                                 any_email_processed = True

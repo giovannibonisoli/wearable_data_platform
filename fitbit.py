@@ -93,9 +93,10 @@ def fetch_daily_summary(access_token, email_id, name, date_obj, db):
         
             db.insert_daily_summary(email_id=email_id, date=date_str, **data)
             logger.info(f"Daily summary collected for {name} on {date_str}")
-            return True, False
+            
 
         db.update_daily_summaries_checkpoint(email_id, date_str)
+        return True, False
         
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 401:
@@ -126,7 +127,7 @@ def process_email_summary(email_record, db):
     if last_date:
         start_date = last_date + timedelta(days=1)
     else:
-        start_date = datetime(2025,11,1).date()
+        start_date = datetime(2025,1,21).date()
 
     last_synch_date = db.get_last_synch(email_id)
     end_date = (last_synch_date.date() - timedelta(days=1))
