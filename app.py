@@ -415,21 +415,18 @@ def available_email_addresses():
 
                     # Get data reception status
                     data_reception_status = None
-                    data_reception_details = None
+                    data_reception_details = {}
                     
                     if status == 'authorized':
-                        # Check last sync (assuming last_sync is available in email_address)
 
-                        issues = []
 
+                        # Check 1: Check last sync to be > 7 days
                         last_sync = db.get_last_synch(email_address[0])
                         now = datetime.now()
 
                         last_sync = last_sync.replace(tzinfo=now.tzinfo)
-                        days_since_sync = (now - last_sync).days
+                        data_reception_details['sync_days'] = (now - last_sync).days
                                       
-                        if days_since_sync > 7:
-                            issues.append(('sync', days_since_sync))
                         
 
                         # Check 2: Gap in intraday data > 3 days
@@ -445,25 +442,21 @@ def available_email_addresses():
                         last_intraday_datetime = result[0][0]
                             
                         if intraday_checkpoint and last_intraday_datetime:
-
                             last_intraday_datetime = last_intraday_datetime.replace(tzinfo=intraday_checkpoint.tzinfo)
-                          
-                            gap_days = (intraday_checkpoint - last_intraday_datetime).days
-                            if gap_days > 3:
-                                issues.append(('gap', gap_days))
+                            # gap_days = (intraday_checkpoint - last_intraday_datetime).days
+                            data_reception_details['gap_days'] = (intraday_checkpoint - last_intraday_datetime).days
+                        else:
+                            data_reception_details['gap_days'] = 0
                             
                         # Determine overall status
-                        if not issues:
-                            data_reception_status = 'ok'
-                        elif len(issues) == 2:
-                            data_reception_status = 'both'
-                            data_reception_details = {'sync_days': issues[0][1], 'gap_days': issues[1][1]}
-                        elif issues[0][0] == 'sync':
+                        if data_reception_details['sync_days'] > 7:
                             data_reception_status = 'sync_warning'
-                            data_reception_details = {'days': issues[0][1]}
                         else:
-                            data_reception_status = 'gap_warning'
-                            data_reception_details = {'days': issues[0][1]}
+                            if data_reception_details['gap_days'] > 3:
+                                data_reception_status = 'gap_warning'
+
+                            else:
+                                data_reception_status = 'ok'
                     else:
                         data_reception_status = 'no_data'
                     

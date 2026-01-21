@@ -99,10 +99,17 @@
                                     </div>
                                 </td>
                                 <td>
+                                    {% if email_address.status == 'authorized' %}
                                     <div>
                                         <strong class="text-primary">{{ email_address.device_type }}</strong>
                                         <br>
                                     </div>
+                                    {% else %}
+                                    <div class="no-action-indicator" style="min-width: 180px;">
+                                        <i class="fas fa-minus me-2"></i>
+                                        <span>{{ _('Not available') }}</span>
+                                    </div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if email_address.status == 'inserted' %}
@@ -131,7 +138,9 @@
                                     {% if email_address.status == 'authorized' %}
                                         {% if email_address.data_reception_status == 'ok' %}
                                             <!-- All good -->
-                                            <div class="status-indicator status-success" style="min-width: 180px;">
+                                            <div class="status-indicator status-success" style="min-width: 180px;"
+                                                data-bs-toggle="tooltip" 
+                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
                                                 <i class="fas fa-check-circle status-icon"></i>
                                                 <span class="status-text">{{ _('Receiving Data') }}</span>
                                             </div>
@@ -140,27 +149,18 @@
                                             <!-- Only sync issue -->
                                             <div class="status-indicator status-warning" style="min-width: 180px;" 
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.days }} {{ _('days ago') }}">
+                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
                                                 <i class="fas fa-sync-alt status-icon"></i>
-                                                <span class="status-text">{{ _('Sync needed') }} ({{ email_address.data_reception_details.days }}d)</span>
+                                                <span class="status-text">{{ _('Sync needed') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'gap_warning' %}
                                             <!-- Only data gap issue -->
                                             <div class="status-indicator status-warning" style="min-width: 180px;"
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Data gap detected') }}: {{ email_address.data_reception_details.days }} {{ _('days') }}">
+                                                 title="{{ _('Data gap detected') }}: {{ email_address.data_reception_details.gap_days }} {{ _('days') }}">
                                                 <i class="fas fa-exclamation-triangle status-icon"></i>
                                                 <span class="status-text">{{ _('Data gap') }} ({{ email_address.data_reception_details.days }}d)</span>
-                                            </div>
-                                        
-                                        {% elif email_address.data_reception_status == 'both' %}
-                                            <!-- Both issues -->
-                                            <div class="status-indicator status-danger" style="min-width: 180px;"
-                                                 data-bs-toggle="tooltip" 
-                                                 title="{{ _('Sync') }}: {{ email_address.data_reception_details.sync_days }}d, {{ _('Gap') }}: {{ email_address.data_reception_details.gap_days }}d">
-                                                <i class="fas fa-exclamation-circle status-icon"></i>
-                                                <span class="status-text">{{ _('Sync + Gap') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'no_data' %}
