@@ -129,7 +129,7 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
 
             values = data_points[timestamp]
             if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values['heart_rate'])
+                db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=values['steps'])
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=values['distance'])
                 db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=values['calories'])
