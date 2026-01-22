@@ -426,25 +426,13 @@ def available_email_addresses():
 
                         last_sync = last_sync.replace(tzinfo=now.tzinfo)
                         data_reception_details['sync_days'] = (now - last_sync).days
-                                      
-                        
 
                         # Check 2: Gap in intraday data > 3 days
                         intraday_checkpoint = db.get_intraday_checkpoint(email_address[0])
-
-                        # Check last intraday data
-                        result = db.execute_query("""
-                            SELECT MAX(time) 
-                            FROM intraday_metrics 
-                            WHERE id = %s
-                        """, (email_address[0],))
                             
-                        last_intraday_datetime = result[0][0]
-                            
-                        if intraday_checkpoint and last_intraday_datetime:
-                            last_intraday_datetime = last_intraday_datetime.replace(tzinfo=intraday_checkpoint.tzinfo)
-                            # gap_days = (intraday_checkpoint - last_intraday_datetime).days
-                            data_reception_details['gap_days'] = (intraday_checkpoint - last_intraday_datetime).days
+                        if intraday_checkpoint:
+                            intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_sync.tzinfo)
+                            data_reception_details['gap_days'] = max((last_sync - intraday_checkpoint).days, 0)
                         else:
                             data_reception_details['gap_days'] = 0
                             
@@ -484,6 +472,63 @@ def available_email_addresses():
     else:
         flash_translated('flash.database_connection_error', 'danger')
         return redirect(url_for('home'))
+
+
+@app.route('/livelyageing/update_devices_info')
+@login_required
+def update_devices_info():
+    """
+    Fetch device information from Fitbit and update database.
+    This retrieves device type and last sync time automatically.
+    """
+
+    db = DatabaseManager()
+    if db.connect():
+    
+        email_addresses = db.get_all_emails()
+
+        errors = []
+        for email_address in email_addresses:
+
+            email_id = email_address['id']
+            access_token, _ = db.get_email_tokens(email_id)
+
+            try:
+                device_data = get_device_info(access_token)
+
+                device_result = db.update_device_type(email_id, device_data['deviceVersion'])
+                last_sync_result = db.update_last_synch(email_id, device_data['lastSyncTime'])
+
+                if not device_result or not last_sync_result:
+                    app.logger.error(f"Error while updating info for device linked to {email_address['address_name']}")
+                    errors.append(email_address['address_name'])
+                    # flash_translated('flash.device_info_update_error', 'danger', address_name=email_address['address_name'])
+                else:
+                    app.logger.info(f"Device Info successfully updated for device linked to {email_address['address_name']}")
+                    # flash_translated('flash.device_info_update_success', 'success', address_name=email_address['address_name'])
+
+            except Exception as e:
+                app.logger.error(f"Error retrieving device info for {email_address['address_name']}: {e}")
+                errors.append(email_address['address_name'])
+                # flash_translated('flash.device_info_retrieve_error', 'danger', address_name=email_address['address_name'])
+
+        if len(errors) > 0:
+            flash_translated('flash.devices_info_update_error', 'danger', email_addresses=','.join(errors))
+        else:
+            flash_translated('flash.devices_info_update_success', 'success')
+            
+        db.close()
+
+    else:
+        flash_translated('flash.database_connection_error', 'danger')
+        return redirect(url_for('available_email_addresses'))
+
+
+    return redirect(url_for('available_email_addresses'))
+
+    
+
+
 
 
 @app.route('/livelyageing/user_stats')

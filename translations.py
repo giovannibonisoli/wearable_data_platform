@@ -894,19 +894,21 @@ TRANSLATIONS = {
             'actions': 'Azioni',
             'Device Type': 'Tipo di dispositivo',
             'Data Reception': 'Ricezione dei dati',
-            'Receiving Data': 'Riceve Dati',
-            'Sync needed': 'Sincronizzazione necessaria',
-            'Data gap': 'Gap nei dati',
-            'Sync + Gap': 'Sync + Gap',
-            'No data yet': 'Nessun dato',
-            'Checking...': 'Verifica...',
             'Not available': 'Non disponibile',
             'days ago': 'giorni fa',
             'days': 'giorni',
             'Last sync': 'Ultima sincronizzazione',
-            'Data gap detected': 'Gap nei dati rilevato',
             'Sync': 'Sincronizzazione',
-            'Gap': 'Gap',
+            'Updated Data': 'Dati aggiornati',
+            'Data are updated to the last synchronization': 'I dati sono aggiornati fino all\'ultima sincronizzazione',
+            'Updating data...': 'Dati in aggiornamento...',
+            'Updating data to the last synchronization': 'Dati in aggiornamento fino all\'ultima sincronizzazione',
+            'Sync needed': 'Sincronizzazione necessaria',
+            'Update latest information about the device': 'Aggiorna le ultime informazioni sul dispositivo',
+            'Update Devices Info': 'Aggiorna Info Dispositivi',
+            'Updated Data': 'Dati aggiornati', 
+            'Checking...': 'Verifica...',
+            
 
             'sync_status': {
                 'ok': 'OK',
@@ -1064,9 +1066,8 @@ TRANSLATIONS = {
             'invalid_auth_link': 'Errore: Link di autorizzazione non valido.',
             'auth_link_expired': 'Errore: Link di autorizzazione scaduto. Richiedine uno nuovo.',
             'user_id_not_provided': 'ID utente non fornito',
-            'user_not_found': 'Utente non trovato',
-            'device_unlinked_success': 'Dispositivo scollegato con successo. Utente e dati storici sono stati preservati.',
-            'unlink_user_failed': 'Impossibile scollegare l\'utente'
+            'devices_info_update_error': 'Errore nell\'aggiornamento delle informazioni dei dispositivi collegati a: {email_addresses}!',
+            'devices_info_update_success': 'Informazioni aggiornate correttamente per tutti i dispositivi!'
         }
     }
 } 

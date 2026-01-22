@@ -806,6 +806,30 @@ main {
     transition: all 0.3s ease;
 }
 
+ /* Update Device Info Button Styling */
+ .btn-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+    color:rgb(255, 255, 255)
+}
+
+.btn-info:active {
+    transform: translateY(0);
+}
+
+/* Spinning animation for sync icon on hover */
+.btn-info:hover .fa-sync-alt {
+    animation: spin-slow 2s linear infinite;
+}
+
 .add-btn i {
     color: var(--white);
 }
@@ -824,6 +848,10 @@ main {
 
 
 .btn-secondary i {
+    color: var(--white);
+}
+
+.btn-info i {
     color: var(--white);
 }
 

@@ -10,11 +10,19 @@
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <h3 class="mb-0" style="color: var(--primary); font-weight: 600;">
                 <i class="bi bi-smartwatch"></i>{{ _('Devices') }}
-                
             </h3>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmailModal" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
-                <i class="fas fa-plus-circle me-2"></i>{{ _('Add New Device') }}
-            </button>
+            <div>
+                <form action="{{ url_for('update_devices_info') }}" class="d-inline me-2">
+                    <button type="submit" class="btn btn-info" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>{{ _('Update Devices Info') }} 
+                    </button>
+                </form>
+                
+                <button id="addDeviceBtn" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmailModal" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                    <i class="fas fa-plus-circle me-2"></i>{{ _('Add New Device') }}
+                </button>
+                
+            </div>
         </div>
 
         <div class="modal fade" id="addEmailModal" tabindex="-1" aria-labelledby="addEmailModalLabel" aria-hidden="true">
@@ -137,17 +145,15 @@
                                 <td>
                                     {% if email_address.status == 'authorized' %}
                                         {% if email_address.data_reception_status == 'ok' %}
-                                            <!-- All good -->
                                             <div class="status-indicator status-success" style="min-width: 180px;"
                                                 data-bs-toggle="tooltip" 
-                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
+                                                 title="{{ _('Data are updated to the last synchronization') }} ({{ email_address.data_reception_details.sync_days }} {{ _('days ago') }})">
                                                 <i class="fas fa-check-circle status-icon"></i>
-                                                <span class="status-text">{{ _('Receiving Data') }}</span>
+                                                <span class="status-text">{{ _('Updated Data') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'sync_warning' %}
-                                            <!-- Only sync issue -->
-                                            <div class="status-indicator status-warning" style="min-width: 180px;" 
+                                            <div class="status-indicator .status-danger" style="min-width: 180px;" 
                                                  data-bs-toggle="tooltip" 
                                                  title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
                                                 <i class="fas fa-sync-alt status-icon"></i>
@@ -155,30 +161,26 @@
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'gap_warning' %}
-                                            <!-- Only data gap issue -->
-                                            <div class="status-indicator status-warning" style="min-width: 180px;"
+                                            <div class="status-indicator status-primary" style="min-width: 180px;"
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Data gap detected') }}: {{ email_address.data_reception_details.gap_days }} {{ _('days') }}">
-                                                <i class="fas fa-exclamation-triangle status-icon"></i>
-                                                <span class="status-text">{{ _('Data gap') }} ({{ email_address.data_reception_details.days }}d)</span>
+                                                 title="{{ _('Updating data to the last synchronization')}}: {{ email_address.data_reception_details.gap_days }} {{ _('days') }}">
+                                                 <i class="fas fa-cloud-download-alt status-icon"></i>
+                                                <span class="status-text">{{ _('Updating data...') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'no_data' %}
-                                            <!-- No intraday data found -->
                                             <div class="status-indicator status-info" style="min-width: 180px;">
                                                 <i class="fas fa-info-circle status-icon"></i>
                                                 <span class="status-text">{{ _('No data yet') }}</span>
                                             </div>
                                         
                                         {% else %}
-                                            <!-- Unknown status -->
                                             <div class="status-indicator status-info" style="min-width: 180px;">
                                                 <i class="fas fa-question-circle status-icon"></i>
                                                 <span class="status-text">{{ _('Checking...') }}</span>
                                             </div>
                                         {% endif %}
                                     {% else %}
-                                        <!-- Not authorized -->
                                         <div class="no-action-indicator" style="min-width: 180px;">
                                             <i class="fas fa-minus me-2"></i>
                                             <span>{{ _('Not available') }}</span>
@@ -201,6 +203,12 @@
                                             <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
                                         </button>
                                     </form>#}
+                       
+                                    <button type="button" class="btn btn-info btn-sm action-btn" 
+                                                data-bs-toggle="tooltip" 
+                                                title="{{ _('Update latest information about the device') }}">
+                                            <i class="fas fa-sync-alt me-2"></i>{{ _('Update Device Info') }}
+                                    </button>                           
                                     <button type="button" class="btn btn-danger btn-sm action-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deactivateModal{{ email_address.id }}">
@@ -335,6 +343,16 @@
     .status-info .status-icon {
         color: #0dcaf0;
     }
+
+    .status-primary {
+        color: #1d55cc;
+        border-color: #1d55cc;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+
+    .status-primary .status-icon {
+        color: #1d55cc;
+    }
     
     .status-warning {
         color: #ffc107;
@@ -365,6 +383,16 @@
     .status-inactive .status-icon {
         color: #6c757d;
     }
+
+    .status-danger {
+        color: #be0101;
+        border-color: #be0101;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+
+    .status-danger .status-icon {
+        color: #be0101;
+    }
     
     /* No action indicator - clearly non-clickable */
     .no-action-indicator {
@@ -384,6 +412,50 @@
         font-size: 0.85rem;
         opacity: 0.6;
     }
+
+
+   #addDeviceBtn:hover {
+        background: linear-gradient(135deg,rgb(2, 63, 2) 0%,rgb(0, 96, 13) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+   }
+    
+
+    @keyframes spin-slow {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Action buttons container - align multiple buttons */
+    .actions-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Ensure buttons in forms display inline */
+    form.d-inline {
+        display: inline-block !important;
+    }
+
+    /* Mobile responsive - stack buttons on small screens */
+    @media (max-width: 768px) {
+        .actions-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .action-btn {
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+    }
+
 </style>
 {% endblock %}
 {% endblock %}
