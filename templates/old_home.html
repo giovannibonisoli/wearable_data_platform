@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Medical Dashboard') }} - Lively Ageing{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-5">
+        <!-- Main Dashboard Cards -->
+        <div class="row g-4">
+            <!-- Patient Management -->
+            <!-- <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('admin_user_profile') }}">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon mb-3">
+                            <i class="fas fa-user-md fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title text-primary mb-2">{{ _('Profile') }}</h5>
+                        <p class="card-text text-muted small">{{ _('Handle profile setting') }}</p>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Email Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
+                    <div class="card-body text-center dashboard-card-body">
+                        <div class="card-icon mb-4">
+                            <i class="bi bi-smartwatch dashboard-icon text-success"></i>
+                        </div>
+                        <h5 class="card-title text-success mb-3 dashboard-title">{{ _('Wearable Devices') }}</h5>
+                        <p class="card-text text-muted dashboard-description">{{ _('Insert and monitor wearable devices') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Alerts -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
+                    <div class="card-body text-center dashboard-card-body">
+                        <div class="card-icon mb-4">
+                            <i class="fas fa-exclamation-triangle dashboard-icon text-warning"></i>
+                        </div>
+                        <h5 class="card-title text-warning mb-3 dashboard-title">{{ _('Medical Alerts') }}</h5>
+                        <p class="card-text text-muted dashboard-description">{{ _('Review and manage critical health alerts and anomalies') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Analytics -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
+                    <div class="card-body text-center dashboard-card-body">
+                        <div class="card-icon mb-4">
+                            <i class="fas fa-chart-bar dashboard-icon text-info"></i>
+                        </div>
+                        <h5 class="card-title text-info mb-3 dashboard-title">{{ _('Health Analytics') }}</h5>
+                        <p class="card-text text-muted dashboard-description">{{ _('Comprehensive health data analysis and reporting') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .welcome-header {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(74, 144, 164, 0.05) 100%);
+        padding: 3rem 2rem;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .stats-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(44, 90, 160, 0.2);
+    }
+    
+    .stats-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    /* Dashboard card styling - improved proportions */
+    .dashboard-card {
+        min-height: 280px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border-color: rgba(0, 0, 0, 0.15);
+    }
+    
+    .dashboard-card-body {
+        padding: 2.5rem 2rem !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    .dashboard-card .card-icon {
+        margin-bottom: 1.5rem;
+    }
+    
+    .dashboard-icon {
+        font-size: 3.5rem !important;
+        line-height: 1;
+    }
+    
+    .dashboard-title {
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin-bottom: 1rem !important;
+        line-height: 1.3;
+    }
+    
+    .dashboard-description {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .dashboard-card {
+            min-height: 240px;
+        }
+        
+        .dashboard-card-body {
+            padding: 2rem 1.5rem !important;
+        }
+        
+        .dashboard-icon {
+            font-size: 2.5rem !important;
+        }
+        
+        .dashboard-title {
+            font-size: 1.2rem;
+        }
+        
+        .dashboard-description {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to all clickable cards
+    const clickableCards = document.querySelectorAll('.clickable-card');
+    
+    clickableCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+        
+        // Add keyboard accessibility
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const url = this.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
+        
+        // Make cards focusable for keyboard navigation
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', card.querySelector('.card-title').textContent);
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}

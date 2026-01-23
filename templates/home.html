@@ -1,201 +1,462 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Medical Dashboard') }} - Lively Ageing{% endblock %}
+{% block title %}{{ _('Device Management') }} - Lively Ageing Medical Platform{% endblock %}
 
 {% block content %}
 <div class="dashboard">
     <div class="container py-5">
-        <!-- Main Dashboard Cards -->
-        <div class="row g-4">
-            <!-- Patient Management -->
-            <!-- <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('admin_user_profile') }}">
-                    <div class="card-body text-center p-3">
-                        <div class="card-icon mb-3">
-                            <i class="fas fa-user-md fa-3x text-primary"></i>
-                        </div>
-                        <h5 class="card-title text-primary mb-2">{{ _('Profile') }}</h5>
-                        <p class="card-text text-muted small">{{ _('Handle profile setting') }}</p>
-                    </div>
-                </div>
-            </div> -->
-
-            <!-- Email Management -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
-                    <div class="card-body text-center dashboard-card-body">
-                        <div class="card-icon mb-4">
-                            <i class="bi bi-smartwatch dashboard-icon text-success"></i>
-                        </div>
-                        <h5 class="card-title text-success mb-3 dashboard-title">{{ _('Wearable Devices') }}</h5>
-                        <p class="card-text text-muted dashboard-description">{{ _('Insert and monitor wearable devices') }}</p>
-                    </div>
-                </div>
+    
+        <!-- Add New Email Button -->
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <h3 class="mb-0" style="color: var(--primary); font-weight: 600;">
+                <i class="bi bi-smartwatch"></i>{{ _('Devices') }}
+            </h3>
+            <div>
+                <form action="{{ url_for('update_devices_info') }}" class="d-inline me-2">
+                    <button type="submit" class="btn btn-info" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>{{ _('Update Devices') }} 
+                    </button>
+                </form>
+                
+                <button id="addDeviceBtn" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmailModal" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                    <i class="fas fa-plus-circle me-2"></i>{{ _('Add New Device') }}
+                </button>
+                
             </div>
-
-            <!-- Medical Alerts -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
-                    <div class="card-body text-center dashboard-card-body">
-                        <div class="card-icon mb-4">
-                            <i class="fas fa-exclamation-triangle dashboard-icon text-warning"></i>
-                        </div>
-                        <h5 class="card-title text-warning mb-3 dashboard-title">{{ _('Medical Alerts') }}</h5>
-                        <p class="card-text text-muted dashboard-description">{{ _('Review and manage critical health alerts and anomalies') }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Health Analytics -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 dashboard-card clickable-card" data-url="{{ url_for('available_email_addresses') }}">
-                    <div class="card-body text-center dashboard-card-body">
-                        <div class="card-icon mb-4">
-                            <i class="fas fa-chart-bar dashboard-icon text-info"></i>
-                        </div>
-                        <h5 class="card-title text-info mb-3 dashboard-title">{{ _('Health Analytics') }}</h5>
-                        <p class="card-text text-muted dashboard-description">{{ _('Comprehensive health data analysis and reporting') }}</p>
-                    </div>
-                </div>
-            </div>
-
-            
         </div>
+
+        <div class="modal fade" id="addEmailModal" tabindex="-1" aria-labelledby="addEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius: 1rem; overflow: hidden; border: none;">
+                    <!-- Modal Header -->
+                    <div class="modal-header" style="background: linear-gradient(135deg, #2c5aa0 0%, #4a90a4 100%); color: white; border: none; padding: 1.5rem;">
+                        <h5 class="modal-title" id="addEmailModalLabel" style="font-weight: 600;">
+                            <i class="fas fa-plus-circle me-2"></i>{{ _('Add Device') }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="modal-body" style="padding: 2rem;">
+                        <form id="addEmailForm" method="POST" action="{{ url_for('home') }}">
+                            <div class="form-group">
+                                <label for="addressNameInsert" class="form-label" style="font-weight: 600; color: var(--text); margin-bottom: 0.75rem;">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                </label>
+                                <input type="email" class="form-control" id="addressNameInsert" 
+                                    name="addressName" required placeholder="{{ _('Enter email address') }}"
+                                    style="border: 2px solid var(--border); border-radius: 0.75rem; padding: 1rem 1.25rem; font-size: 1rem;">
+                                <small class="form-text text-muted mt-2 d-block">
+                                    <i class="fas fa-info-circle me-1"></i>{{ _('Enter a valid email address linked to a device') }}
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
+                        </button>
+                        <button type="submit" form="addEmailForm" class="btn btn-success" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                            <i class="fas fa-plus me-2"></i>{{ _('Add Device') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email addresses List -->
+        {% if email_addresses %}
+        <div class="card devices-table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover devices-table mb-0">
+                        <thead>
+                            <tr>
+                                
+                                <th class="table-header">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="bi bi-smartwatch me-2"></i>{{ _('Device Type') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-shield-alt me-2"></i>{{ _('Status') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="bi bi-cloud-download-fill me-2"></i>{{ _('Data Reception') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for email_address in email_addresses %}
+                            <tr class="device-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="device-icon me-3">
+                                            <i class="fas fa-user-circle text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-primary">{{ email_address.address_name }}</strong>
+                                            <br>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'authorized' %}
+                                    <div>
+                                        <strong class="text-primary">{{ email_address.device_type }}</strong>
+                                        <br>
+                                    </div>
+                                    {% else %}
+                                    <div class="no-action-indicator" style="min-width: 180px;">
+                                        <i class="fas fa-minus me-2"></i>
+                                        <span>{{ _('Not available') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'inserted' %}
+                                    <div class="status-indicator status-warning">
+                                        <i class="fa fa-warning status-icon"></i>
+                                        <span class="status-text">{{ _('Data Access Not Authorized') }}</span>
+                                    </div>
+                                    {% elif email_address.status == 'pending_auth_request' %}
+                                    <div class="status-indicator status-info">
+                                        <i class="fas fa-clock status-icon"></i>
+                                        <span class="status-text">{{ _('Pending Authorization Request') }}</span>
+                                    </div>
+                                    {% elif email_address.status == 'authorized' %}
+                                    <div class="status-indicator status-success">
+                                        <i class="fas fa-check-circle status-icon"></i>
+                                        <span class="status-text">{{ _('Data Access Authorized') }}</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="status-indicator status-inactive">
+                                        <i class="fas fa-times-circle status-icon"></i>
+                                        <span class="status-text">{{ _('Not Active') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'authorized' %}
+                                        {% if email_address.data_reception_status == 'ok' %}
+                                            <div class="status-indicator status-success" style="min-width: 180px;"
+                                                data-bs-toggle="tooltip" 
+                                                 title="{{ _('Data are updated to the last synchronization') }} ({{ email_address.data_reception_details.sync_days }} {{ _('days ago') }})">
+                                                <i class="fas fa-check-circle status-icon"></i>
+                                                <span class="status-text">{{ _('Updated Data') }}</span>
+                                            </div>
+                                        
+                                        {% elif email_address.data_reception_status == 'sync_warning' %}
+                                            <div class="status-indicator .status-danger" style="min-width: 180px;" 
+                                                 data-bs-toggle="tooltip" 
+                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
+                                                <i class="fas fa-sync-alt status-icon"></i>
+                                                <span class="status-text">{{ _('Sync needed') }}</span>
+                                            </div>
+                                        
+                                        {% elif email_address.data_reception_status == 'gap_warning' %}
+                                            <div class="status-indicator status-primary" style="min-width: 180px;"
+                                                 data-bs-toggle="tooltip" 
+                                                 title="{{ _('Updating data to the last synchronization')}}: {{ email_address.data_reception_details.gap_days }} {{ _('days') }}">
+                                                 <i class="fas fa-cloud-download-alt status-icon"></i>
+                                                <span class="status-text">{{ _('Updating data...') }}</span>
+                                            </div>
+                                        
+                                        {% elif email_address.data_reception_status == 'no_data' %}
+                                            <div class="status-indicator status-info" style="min-width: 180px;">
+                                                <i class="fas fa-info-circle status-icon"></i>
+                                                <span class="status-text">{{ _('No data yet') }}</span>
+                                            </div>
+                                        
+                                        {% else %}
+                                            <div class="status-indicator status-info" style="min-width: 180px;">
+                                                <i class="fas fa-question-circle status-icon"></i>
+                                                <span class="status-text">{{ _('Checking...') }}</span>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="no-action-indicator" style="min-width: 180px;">
+                                            <i class="fas fa-minus me-2"></i>
+                                            <span>{{ _('Not available') }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email_address.status == 'inserted' %}
+                                    <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="addressIdAuth" value="{{ email_address.id }}">
+                                        <input type="hidden" name="addressNameAuth" value="{{ email_address.address_name }}">
+                                        <button type="submit" class="btn btn-primary btn-sm action-btn">
+                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Send Authorization Email') }}
+                                        </button>
+                                    </form>
+                                    {% elif email_address.status == 'authorized' %}
+                                    {#<form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm action-btn">
+                                            <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
+                                        </button>
+                                    </form>#}
+                       
+                                    <a href="{{ url_for('device_details', device_id=email_address.id) }}"
+                                        class="btn btn-info btn-sm action-btn"
+                                        data-bs-toggle="tooltip"
+                                        title="{{ _('View detailed device information') }}">
+                                            <i class="bi bi-activity me-2"></i>{{ _('Device Details') }}
+                                    </a>                         
+                                    <button type="button" class="btn btn-danger btn-sm action-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deactivateModal{{ email_address.id }}">
+                                        <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
+                                    </button>
+                                
+                                    {% else %}
+                                    <div class="no-action-indicator">
+                                        <i class="fas fa-ban me-2"></i>
+                                        <span>{{ _('No action allowed') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card empty-state-card">
+            <div class="card-body text-center py-5">
+                <div class="empty-icon mb-4">
+                    <i class="fas fa-watch fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">{{ _('No Email Addresses inserted') }}</h4>
+                <p class="text-muted mb-4">{{ _('Start monitoring patient health by adding an email address.') }}</p>
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{{ _('Getting Started:') }}</strong> {{ _('Use the form above to add a new email address and begin monitoring the associated wearable.') }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
+<!-- Deactivation Confirmation Modals -->
+{% for email_address in email_addresses %}
+<div class="modal fade" id="deactivateModal{{ email_address.id }}" tabindex="-1" aria-labelledby="deactivateModalLabel{{ email_address.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1rem; overflow: hidden; border: none;">
+            <!-- Modal Header -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 1.5rem;">
+                <h5 class="modal-title" id="deactivateModalLabel{{ email_address.id }}" style="font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ _('Confirm Deactivation') }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="text-center mb-4">
+                    <div class="warning-icon" style="background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(200, 35, 51, 0.1) 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #dc3545;"></i>
+                    </div>
+                </div>
+                
+                <h6 class="text-center mb-3" style="color: #343a40; font-weight: 600;">
+                    {{ _('Are you sure you want to disable this device?') }}
+                </h6>
+                
+                <div class="alert alert-warning" style="border-radius: 0.75rem; border-left: 4px solid #ffc107; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
+                    <strong><i class="fas fa-info-circle me-2"></i>{{ _('Email Address:') }}</strong><br>
+                    <span style="font-size: 1.1rem; color: #856404;">{{ email_address.address_name }}</span>
+                </div>
+                
+                <p class="text-muted text-center mb-0" style="font-size: 0.9rem;">
+                    {{ _('This action will make the email address no longer usable in this service') }}
+                </p>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem;">
+                    <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
+                </button>
+                <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
+                    <button type="submit" class="btn btn-danger" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
+                        <i class="fas fa-check me-2"></i>{{ _('confirm') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+
 {% block extra_css %}
 <style>
-    .welcome-header {
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(74, 144, 164, 0.05) 100%);
-        padding: 3rem 2rem;
-        border-radius: 1.5rem;
-        border: 1px solid rgba(44, 90, 160, 0.1);
-    }
+    /* Device management specific styles that aren't in shared CSS */
     
-    .stats-card {
-        transition: all 0.3s ease;
-        border-left: 4px solid var(--primary);
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(44, 90, 160, 0.2);
-    }
-    
-    .stats-icon {
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
+    /* Status indicators - elegant, non-button-like design */
+    .status-indicator {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        margin: 0 auto;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1.5px solid;
+        background-color: transparent;
+        transition: all 0.2s ease;
     }
     
-    /* Dashboard card styling - improved proportions */
-    .dashboard-card {
-        min-height: 280px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 1rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    .status-indicator:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        border-color: rgba(0, 0, 0, 0.15);
-    }
-    
-    .dashboard-card-body {
-        padding: 2.5rem 2rem !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        height: 100%;
-    }
-    
-    .dashboard-card .card-icon {
-        margin-bottom: 1.5rem;
-    }
-    
-    .dashboard-icon {
-        font-size: 3.5rem !important;
-        line-height: 1;
-    }
-    
-    .dashboard-title {
-        font-size: 1.35rem;
-        font-weight: 600;
-        margin-bottom: 1rem !important;
-        line-height: 1.3;
-    }
-    
-    .dashboard-description {
+    .status-icon {
+        margin-right: 0.5rem;
         font-size: 0.95rem;
-        line-height: 1.5;
-        margin-bottom: 0;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .dashboard-card {
-            min-height: 240px;
+    .status-text {
+        line-height: 1.2;
+    }
+    
+    /* Status color variants */
+    .status-info {
+        color: #0dcaf0;
+        border-color: #0dcaf0;
+        background-color: rgba(13, 202, 240, 0.08);
+    }
+    
+    .status-info .status-icon {
+        color: #0dcaf0;
+    }
+
+    .status-primary {
+        color: #1d55cc;
+        border-color: #1d55cc;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+
+    .status-primary .status-icon {
+        color: #1d55cc;
+    }
+    
+    .status-warning {
+        color: #ffc107;
+        border-color: #ffc107;
+        background-color: rgba(255, 193, 7, 0.08);
+    }
+    
+    .status-warning .status-icon {
+        color: #ffc107;
+    }
+    
+    .status-success {
+        color: #198754;
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.08);
+    }
+    
+    .status-success .status-icon {
+        color: #198754;
+    }
+    
+    .status-inactive {
+        color: #6c757d;
+        border-color: #6c757d;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+    
+    .status-inactive .status-icon {
+        color: #6c757d;
+    }
+
+    .status-danger {
+        color: #be0101;
+        border-color: #be0101;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+
+    .status-danger .status-icon {
+        color: #be0101;
+    }
+    
+    /* No action indicator - clearly non-clickable */
+    .no-action-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-style: italic;
+        opacity: 0.7;
+        user-select: none;
+        pointer-events: none;
+    }
+    
+    .no-action-indicator i {
+        font-size: 0.85rem;
+        opacity: 0.6;
+    }
+
+
+   #addDeviceBtn:hover {
+        background: linear-gradient(135deg,rgb(2, 63, 2) 0%,rgb(0, 96, 13) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+   }
+    
+
+    @keyframes spin-slow {
+        from {
+            transform: rotate(0deg);
         }
-        
-        .dashboard-card-body {
-            padding: 2rem 1.5rem !important;
-        }
-        
-        .dashboard-icon {
-            font-size: 2.5rem !important;
-        }
-        
-        .dashboard-title {
-            font-size: 1.2rem;
-        }
-        
-        .dashboard-description {
-            font-size: 0.9rem;
+        to {
+            transform: rotate(360deg);
         }
     }
+
+    /* Action buttons container - align multiple buttons */
+    .actions-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Ensure buttons in forms display inline */
+    form.d-inline {
+        display: inline-block !important;
+    }
+
+    /* Mobile responsive - stack buttons on small screens */
+    @media (max-width: 768px) {
+        .actions-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .action-btn {
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+    }
+
 </style>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add click handlers to all clickable cards
-    const clickableCards = document.querySelectorAll('.clickable-card');
-    
-    clickableCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            const url = this.getAttribute('data-url');
-            if (url) {
-                window.location.href = url;
-            }
-        });
-        
-        // Add keyboard accessibility
-        card.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                const url = this.getAttribute('data-url');
-                if (url) {
-                    window.location.href = url;
-                }
-            }
-        });
-        
-        // Make cards focusable for keyboard navigation
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', card.querySelector('.card-title').textContent);
-    });
-});
-</script>
-{% endblock %}
-
 {% endblock %}

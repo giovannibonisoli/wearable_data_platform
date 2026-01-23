@@ -905,7 +905,7 @@ TRANSLATIONS = {
             'Updating data to the last synchronization': 'Dati in aggiornamento fino all\'ultima sincronizzazione',
             'Sync needed': 'Sincronizzazione necessaria',
             'Update latest information about the device': 'Aggiorna le ultime informazioni sul dispositivo',
-            'Update Devices Info': 'Aggiorna Info Dispositivi',
+            'Update Devices': 'Aggiorna Dispositivi',
             'Updated Data': 'Dati aggiornati', 
             'Checking...': 'Verifica...',
             
@@ -931,8 +931,7 @@ TRANSLATIONS = {
             'Click on the authorization link': 'Clicca sul link di autorizzazione',
             'Complete the Fitbit authorization process': 'Completa il processo di autorizzazione di Fitbit',
             'Return to the devices page': 'Ritorna alla pagina dei dispositivi',
-            'Back to Device Management': 'Indietro alla Gestione Dispositivi',
-            'Go to Home': 'Vai alla Home',
+            'Back to Home': 'Torna alla Home',
             'The authorization link will expire in 10 minutes for security reasons.': 'Il link di autorizzazione scadrà tra 10 minuti per ragioni di sicurezza.',
             'Are you sure you want to disable this device?': 'Sei sicuro di voler disabilitare il seguente dispositivo?',
             'Authorization Successful!': 'Autorizzazione Concessa!',

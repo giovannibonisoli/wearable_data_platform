@@ -308,13 +308,13 @@ def check_dashboard_updates():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/livelyageing/home')
-@login_required
-def home():
-    """
-    Render the home page with recent activity.
-    """
-    return render_template('home.html')
+# @app.route('/livelyageing/home')
+# @login_required
+# def home():
+#     """
+#     Render the home page with recent activity.
+#     """
+#     return render_template('home.html')
     
 
 
@@ -381,9 +381,9 @@ def change_password():
     return redirect(url_for('admin_user_profile'))
 
 
-@app.route('/livelyageing/available_email_addresses', methods=['GET', 'POST'])
+@app.route('/livelyageing/home', methods=['GET', 'POST'])
 @login_required
-def available_email_addresses():
+def home():
     db = DatabaseManager()
     if db.connect():
         try:
@@ -459,7 +459,7 @@ def available_email_addresses():
                     })
                 
                 return render_template(
-                    'available_email_addresses.html', 
+                    'home.html', 
                     email_addresses=email_addresses,
                     user=current_user
                 )
@@ -513,7 +513,7 @@ def update_devices_info():
                 # flash_translated('flash.device_info_retrieve_error', 'danger', address_name=email_address['address_name'])
 
         if len(errors) > 0:
-            flash_translated('flash.devices_info_update_error', 'danger', email_addresses=','.join(errors))
+            flash_translated('flash.devices_info_update_error', 'danger', email_addresses=', '.join(errors))
         else:
             flash_translated('flash.devices_info_update_success', 'success')
             
@@ -522,7 +522,7 @@ def update_devices_info():
     else:
         flash_translated('flash.database_connection_error', 'danger')
 
-    return redirect(url_for('available_email_addresses'))
+    return redirect(url_for('home'))
 
     
 
@@ -648,7 +648,7 @@ def send_auth_email():
     address_name = request.form.get('addressNameAuth')
     if not address_name:
         flash_translated('flash.select_email', 'danger')
-        return redirect(url_for('available_email_addresses'))
+        return redirect(url_for('home'))
 
     # Generate code_verifier and store it temporarily with email as key
     code_verifier = generate_code_verifier()
@@ -708,7 +708,7 @@ def send_auth_email():
         return render_template('auth_email_sent_confirmation.html', address_name=address_name)
     else:
         flash_translated('flash.email_send_error', 'danger')
-        return redirect(url_for('available_email_addresses'))
+        return redirect(url_for('home'))
 
 
 @app.route('/livelyageing/callback')
@@ -725,7 +725,7 @@ def callback():
         if not code or not state:
             app.logger.error("Missing code or state parameter")
             flash_translated('flash.missing_auth_info', 'danger')
-            return redirect(url_for('available_email_addresses'))
+            return redirect(url_for('home'))
 
         # Decode state to get email
         try:
@@ -734,12 +734,12 @@ def callback():
         except Exception as e:
             app.logger.error(f"Invalid state parameter: {e}")
             flash_translated('flash.invalid_auth_link', 'danger')
-            return redirect(url_for('available_email_addresses'))
+            return redirect(url_for('home'))
 
         if not address_name:
             app.logger.error("No email found in state")
             flash_translated('flash.invalid_auth_link', 'danger')
-            return redirect(url_for('available_email_addresses'))
+            return redirect(url_for('home'))
 
         db = DatabaseManager()
         if db.connect():
@@ -749,7 +749,7 @@ def callback():
                 if not pending_auth:
                     app.logger.error("No pending authorization found or expired")
                     flash_translated('flash.auth_link_expired', 'danger')
-                    return redirect(url_for('available_email_addresses'))
+                    return redirect(url_for('home'))
 
                 code_verifier = pending_auth['code_verifier']
 
@@ -814,7 +814,7 @@ def deactivate_email():
 
         app.logger.error(f"Email {email_id} deactivated.")
 
-    return redirect(url_for('available_email_addresses'))
+    return redirect(url_for('home'))
 
 
 # Template filters
