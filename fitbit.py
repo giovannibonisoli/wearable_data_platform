@@ -124,15 +124,16 @@ def process_email_summary(email_record, db):
         return 'error'
 
     last_date = db.get_daily_summary_checkpoint(email_id)
+    
     if last_date:
         start_date = last_date + timedelta(days=1)
     else:
         start_date = datetime(2025,1,21).date()
 
-    last_synch_date = db.get_last_synch(email_id)
-    end_date = (last_synch_date.date() - timedelta(days=1))
+    intraday_checkpoint = db.get_intraday_checkpoint(email_id)
+    end_date = (intraday_checkpoint.date() - timedelta(days=1))
 
-    if start_date > end_date:
+    if start_date >= end_date:
         logger.info(f"{name} is up to date for summaries")
         return 'success'
     
