@@ -11,7 +11,7 @@ from emails import send_email
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
-from flask_babel import Babel, get_locale, gettext as babel_gettext
+from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
 
 import os
 import logging
@@ -521,15 +521,10 @@ def update_devices_info():
 
     else:
         flash_translated('flash.database_connection_error', 'danger')
-        return redirect(url_for('available_email_addresses'))
-
 
     return redirect(url_for('available_email_addresses'))
 
     
-
-
-
 
 @app.route('/livelyageing/user_stats')
 @login_required
@@ -833,20 +828,22 @@ def format_number(value):
     except (ValueError, TypeError):
         return value
 
-@app.template_filter('datetime')
-def format_datetime(value):
-    """Format a datetime value."""
-    if value is None:
-        return '-'
-    try:
-        if isinstance(value, str):
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        elif isinstance(value, int):
-            # Convert integer timestamp to datetime
-            value = datetime.fromtimestamp(value)
-        return value.strftime('%Y-%m-%d %H:%M:%S')
-    except (ValueError, TypeError):
-        return value
+# @app.template_filter('datetime')
+# def format_datetime(value):
+#     """Format a datetime value."""
+#     if value is None:
+#         return '-'
+#     try:
+#         if isinstance(value, str):
+#             value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+#         elif isinstance(value, int):
+#             # Convert integer timestamp to datetime
+#             value = datetime.fromtimestamp(value)
+#         return value.strftime('%Y-%m-%d %H:%M:%S')
+#     except (ValueError, TypeError):
+#         return value
+
+
 
 def get_text(key):
     """Get the translation for a key in the current language."""
@@ -1036,6 +1033,86 @@ def refresh_data():
         app.logger.error(f"Error refreshing data: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+
+@app.route("/livelyageing/device_details/<int:device_id>")
+@login_required
+def device_details(device_id):
+    # device = get_device(device_id)  # ← tuo metodo
+    # metrics = get_device_metrics(device_id)
+
+
+    try:
+        # Get all unique emails from the database
+        db = DatabaseManager()
+        if db.connect():
+            last_synch = db.get_last_synch(device_id)
+            last_synch = format_datetime(last_synch, 'DD MMMM YYYY - HH:MM')
+
+            daily_summaries_checkpoint = db.get_daily_summary_checkpoint(device_id)
+            daily_summaries_checkpoint = format_date(daily_summaries_checkpoint, 'DD MMMM YYYY')
+
+            intraday_checkpoint = db.get_intraday_checkpoint(device_id)
+            intraday_checkpoint = format_datetime(intraday_checkpoint, 'DD MMMM YYYY - HH:MM')
+
+            device = {
+                        "last_sync": last_synch,
+                        "last_daily_summary": daily_summaries_checkpoint,
+                        "last_intraday": intraday_checkpoint,
+                    
+            }
+
+    except Exception as e:
+        app.logger.error(f"Error refreshing data: {e}")
+        return jsonify({'error': str(e)}), 500
+
+    metrics = {
+        "steps": {
+            "value": 7981,
+            "history": [5000, 7000, 6500, 8000, 7800]
+        },
+        "distance": {
+            "value": 5.3,
+            "history": [3.2, 4.1, 4.8, 5.0, 5.3]
+        },
+        "elevation": {
+            "value": 78,
+            "history": [40,50,60,80,78]
+        },
+        "floors": {
+            "value": 12,
+            "history": [10,12,9,15,12]
+        },
+        "heart_rate": {
+            "value": 75,
+            "range": "(62–110 bpm)",
+            "history": [70,72,75,78,75]
+        }
+    }
+
+    medical_alerts = [
+        "Battito cardiaco irregolare rilevato ieri",
+        "Pausa prolungata senza attività"
+    ]
+
+    activity_alerts = [
+        "Passi troppo bassi per 3 giorni consecutivi"
+    ]
+    alerts = [
+        "Missing intraday data for 22 Apr",
+        "Sync gap > 24h detected"
+    ]
+
+    return render_template(
+        "device_details.html",
+        device=device,
+        metrics=metrics,
+        alerts=alerts,
+        medical_alerts=medical_alerts,
+        activity_alerts=activity_alerts
+    )
+
+
 @app.route('/livelyageing/api/daily_summary')
 @login_required
 def get_daily_summary():
@@ -1089,6 +1166,10 @@ def get_daily_summary():
     except Exception as e:
         app.logger.error(f"Error getting the daily summary.: {str(e)}")
         return jsonify({'error': 'Internal server error.'}), 500
+
+
+
+    
 
 @app.route('/livelyageing/api/alerts')
 @login_required

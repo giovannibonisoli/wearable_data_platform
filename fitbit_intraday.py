@@ -11,7 +11,7 @@ MAIN FUNCTIONALITY:
 - Automatically updates checkpoint using db.update_intraday_checkpoint()
 
 Key variables to modify:
-    BACKFILL_START_DATE = "2025-01-20"  # First day to collect (inclusive)
+    BACKFILL_START_DATE = "2025-01-24"  # First day to collect (inclusive)
 """
 
 from base64 import b64encode
@@ -45,7 +45,7 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 
 # === BACKFILL CONFIGURATION ===
-BACKFILL_START_DATE = "2025-01-24"  # First day to collect (inclusive)
+BACKFILL_START_DATE = "2025-01-25"  # First day to collect (inclusive)
 SLEEP_ON_RATE_LIMIT = 600  # 10 minutes in seconds
 
 
@@ -87,10 +87,12 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
 
         
         metrics = [
-            ('heart_rate', f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d/{detail_level}.json", 'activities-heart-intraday'),
-            ('steps', f"https://api.fitbit.com/1/user/-/activities/steps/date/{date_str}/1d/{detail_level}.json", 'activities-steps-intraday'),
-            ('calories', f"https://api.fitbit.com/1/user/-/activities/calories/date/{date_str}/1d/{detail_level}.json", 'activities-calories-intraday'),
-            ('distance', f"https://api.fitbit.com/1/user/-/activities/distance/date/{date_str}/1d/{detail_level}.json", 'activities-distance-intraday'),
+            # ('heart_rate', f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d/{detail_level}.json", 'activities-heart-intraday'),
+            # ('steps', f"https://api.fitbit.com/1/user/-/activities/steps/date/{date_str}/1d/{detail_level}.json", 'activities-steps-intraday'),
+            # ('calories', f"https://api.fitbit.com/1/user/-/activities/calories/date/{date_str}/1d/{detail_level}.json", 'activities-calories-intraday'),
+            # ('distance', f"https://api.fitbit.com/1/user/-/activities/distance/date/{date_str}/1d/{detail_level}.json", 'activities-distance-intraday'),
+            ('floors', f"https://api.fitbit.com/1/user/-/activities/floors/date/{date_str}/1d/{detail_level}.json", 'activities-floors-intraday'),
+            ('elevation', f"https://api.fitbit.com/1/user/-/activities/elevation/date/{date_str}/1d/{detail_level}.json", 'activities-elevation-intraday'),
         ]
 
         data_points = {}
@@ -128,16 +130,20 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
         for timestamp in timestamps:
 
             values = data_points[timestamp]
-            if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=values['steps'])
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=values['distance'])
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=values['calories'])
+            # if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
 
+            if db.check_intraday_timestamp(email_address['id'], timestamp):
+                # db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
+                # db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=values['steps'])
+                # db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=values['distance'])
+                # db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=values['calories'])
+
+                db.insert_intraday_metric(email_address['id'], timestamp, data_type='floors', value=values['floors'])
+                db.insert_intraday_metric(email_address['id'], timestamp, data_type='elevation', value=values['elevation'])
             else:
                 print(f"Empty point or checkpoint reached for timestamp {timestamp}")
 
-            db.update_intraday_checkpoint(email_address['id'], timestamp)
+            # db.update_intraday_checkpoint(email_address['id'], timestamp)
 
 
         # Update checkpoint in database
@@ -298,14 +304,30 @@ def process_all_emails_continuous():
 
 
 if __name__ == "__main__":
-    os.makedirs("logs", exist_ok=True)
-    logger.info("=== START OF FITBIT INTRADAY CONTINUOUS LOOP ===")
-    logger.info(f"Python version: {sys.version}")
-    logger.info(f"Working directory: {os.getcwd()}")
+    # os.makedirs("logs", exist_ok=True)
+    # logger.info("=== START OF FITBIT INTRADAY CONTINUOUS LOOP ===")
+    # logger.info(f"Python version: {sys.version}")
+    # logger.info(f"Working directory: {os.getcwd()}")
     
-    try:
-        process_all_emails_continuous()
-    except KeyboardInterrupt:
-        logger.info("\n=== STOPPED BY USER (Ctrl+C) ===")
-    except Exception as e:
-        logger.error(f"Fatal error: {e}", exc_info=True)
+    # try:
+    #     process_all_emails_continuous()
+    # except KeyboardInterrupt:
+    #     logger.info("\n=== STOPPED BY USER (Ctrl+C) ===")
+    # except Exception as e:
+    #     logger.error(f"Fatal error: {e}", exc_info=True)
+    
+    db = DatabaseManager()
+    if db.connect():
+
+        current_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
+        email_addresses = db.get_all_emails()
+
+        while True:
+        
+            for email_address in email_addresses:
+                last_synch_date = db.get_last_synch(email_address['id'])
+                access_token, refresh_token = db.get_email_tokens(email_address['id'])
+                date_str = current_date.strftime('%Y-%m-%d')
+                success, hit_rate_limit = get_intraday_data(access_token, email_address, date_str, last_synch_date)
+
+            current_date = current_date + timedelta(days=1)

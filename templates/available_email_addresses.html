@@ -204,11 +204,12 @@
                                         </button>
                                     </form>#}
                        
-                                    <button type="button" class="btn btn-info btn-sm action-btn" 
-                                                data-bs-toggle="tooltip" 
-                                                title="{{ _('Update latest information about the device') }}">
-                                            <i class="fas fa-sync-alt me-2"></i>{{ _('Update Device Info') }}
-                                    </button>                           
+                                    <a href="{{ url_for('device_details', device_id=email_address.id) }}"
+                                        class="btn btn-info btn-sm action-btn"
+                                        data-bs-toggle="tooltip"
+                                        title="{{ _('View detailed device information') }}">
+                                            <i class="bi bi-activity me-2"></i>{{ _('Device Details') }}
+                                    </a>                         
                                     <button type="button" class="btn btn-danger btn-sm action-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deactivateModal{{ email_address.id }}">
