@@ -82,10 +82,13 @@
                                     <i class="bi bi-smartwatch me-2"></i>{{ _('Device Type') }}
                                 </th>
                                 <th class="table-header">
-                                    <i class="fas fa-shield-alt me-2"></i>{{ _('Status') }}
+                                    <i class="fas fa-lock me-2"></i>{{ _('Authorization') }}
                                 </th>
                                 <th class="table-header">
-                                    <i class="bi bi-cloud-download-fill me-2"></i>{{ _('Data Reception') }}
+                                    <i class="fas fa-sync-alt me-2"></i>{{ _('Cloud Synchronization') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="bi bi-graph-up me-2"></i>{{ _('Usage') }}
                                 </th>
                                 <th class="table-header">
                                     <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
@@ -97,9 +100,7 @@
                             <tr class="device-row">
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="device-icon me-3">
-                                            <i class="fas fa-user-circle text-primary"></i>
-                                        </div>
+
                                         <div>
                                             <strong class="text-primary">{{ email_address.address_name }}</strong>
                                             <br>
@@ -123,17 +124,17 @@
                                     {% if email_address.status == 'inserted' %}
                                     <div class="status-indicator status-warning">
                                         <i class="fa fa-warning status-icon"></i>
-                                        <span class="status-text">{{ _('Data Access Not Authorized') }}</span>
+                                        <span class="status-text">{{ _('Not Authorized') }}</span>
                                     </div>
                                     {% elif email_address.status == 'pending_auth_request' %}
                                     <div class="status-indicator status-info">
                                         <i class="fas fa-clock status-icon"></i>
-                                        <span class="status-text">{{ _('Pending Authorization Request') }}</span>
+                                        <span class="status-text">{{ _('Pending Request') }}</span>
                                     </div>
                                     {% elif email_address.status == 'authorized' %}
                                     <div class="status-indicator status-success">
                                         <i class="fas fa-check-circle status-icon"></i>
-                                        <span class="status-text">{{ _('Data Access Authorized') }}</span>
+                                        <span class="status-text">{{ _('Authorized') }}</span>
                                     </div>
                                     {% else %}
                                     <div class="status-indicator status-inactive">
@@ -147,9 +148,9 @@
                                         {% if email_address.data_reception_status == 'ok' %}
                                             <div class="status-indicator status-success" style="min-width: 180px;"
                                                 data-bs-toggle="tooltip" 
-                                                 title="{{ _('Data are updated to the last synchronization') }} ({{ email_address.data_reception_details.sync_days }} {{ _('days ago') }})">
+                                                 title="{{ _('Data are updated to the last synchronization') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
                                                 <i class="fas fa-check-circle status-icon"></i>
-                                                <span class="status-text">{{ _('Updated Data') }}</span>
+                                                <span class="status-text">{{ _('Updated Data') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'sync_warning' %}
@@ -157,7 +158,7 @@
                                                  data-bs-toggle="tooltip" 
                                                  title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
                                                 <i class="fas fa-sync-alt status-icon"></i>
-                                                <span class="status-text">{{ _('Sync needed') }}</span>
+                                                <span class="status-text">{{ _('Sync device') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'gap_warning' %}
@@ -186,6 +187,9 @@
                                             <span>{{ _('Not available') }}</span>
                                         </div>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    
                                 </td>
                                 <td>
                                     {% if email_address.status == 'inserted' %}
