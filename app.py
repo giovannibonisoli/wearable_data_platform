@@ -400,7 +400,7 @@ def home():
                     flash_translated('flash.email_added_success', 'success', address=address_name)
                 else:
                     flash_translated('flash.email_add_error', 'danger')
-                return redirect(url_for('available_email_addresses'))
+                return redirect(url_for('home'))
             else:
                 # Get only the email addresses owned by current user
                 result = db.get_admin_user_email_addresses(current_user.id)
@@ -416,10 +416,9 @@ def home():
                     # Get data reception status
                     data_reception_status = None
                     data_reception_details = {}
+
                     
                     if status == 'authorized':
-
-
                         # Check 1: Check last sync to be > 7 days
                         last_sync = db.get_last_synch(email_address[0])
                         now = datetime.now()
@@ -433,6 +432,7 @@ def home():
                         if intraday_checkpoint:
                             intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_sync.tzinfo)
                             data_reception_details['gap_days'] = max((last_sync - intraday_checkpoint).days, 0)
+                
                         else:
                             data_reception_details['gap_days'] = 0
                             
@@ -460,8 +460,7 @@ def home():
                 
                 return render_template(
                     'home.html', 
-                    email_addresses=email_addresses,
-                    user=current_user
+                    email_addresses=email_addresses
                 )
         except Exception as e:
             app.logger.error(f"Error fetching email addresses: {e}")
