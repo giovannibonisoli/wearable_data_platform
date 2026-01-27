@@ -664,8 +664,6 @@ class DatabaseManager:
         ))
         return result
 
-
-
     def get_all_emails(self):
         """Retrieves a list of unique email addresses from the database"""
 
@@ -676,6 +674,12 @@ class DatabaseManager:
                     'address_name': row[1]
                 } for row in result if row[2] == 'authorized'] if result else []
 
+
+    def get_intraday_data_timestamps_by_range(self, email_id, start_date, end_date):
+
+        query = "SELECT time FROM intraday_metrics WHERE email_id = %s AND time > %s AND time < %s ORDER BY TIME;"
+        result = self.execute_query(query, (email_id, start_date, end_date))
+        return result if result else []
 
 def connect_to_db():
     """
@@ -1355,30 +1359,22 @@ if __name__ == "__main__":
     else:
 
         try:
- 
-            # query = "DELETE FROM daily_summaries WHERE 1=1;"
-            # result = db.execute_query(query, [])
 
-            # print("Daily summaries eliminati!")
-
-
-            # query = "DELETE FROM intraday_metrics WHERE 1=1;"
-            # result = db.execute_query(query, [])
-
-            # print("Dati intraday eliminati!")
-
-            query = """
-                UPDATE email_addresses SET intraday_checkpoint = '2025-01-24 00:00:00' WHERE id < 3;
-            """
-            result = db.execute_query(query, [])
-
+            # from auth import refresh_tokens
             # for email_id in [1, 2]:
 
-            #     access_token, refresh_tokens = db.get_email_tokens(email_id)
-            #     device_data = get_device_info(access_token)
-            #     db.update_last_synch(email_id, device_data['lastSyncTime'])
+            #     access_token, refresh_token = db.get_email_tokens(email_id)
 
-            print("Dati aggiornati!")
+            #     new_access_token, new_refresh_token = refresh_tokens(refresh_token)
+
+            #     db.update_email_tokens(email_id, new_access_token, new_refresh_token)
+
+            # print("Dati aggiornati!")
+
+            query = "UPDATE email_addresses SET daily_summaries_checkpoint = '2026-01-20' WHERE id=1;"
+
+            # query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, status='inserted' WHERE 1=1;"
+            result = db.execute_query(query, [])
 
         finally:
             db.close()

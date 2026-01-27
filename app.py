@@ -13,7 +13,7 @@ from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
 
-from device_statistics import get_device_sync_data
+from device_statistics import get_device_sync_data, get_last_device_usage_statistics
 
 import os
 import logging
@@ -418,9 +418,11 @@ def home():
                     # Get data reception status
                     data_reception_status = 'no_data'
                     data_reception_details = {}
+                    device_usage_details = {}
  
                     if status == 'authorized':
                         data_reception_status, data_reception_details = get_device_sync_data(email_address[0])
+                        device_usage_details = get_last_device_usage_statistics(email_address[0], timedelta(days=7))
                     
                     email_addresses.append({
                         "id": email_address[0],
@@ -429,7 +431,8 @@ def home():
                         "created_at": email_address[3],
                         "device_type": email_address[4] if email_address[4] else "",
                         "data_reception_status": data_reception_status,
-                        "data_reception_details": data_reception_details
+                        "data_reception_details": data_reception_details,
+                        "device_usage_details": device_usage_details
                     })
                 
                 return render_template(
