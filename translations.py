@@ -919,8 +919,9 @@ TRANSLATIONS = {
             'Checking...': 'Verifica...',
             'View detailed device information': 'Vedi informazioni dettagliate sul dispositivo',
             'Resync with the cloud to avoid data loss': 'Sincronizzare nuovamente con il cloud per evitare la perdita di dati',
-            
-
+            'The patient has used the device for more than 8 hours a day over the past week': 'Il paziente ha utilizzato il dispositivo per più di 8 ore al giorno nell’ultima settimana',
+            'The patient has used the device for less than 8 hours a day over the past week': 'Il paziente ha utilizzato il dispositivo per meno di 8 ore al giorno nell’ultima settimana',
+            '8 hours': '8 ore',
             'sync_status': {
                 'ok': 'OK',
                 'ok_desc': 'Dati aggiornati nelle ultime 24h',

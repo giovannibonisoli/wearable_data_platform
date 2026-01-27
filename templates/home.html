@@ -207,7 +207,28 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    
+                                    {% if email_address.status == 'authorized' %}
+                                        {% if email_address.device_usage_details.average_hours_per_day > 8 %}
+                                            <div class="status-indicator status-success" style="min-width: 180px;"
+                                                data-bs-toggle="tooltip" 
+                                                title="{{ _('The patient has used the device for more than 8 hours a day over the past week') }}">
+                                                <i class="fas fa-check-circle status-icon"></i>
+                                                <span class="status-text"> >{{ _('8 hours') }}</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="status-indicator status-warning" style="min-width: 180px;" 
+                                                data-bs-toggle="tooltip" 
+                                                title="{{ _('The patient has used the device for less than 8 hours a day over the past week') }}">
+                                                <i class="fa fa-warning status-icon"></i>
+                                                <span class="status-text"> <{{ _('8 hours') }}</span>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="no-action-indicator" style="min-width: 180px;">
+                                            <i class="fas fa-minus me-2"></i>
+                                            <span>{{ _('Not available') }}</span>
+                                        </div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if email_address.status == 'inserted' %}
