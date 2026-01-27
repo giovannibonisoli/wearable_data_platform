@@ -149,41 +149,40 @@
                                             {% if email_address.data_reception_details.sync_days > 0 %}
                                                 <div class="status-indicator status-success" style="min-width: 180px;"
                                                     data-bs-toggle="tooltip" 
-                                                    title="{{ _('Data are updated to the last synchronization') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
+                                                    title="{{ _('Data are updated to the last synchronization') }}">
                                                     <i class="fas fa-check-circle status-icon"></i>
-                                                    <span class="status-text">{{ _('Updated Data') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                                 </div>
                                             {% else %}
                                                 {% if email_address.data_reception_details.sync_hours > 0 %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
-                                                        title="{{ _('Data are updated to the last synchronization') }}: {{ email_address.data_reception_details.sync_hours }} {{ _('hours ago') }}">
+                                                        title="{{ _('Data are updated to the last synchronization') }}">
                                                         <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('Updated Data') }}: {{ email_address.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
                                                     </div>
                                                 {% else %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
-                                                        title="{{ _('Data are updated to the last synchronization') }}: {{ email_address.data_reception_details.sync_minutes }} {{ _('minutes ago') }}">
+                                                        title="{{ _('Data are updated to the last synchronization') }}">
                                                         <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('Updated Data') }}: {{ email_address.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
                                                     </div>
-
                                                 {% endif %}
                                             {% endif %}
                                         
                                         {% elif email_address.data_reception_status == 'sync_warning' %}
-                                            <div class="status-indicator .status-danger" style="min-width: 180px;" 
+                                            <div class="status-indicator status-danger" style="min-width: 180px;" 
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Last sync') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}">
-                                                <i class="fas fa-sync-alt status-icon"></i>
-                                                <span class="status-text">{{ _('Sync device') }}: {{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                 title="{{ _('Resync with the cloud to avoid data loss') }}">
+                                                <i class="fa fa-warning status-icon"></i>
+                                                <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                             </div>
                                         
                                         {% elif email_address.data_reception_status == 'gap_warning' %}
                                             <div class="status-indicator status-primary" style="min-width: 180px;"
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Updating data to the last synchronization')}}: {{ email_address.data_reception_details.gap_days }} {{ _('days') }}">
+                                                 title="{{ _('Updating data to the last synchronization')}}: {{ email_address.data_reception_details.sync_days}} {{ _('days') }}">
                                                  <i class="fas fa-cloud-download-alt status-icon"></i>
                                                 <span class="status-text">{{ _('Updating data...') }}</span>
                                             </div>
@@ -374,7 +373,7 @@
     .status-primary {
         color: #1d55cc;
         border-color: #1d55cc;
-        background-color: rgba(108, 117, 125, 0.08);
+        background-color: rgb(208, 228, 255);
     }
 
     .status-primary .status-icon {
@@ -414,7 +413,7 @@
     .status-danger {
         color: #be0101;
         border-color: #be0101;
-        background-color: rgba(108, 117, 125, 0.08);
+        background-color: rgba(239, 1, 1, 0.227);
     }
 
     .status-danger .status-icon {
