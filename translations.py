@@ -884,6 +884,7 @@ TRANSLATIONS = {
             'status': 'Stato',
             'Actions': 'Azioni',
             # 'Add New Device': 'Aggiungi nuovo dispositivo',
+            'No data yet': 'Nessun dato',
             'Add Device': 'Aggiungi dispositivo',
             'Request Authorization': 'Richiedi Autorizzazione',
             'Send an email to request authorization to download the data collected by the wearable device': 'Invia un email per richiedere l\'autorizzazione a scaricare dal cloud i dati raccolti dal dispositivo',
@@ -917,6 +918,7 @@ TRANSLATIONS = {
             'Device Details': 'Dettagli Dispositivo',
             'Checking...': 'Verifica...',
             'View detailed device information': 'Vedi informazioni dettagliate sul dispositivo',
+            'Resync with the cloud to avoid data loss': 'Sincronizzare nuovamente con il cloud per evitare la perdita di dati',
             
 
             'sync_status': {
