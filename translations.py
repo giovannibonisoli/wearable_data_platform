@@ -879,12 +879,14 @@ TRANSLATIONS = {
             'unassigned': 'Non assegnato'
         },
         'home': {
+            'Disable': 'Disabilita',
             'Disable Device': 'Disabilita Dispositivo',
             'status': 'Stato',
             'Actions': 'Azioni',
-            'Add New Device': 'Aggiungi nuovo dispositivo',
+            # 'Add New Device': 'Aggiungi nuovo dispositivo',
             'Add Device': 'Aggiungi dispositivo',
-            'Send Authorization Email': 'Invia Richiesta di Autorizzazione',
+            'Request Authorization': 'Richiedi Autorizzazione',
+            'Send an email to request authorization to download the data collected by the wearable device': 'Invia un email per richiedere l\'autorizzazione a scaricare dal cloud i dati raccolti dal dispositivo',
             'Confirm Deactivation': 'Conferma Disattivazione',
             'Are you sure you want to disable this device?': 'Sicuro di voler disabilitare questo dispositivo?',
             'user': 'Utente',
@@ -899,6 +901,8 @@ TRANSLATIONS = {
             'Data Reception': 'Ricezione dei dati',
             'Not available': 'Non disponibile',
             'days ago': 'giorni fa',
+            'hours ago': 'ore fa',
+            'minutes ago': 'minuti fa',
             'days': 'giorni',
             'Last sync': 'Ultima sincronizzazione',
             'Sync': 'Sincronizzazione',
@@ -910,7 +914,9 @@ TRANSLATIONS = {
             'Sync device': 'Sincronizzare dispositivo',
             'Update latest information about the device': 'Aggiorna le ultime informazioni sul dispositivo',
             'Update Devices': 'Aggiorna Dispositivi',
+            'Device Details': 'Dettagli Dispositivo',
             'Checking...': 'Verifica...',
+            'View detailed device information': 'Vedi informazioni dettagliate sul dispositivo',
             
 
             'sync_status': {

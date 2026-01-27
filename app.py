@@ -13,6 +13,8 @@ from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
 
+from device_statistics import get_device_sync_data
+
 import os
 import logging
 import json
@@ -395,7 +397,7 @@ def home():
                     address_name
                 )
 
-                print("EMAIL ID:", email_id)
+                # print("EMAIL ID:", email_id)
                 if email_id:
                     flash_translated('flash.email_added_success', 'success', address=address_name)
                 else:
@@ -414,39 +416,11 @@ def home():
                             status = 'pending_auth_request'
 
                     # Get data reception status
-                    data_reception_status = None
+                    data_reception_status = 'no_data'
                     data_reception_details = {}
-
-                    
+ 
                     if status == 'authorized':
-                        # Check 1: Check last sync to be > 7 days
-                        last_sync = db.get_last_synch(email_address[0])
-                        now = datetime.now()
-
-                        last_sync = last_sync.replace(tzinfo=now.tzinfo)
-                        data_reception_details['sync_days'] = (now - last_sync).days
-
-                        # Check 2: Gap in intraday data > 3 days
-                        intraday_checkpoint = db.get_intraday_checkpoint(email_address[0])
-                            
-                        if intraday_checkpoint:
-                            intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_sync.tzinfo)
-                            data_reception_details['gap_days'] = max((last_sync - intraday_checkpoint).days, 0)
-                
-                        else:
-                            data_reception_details['gap_days'] = 0
-                            
-                        # Determine overall status
-                        if data_reception_details['sync_days'] > 7:
-                            data_reception_status = 'sync_warning'
-                        else:
-                            if data_reception_details['gap_days'] > 3:
-                                data_reception_status = 'gap_warning'
-
-                            else:
-                                data_reception_status = 'ok'
-                    else:
-                        data_reception_status = 'no_data'
+                        data_reception_status, data_reception_details = get_device_sync_data(email_address[0])
                     
                     email_addresses.append({
                         "id": email_address[0],
