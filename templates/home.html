@@ -122,25 +122,31 @@
                                 </td>
                                 <td>
                                     {% if email_address.status == 'inserted' %}
-                                    <div class="status-indicator status-warning">
-                                        <i class="fa fa-warning status-icon"></i>
-                                        <span class="status-text">{{ _('Not Authorized') }}</span>
-                                    </div>
+                                        <div class="status-indicator status-warning"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('Authorization must be requested and granted before downloading data from the cloud') }}">
+                                            <i class="fa fa-warning status-icon"></i>
+                                            <span class="status-text">{{ _('Not Authorized') }}</span>
+                                        </div>
                                     {% elif email_address.status == 'pending_auth_request' %}
-                                    <div class="status-indicator status-info">
-                                        <i class="fas fa-clock status-icon"></i>
-                                        <span class="status-text">{{ _('Pending Request') }}</span>
-                                    </div>
+                                        <div class="status-indicator status-info"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('The authorization request has been sent and is awaiting approval') }}">
+                                            <i class="fas fa-clock status-icon"></i>
+                                            <span class="status-text">{{ _('Pending Request') }}</span>
+                                        </div>
                                     {% elif email_address.status == 'authorized' %}
-                                    <div class="status-indicator status-success">
-                                        <i class="fas fa-check-circle status-icon"></i>
-                                        <span class="status-text">{{ _('Authorized') }}</span>
-                                    </div>
+                                        <div class="status-indicator status-success"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('Access authorization for this device’s data has been obtained') }}">
+                                            <i class="fas fa-check-circle status-icon"></i>
+                                            <span class="status-text">{{ _('Authorized') }}</span>
+                                        </div>
                                     {% else %}
-                                    <div class="status-indicator status-inactive">
-                                        <i class="fas fa-times-circle status-icon"></i>
-                                        <span class="status-text">{{ _('Not Active') }}</span>
-                                    </div>
+                                        <div class="status-indicator status-inactive">
+                                            <i class="fas fa-times-circle status-icon"></i>
+                                            <span class="status-text">{{ _('Not Active') }}</span>
+                                        </div>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -213,14 +219,14 @@
                                                 data-bs-toggle="tooltip" 
                                                 title="{{ _('The patient has used the device for more than 8 hours a day over the past week') }}">
                                                 <i class="fas fa-check-circle status-icon"></i>
-                                                <span class="status-text"> >{{ _('8 hours') }}</span>
+                                                <span class="status-text"> >{{ _('8 hours a day') }}</span>
                                             </div>
                                         {% else %}
                                             <div class="status-indicator status-warning" style="min-width: 180px;" 
                                                 data-bs-toggle="tooltip" 
                                                 title="{{ _('The patient has used the device for less than 8 hours a day over the past week') }}">
                                                 <i class="fa fa-warning status-icon"></i>
-                                                <span class="status-text"> <{{ _('8 hours') }}</span>
+                                                <span class="status-text"> <{{ _('8 hours a day') }}</span>
                                             </div>
                                         {% endif %}
                                     {% else %}
