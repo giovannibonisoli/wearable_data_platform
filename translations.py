@@ -718,7 +718,7 @@ TRANSLATIONS = {
             'Authorized': 'Autorizzato',
             'Not Authorized': 'Non autorizzato',
             'No action allowed': 'Nessun azione permessa',
-            'Pending Request': 'Richiesta in attesa',
+            'Pending Request': 'In attesa',
             'Not Active': 'Non attivo',
             'registered_on': 'Registrato il',
             'years_old': 'anni',
@@ -898,7 +898,7 @@ TRANSLATIONS = {
             'Authorization': 'Autorizzazione',
             'Authorization must be requested and granted before downloading data from the cloud': 'È necessario richiedere e ottenere l’autorizzazione per scaricare i dati dal cloud',
             'Access authorization for this device’s data has been obtained': 'L’autorizzazione all’accesso ai dati di questo dispositivo è stata ottenuta.',
-            'The authorization request has been sent and is awaiting approval': 'La richiesta di autorizzazione è stata inviata. In attesa di approvazione…'.
+            'The authorization request has been sent and is awaiting approval': 'La richiesta di autorizzazione è stata inviata. In attesa di approvazione…',
             'Usage': 'Utilizzo',
             'actions': 'Azioni',
             'Device Type': 'Tipo di dispositivo',
