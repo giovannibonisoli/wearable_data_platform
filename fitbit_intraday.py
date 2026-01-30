@@ -296,8 +296,6 @@ def process_all_emails_continuous():
             time.sleep(2)
 
 
-
-
 if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
     logger.info("=== START OF FITBIT INTRADAY CONTINUOUS LOOP ===")

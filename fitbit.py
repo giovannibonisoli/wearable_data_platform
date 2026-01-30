@@ -93,7 +93,6 @@ def fetch_daily_summary(access_token, email_id, name, date_obj, db):
         
             db.insert_daily_summary(email_id=email_id, date=date_str, **data)
             logger.info(f"Daily summary collected for {name} on {date_str}")
-            
 
         db.update_daily_summaries_checkpoint(email_id, date_str)
         return True, False
@@ -118,6 +117,7 @@ def process_email_summary(email_record, db):
     name = email_record['address_name']
 
     logger.info(f"Processing daily summary for email {name}")
+
     access_token, refresh_token = db.get_email_tokens(email_id)
     if not access_token or not refresh_token:
         logger.warning(f"No tokens for {name}")
@@ -130,8 +130,8 @@ def process_email_summary(email_record, db):
     else:
         start_date = datetime(2025,1,21).date()
 
-    intraday_checkpoint = db.get_intraday_checkpoint(email_id)
-    end_date = (intraday_checkpoint.date() - timedelta(days=1))
+    last_sync = db.get_last_synch(email_id)
+    end_date = (last_sync.date() - timedelta(days=1))
 
     if start_date >= end_date:
         logger.info(f"{name} is up to date for summaries")
