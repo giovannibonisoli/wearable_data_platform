@@ -291,6 +291,23 @@ class DatabaseManager:
         return None
 
 
+    def get_sleep_checkpoint(self, email_id):
+        """
+        Get the last date for which a daily summary was collected.
+        Returns a date object or None.
+        """
+        query = """
+            SELECT sleep_checkpoint
+            FROM email_addresses
+            WHERE id = %s
+        """
+        result = self.execute_query(query, (email_id,))
+            
+        if result:
+            return result[0][0]
+        return None
+
+
     def update_last_synch(self, email_id, timestamp):
         """
         """
@@ -340,6 +357,24 @@ class DatabaseManager:
                 
         if result:
             print(f"Intraday checkpoint {timestamp} for email_id {email_id} successfully updated.")
+        return result
+
+
+    def update_sleep_checkpoint(self, email_id, date):
+        """
+        Get the last date for which sleep was collected.
+        Returns a date object or None.
+        """
+
+        query = """
+                UPDATE email_addresses
+                SET sleep_checkpoint = %s
+                WHERE id = %s;
+        """
+        result = self.execute_query(query, (date, email_id))
+                
+        if result:
+            print(f"Sleep checkpoint {date} for email_id {email_id} successfully updated.")
         return result
 
 
@@ -579,28 +614,89 @@ class DatabaseManager:
                 print(f"Intraday {data_type} data for email_id {email_id} successfully saved in intraday_metrics.")
             return result
 
-    def insert_sleep_log(self, email_id, start_time, end_time, **data):
+
+    def insert_sleep_session(self, email_id):
+        query = """
+            INSERT INTO sleep_sessions (email_id) 
+            VALUES (%s)
+            RETURNING id;
+        """
+
+        result = self.execute_query(query, (email_id, ))
+        if result:
+            print(f"Sleep session inserted for email address {email_id}")
+        return result[0][0]
+
+
+    def insert_sleep_log(self, sleep_session_id, data):
         """Inserts a sleep record into the database"""
+
         query = """
             INSERT INTO sleep_logs (
-                email_id, start_time, end_time, duration_ms,
-                efficiency, minutes_asleep, minutes_awake,
-                minutes_in_rem, minutes_in_light, minutes_in_deep
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                sleep_session_id, start_time, end_time, is_main_sleep, duration, 
+                minutes_asleep, minutes_awake, minutes_in_the_bed, log_type, type
+            ) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
+
         result = self.execute_query(query, (
-            email_id, start_time, end_time,
-            data.get('duration_ms'),
-            data.get('efficiency'),
-            data.get('minutes_asleep'),
-            data.get('minutes_awake'),
-            data.get('minutes_in_rem'),
-            data.get('minutes_in_light'),
-            data.get('minutes_in_deep')
+            sleep_session_id,
+            data['startTime'], 
+            data['endTime'],
+            data['isMainSleep'],
+            data['duration'] / 1000,
+            data['minutesAsleep'],
+            data['minutesAwake'],
+            data['timeInBed'],
+            data['logType'],
+            data['type']
         ))
+
         if result:
-            print(f"Sleep record inserted for email address {email_id}")
+            print(f"Sleep record inserted for sleep session {sleep_session_id}")
         return result
+
+
+    def insert_sleep_level(self, sleep_session_id, data):
+        """Inserts a sleep levelrecord into the database"""
+        query = """
+            INSERT INTO sleep_levels (
+                sleep_session_id, time, level, seconds
+            ) 
+            VALUES (%s, %s, %s, %s)
+        """
+
+        result = self.execute_query(query, (
+            sleep_session_id, 
+            data['dateTime'], 
+            data['level'],
+            data['seconds'],
+        ))
+
+        if result:
+            print(f"Sleep level record inserted for sleep session {sleep_session_id}")
+        return result
+
+    
+    def insert_sleep_short_level(self, sleep_session_id, short):
+        """Inserts a sleep short level record into the database"""
+        query = """
+            INSERT INTO sleep_short_levels (
+                sleep_session_id, time, seconds
+            ) 
+            VALUES (%s, %s, %s)
+        """
+
+        result = self.execute_query(query, (
+            sleep_session_id, 
+            short['dateTime'],
+            short['seconds'],
+        ))
+
+        if result:
+            print(f"Sleep short level record inserted for sleep_log {sleep_session_id}")
+        return result
+
 
     def get_user_history(self, email_id):
         """Retrieves the complete history of an email address"""
@@ -757,7 +853,7 @@ def init_db():
 
         db.execute_query("""
             CREATE TABLE pending_authorizations (
-                    id SERIAL,
+                    id SERIAL PRIMARY KEY,
                     email_id INTEGER REFERENCES email_addresses(id),
                     state VARCHAR(500) UNIQUE NOT NULL,
                     code_verifier VARCHAR(128) NOT NULL,
@@ -826,20 +922,27 @@ def init_db():
             );
         """)
 
+        db.execute_query("""
+            CREATE TABLE sleep_sessions (
+                id SERIAL PRIMARY KEY,
+                email_id INTEGER REFERENCES email_addresses(id)
+            );
+        """)
+
+
         # Crear sleep log table
         db.execute_query("""
-            CREATE TABLE IF NOT EXISTS sleep_logs (
-                id SERIAL,
-                email_id INTEGER REFERENCES email_addresses(id),
-                start_time TIMESTAMPTZ NOT NULL,
-                end_time TIMESTAMPTZ NOT NULL,
-                duration_ms INTEGER,
-                efficiency INTEGER,
+            CREATE TABLE sleep_logs (
+                sleep_sessions_id INTEGER REFERENCES sleep_sessions(id),
+                start_time TIMESTAMPTZ,
+                end_time TIMESTAMPTZ,
+                is_main_sleep BOOLEAN,
+                duration INTEGER,
                 minutes_asleep INTEGER,
                 minutes_awake INTEGER,
-                minutes_in_rem INTEGER,
-                minutes_in_light INTEGER,
-                minutes_in_deep INTEGER
+                minutes_in_the_bed INTEGER,
+                log_type VARCHAR(50),
+                type VARCHAR(50)
             );
         """)
 
@@ -851,33 +954,41 @@ def init_db():
             );
         """)
 
-        # Create alert table
         db.execute_query("""
-            CREATE TABLE IF NOT EXISTS alerts (
+            CREATE TABLE IF NOT EXISTS sleep_levels (
                 id SERIAL,
-                alert_time TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                email_id INTEGER REFERENCES email_addresses(id),
-                alert_type VARCHAR(100) NOT NULL,
-                priority VARCHAR(20) NOT NULL,
-                triggering_value DOUBLE PRECISION,
-                threshold_value VARCHAR(50),
-                details TEXT,
-                acknowledged BOOLEAN DEFAULT FALSE,
-                acknowledged_at TIMESTAMPTZ,
-                acknowledged_by INTEGER REFERENCES email_addresses(id),
-                PRIMARY KEY (id, alert_time)
+                sleep_session_id INTEGER REFERENCES sleep_sessions(id),
+                time TIMESTAMPTZ NOT NULL,
+                level VARCHAR(50),
+                seconds INTEGER
             );
         """)
 
         # Convert it to hypertable
         db.execute_query("""
-            SELECT create_hypertable('alerts', 'alert_time',
+            SELECT create_hypertable('sleep_levels', 'time',
                 if_not_exists => TRUE,
                 migrate_data => TRUE
             );
         """)
 
-        
+
+        db.execute_query("""
+            CREATE TABLE IF NOT EXISTS sleep_short_levels (
+                id SERIAL,
+                sleep_session_id INTEGER REFERENCES sleep_sessions(id),
+                time TIMESTAMPTZ NOT NULL,
+                seconds INTEGER
+            );
+        """)
+
+        # Convert it to hypertable
+        db.execute_query("""
+            SELECT create_hypertable('sleep_short_levels', 'time',
+                if_not_exists => TRUE,
+                migrate_data => TRUE
+            );
+        """)
 
         print("Database successfully initialized with TimeScaleDB.")
         return True
@@ -1344,12 +1455,10 @@ def drop_fitbit_data():
 
 
 if __name__ == "__main__":
-    # Reset and reinitialize the database
     # drop_authorizations()
     # reset_database()
+
     # Create test data
-    # create_test_data()
-    # drop_intraday_data()
     # reset_emails_status()
     # drop_fitbit_data()
 
@@ -1360,21 +1469,24 @@ if __name__ == "__main__":
 
         try:
 
-            # from auth import refresh_tokens
-            # for email_id in [1, 2]:
+            # reset_emails_status()
 
-            #     access_token, refresh_token = db.get_email_tokens(email_id)
+            from auth import refresh_tokens
+            for email_id in [1, 2]:
 
-            #     new_access_token, new_refresh_token = refresh_tokens(refresh_token)
+                access_token, refresh_token = db.get_email_tokens(email_id)
 
-            #     db.update_email_tokens(email_id, new_access_token, new_refresh_token)
+                new_access_token, new_refresh_token = refresh_tokens(refresh_token)
 
-            # print("Dati aggiornati!")
+    
+                db.update_email_tokens(email_id, new_access_token, new_refresh_token)
 
-            query = "UPDATE email_addresses SET daily_summaries_checkpoint = '2026-01-20' WHERE id=1;"
+            print("Dati aggiornati!")
+
+            # query = "UPDATE email_addresses SET daily_summaries_checkpoint = '2026-01-20' WHERE id=1;"
 
             # query = "UPDATE email_addresses SET access_token = NULL, refresh_token = NULL, status='inserted' WHERE 1=1;"
-            result = db.execute_query(query, [])
+            # result = db.execute_query(query, [])
 
         finally:
             db.close()
