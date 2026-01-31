@@ -477,13 +477,13 @@ class DatabaseManager:
             print(f"Error al obtener alerta por ID: {str(e)}")
             return None
 
-    def store_pending_auth(self, email_id, state, code_verifier):
+    def store_pending_auth(self, device_id, state, code_verifier):
         """Store pending authorization with expiration"""
         query = """
-            INSERT INTO pending_authorizations (email_id, state, code_verifier, expires_at)
+            INSERT INTO pending_authorizations (device_id, state, code_verifier, expires_at)
             VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes')
         """
-        return self.execute_query(query, (email_id, state, code_verifier))
+        return self.execute_query(query, (device_id, state, code_verifier))
 
     def get_pending_auth(self, state):
         """Retrieve pending authorization if not expired"""
@@ -759,14 +759,25 @@ class DatabaseManager:
         ))
         return result
 
-    def get_all_emails(self):
-        """Retrieves a list of unique email addresses from the database"""
+    # def get_all_emails(self):
+    #     """Retrieves a list of unique email addresses from the database"""
 
-        query = "SELECT id, address_name, status FROM email_addresses;"
+    #     query = "SELECT id, address_name, status FROM email_addresses;"
+    #     result = self.execute_query(query)
+    #     return [{
+    #                 'id': row[0], 
+    #                 'address_name': row[1]
+    #             } for row in result if row[2] == 'authorized'] if result else []
+
+
+    def get_all_devices(self):
+        """Retrieves a list of unique devices from the database"""
+
+        query = "SELECT id, email_address, authorization_status FROM devices;"
         result = self.execute_query(query)
         return [{
                     'id': row[0], 
-                    'address_name': row[1]
+                    'email_address': row[1]
                 } for row in result if row[2] == 'authorized'] if result else []
 
 

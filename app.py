@@ -200,7 +200,6 @@ def admin_user_profile():
             admin_user['id'] = int(current_user.id)
 
             admin_user.update(db.get_admin_user_by_id(admin_user['id']))
-            # admin_user['num_email_addresses'] = len(db.get_admin_user_email_addresses(admin_user['id']))
             admin_user['num_devices'] = len(db.get_admin_user_devices(admin_user['id']))
 
             return render_template('admin_user_profile.html', admin_user=admin_user)
@@ -271,8 +270,7 @@ def home():
                     flash_translated('flash.email_add_error', 'danger')
                 return redirect(url_for('home'))
             else:
-                # Get only the email addresses owned by current user
-                # result = db.get_admin_user_email_addresses(current_user.id)
+                # Get only the devices owned by current user
                 result = db.get_admin_user_devices(current_user.id)
                 
                 devices = []
@@ -307,8 +305,8 @@ def home():
                     devices=devices
                 )
         except Exception as e:
-            app.logger.error(f"Error fetching email addresses: {e}")
-            flash_translated('flash.email_load_error', 'danger')
+            app.logger.error(f"Error fetching devices: {e}")
+            flash_translated('flash.device_load_error', 'danger')
             return redirect(url_for('home'))
         finally:
             db.close()
@@ -328,35 +326,32 @@ def update_devices_info():
     db = DatabaseManager()
     if db.connect():
     
-        email_addresses = db.get_all_emails()
+        devices = db.get_all_devices()
 
         errors = []
-        for email_address in email_addresses:
+        for device in devices:
 
-            email_id = email_address['id']
-            access_token, _ = db.get_email_tokens(email_id)
+            device_id = device['id']
+            access_token, _ = db.get_email_tokens(device_id)
 
             try:
                 device_data = get_device_info(access_token)
 
-                device_result = db.update_device_type(email_id, device_data['deviceVersion'])
-                last_sync_result = db.update_last_synch(email_id, device_data['lastSyncTime'])
+                device_result = db.update_device_type(device_id, device_data['deviceVersion'])
+                last_sync_result = db.update_last_synch(device_id, device_data['lastSyncTime'])
 
                 if not device_result or not last_sync_result:
-                    app.logger.error(f"Error while updating info for device linked to {email_address['address_name']}")
-                    errors.append(email_address['address_name'])
-                    # flash_translated('flash.device_info_update_error', 'danger', address_name=email_address['address_name'])
+                    app.logger.error(f"Error while updating info for device linked to {device['email_address']}")
+                    errors.append(device['email_address'])
                 else:
-                    app.logger.info(f"Device Info successfully updated for device linked to {email_address['address_name']}")
-                    # flash_translated('flash.device_info_update_success', 'success', address_name=email_address['address_name'])
+                    app.logger.info(f"Device Info successfully updated for device linked to {device['email_address']}")
 
             except Exception as e:
-                app.logger.error(f"Error retrieving device info for {email_address['address_name']}: {e}")
-                errors.append(email_address['address_name'])
-                # flash_translated('flash.device_info_retrieve_error', 'danger', address_name=email_address['address_name'])
+                app.logger.error(f"Error retrieving device info for {device['email_address']}: {e}")
+                errors.append(device['email_address'])
 
         if len(errors) > 0:
-            flash_translated('flash.devices_info_update_error', 'danger', email_addresses=', '.join(errors))
+            flash_translated('flash.devices_info_update_error', 'danger', devices=', '.join(errors))
         else:
             flash_translated('flash.devices_info_update_success', 'success')
             
@@ -368,129 +363,128 @@ def update_devices_info():
     return redirect(url_for('home'))
 
     
+# @app.route('/livelyageing/user_stats')
+# @login_required
+# def user_stats():
+#     """
+#     Display statistics for all users, organized into three categories:
+#     1. Active Users: Have name, tokens, and data
+#     2. Unassigned Users: Latest instance without name/tokens
+#     3. Historical Users: Previous instances with name and data
+#     """
+#     search = request.args.get('search', '').strip()
 
-@app.route('/livelyageing/user_stats')
-@login_required
-def user_stats():
-    """
-    Display statistics for all users, organized into three categories:
-    1. Active Users: Have name, tokens, and data
-    2. Unassigned Users: Latest instance without name/tokens
-    3. Historical Users: Previous instances with name and data
-    """
-    search = request.args.get('search', '').strip()
+#     db = DatabaseManager()
+#     if db.connect():
+#         try:
+#             # Get all users with relevant information.
 
-    db = DatabaseManager()
-    if db.connect():
-        try:
-            # Get all users with relevant information.
+#             if search:
+#                 users = db.execute_query("""
+#                     WITH UserInstances AS (
+#                         SELECT
+#                             u.id,
+#                             u.name,
+#                             u.email,
+#                             u.created_at,
+#                             u.access_token IS NOT NULL AND u.refresh_token IS NOT NULL as has_tokens,
+#                             (SELECT MAX(date) FROM daily_summaries d WHERE d.user_id = u.id) as last_update,
+#                             EXISTS(SELECT 1 FROM daily_summaries d WHERE d.user_id = u.id) as has_data,
+#                             ROW_NUMBER() OVER (PARTITION BY u.email ORDER BY u.created_at DESC) as rn
+#                         FROM users u
+#                         WHERE LOWER(u.name) LIKE LOWER(%s) OR LOWER(u.email) LIKE LOWER(%s)
+#                     )
+#                     SELECT *
+#                     FROM UserInstances
+#                     ORDER BY email, created_at DESC
+#                 """, (f"%{search}%", f"%{search}%"))
+#             else:
+#                 users = db.execute_query("""
+#                     WITH UserInstances AS (
+#                         SELECT
+#                             u.id,
+#                             u.name,
+#                             u.email,
+#                             u.created_at,
+#                             u.access_token IS NOT NULL AND u.refresh_token IS NOT NULL as has_tokens,
+#                             (SELECT MAX(date) FROM daily_summaries d WHERE d.user_id = u.id) as last_update,
+#                             EXISTS(SELECT 1 FROM daily_summaries d WHERE d.user_id = u.id) as has_data,
+#                             ROW_NUMBER() OVER (PARTITION BY u.email ORDER BY u.created_at DESC) as rn
+#                         FROM users u
+#                     )
+#                     SELECT *
+#                     FROM UserInstances
+#                     ORDER BY email, created_at DESC
+#                 """)
 
-            if search:
-                users = db.execute_query("""
-                    WITH UserInstances AS (
-                        SELECT
-                            u.id,
-                            u.name,
-                            u.email,
-                            u.created_at,
-                            u.access_token IS NOT NULL AND u.refresh_token IS NOT NULL as has_tokens,
-                            (SELECT MAX(date) FROM daily_summaries d WHERE d.user_id = u.id) as last_update,
-                            EXISTS(SELECT 1 FROM daily_summaries d WHERE d.user_id = u.id) as has_data,
-                            ROW_NUMBER() OVER (PARTITION BY u.email ORDER BY u.created_at DESC) as rn
-                        FROM users u
-                        WHERE LOWER(u.name) LIKE LOWER(%s) OR LOWER(u.email) LIKE LOWER(%s)
-                    )
-                    SELECT *
-                    FROM UserInstances
-                    ORDER BY email, created_at DESC
-                """, (f"%{search}%", f"%{search}%"))
-            else:
-                users = db.execute_query("""
-                    WITH UserInstances AS (
-                        SELECT
-                            u.id,
-                            u.name,
-                            u.email,
-                            u.created_at,
-                            u.access_token IS NOT NULL AND u.refresh_token IS NOT NULL as has_tokens,
-                            (SELECT MAX(date) FROM daily_summaries d WHERE d.user_id = u.id) as last_update,
-                            EXISTS(SELECT 1 FROM daily_summaries d WHERE d.user_id = u.id) as has_data,
-                            ROW_NUMBER() OVER (PARTITION BY u.email ORDER BY u.created_at DESC) as rn
-                        FROM users u
-                    )
-                    SELECT *
-                    FROM UserInstances
-                    ORDER BY email, created_at DESC
-                """)
+#             # Process all users
+#             processed_users = []
+#             current_email = None
 
-            # Process all users
-            processed_users = []
-            current_email = None
+#             for user in users:
+#                 user_id, name, email, created_at, has_tokens, last_update, has_data, row_num = user
 
-            for user in users:
-                user_id, name, email, created_at, has_tokens, last_update, has_data, row_num = user
+#                 # It's the most recent instance if `row_num = 1`.
 
-                # It's the most recent instance if `row_num = 1`.
+#                 is_latest = (row_num == 1)
 
-                is_latest = (row_num == 1)
+#                 # If we change the email or it's the first user.
+#                 if email != current_email:
+#                     current_email = email
 
-                # If we change the email or it's the first user.
-                if email != current_email:
-                    current_email = email
+#                 # Determine the user's status.
+#                 if is_latest:
+#                     if not name:
+#                         # If it doesn’t have a name, it’s unassigned.
+#                         status = 'unassigned'
+#                     elif not has_tokens:
+#                         # If it has a name but no tokens, it’s unlinked.
+#                         status = 'unlinked'
+#                     elif has_tokens and name:
+#                         # If it has a name and tokens, it’s active.
+#                         status = 'active'
+#                 else:
+#                     # Previous instances are historical if they have a name and data.
+#                     status = 'historical'
 
-                # Determine the user's status.
-                if is_latest:
-                    if not name:
-                        # If it doesn’t have a name, it’s unassigned.
-                        status = 'unassigned'
-                    elif not has_tokens:
-                        # If it has a name but no tokens, it’s unlinked.
-                        status = 'unlinked'
-                    elif has_tokens and name:
-                        # If it has a name and tokens, it’s active.
-                        status = 'active'
-                else:
-                    # Previous instances are historical if they have a name and data.
-                    status = 'historical'
+#                 # Add the user if:
+#                 # 1. It is the most recent instance, OR
+#                 # 2. It is a historical instance that had a name and data
 
-                # Add the user if:
-                # 1. It is the most recent instance, OR
-                # 2. It is a historical instance that had a name and data
+#                 if is_latest or (name and has_data):
+#                     processed_users.append({
+#                         'id': user_id,
+#                         'name': name,
+#                         'email': email,
+#                         'created_at': created_at,
+#                         'last_update': last_update,
+#                         'has_tokens': has_tokens,
+#                         'has_data': has_data,
+#                         'is_latest': is_latest,
+#                         'status': status
+#                     })
 
-                if is_latest or (name and has_data):
-                    processed_users.append({
-                        'id': user_id,
-                        'name': name,
-                        'email': email,
-                        'created_at': created_at,
-                        'last_update': last_update,
-                        'has_tokens': has_tokens,
-                        'has_data': has_data,
-                        'is_latest': is_latest,
-                        'status': status
-                    })
-
-            return render_template('user_stats.html',
-                                users=processed_users,
-                                search=search,
-                                now=datetime.now())
-        except Exception as e:
-            app.logger.error(f"Error fetching user statistics: {e}")
-            return "Error: Could not retrieve user statistics.", 500
-        finally:
-            db.close()
-    else:
-        return "Error: Could not connect to the database.", 500
+#             return render_template('user_stats.html',
+#                                 users=processed_users,
+#                                 search=search,
+#                                 now=datetime.now())
+#         except Exception as e:
+#             app.logger.error(f"Error fetching user statistics: {e}")
+#             return "Error: Could not retrieve user statistics.", 500
+#         finally:
+#             db.close()
+#     else:
+#         return "Error: Could not connect to the database.", 500
 
 
 @app.route('/livelyageing/send_auth_email', methods=['POST'])
 @login_required
 def send_auth_email():
     """Generate authorization url and send it by email"""
-    email_id = request.form.get('addressIdAuth')
-    address_name = request.form.get('addressNameAuth')
-    if not address_name:
-        flash_translated('flash.select_email', 'danger')
+    device_id = request.form.get('deviceIdAuth')
+    email_address = request.form.get('emailAddressAuth')
+    if not email_address:
+        flash_translated('flash.select_device', 'danger')
         return redirect(url_for('home'))
 
     # Generate code_verifier and store it temporarily with email as key
@@ -498,7 +492,7 @@ def send_auth_email():
 
     # Create state that includes email (encoded for security)
     state_data = {
-        'email': address_name,
+        'email_address': email_address,
         'random': generate_state()  # mantieni randomness per sicurezza
     }
     # Encode the state data
@@ -539,18 +533,18 @@ def send_auth_email():
         Team Lively Ageing
         """
 
-    if send_email(address_name, email_subject, email_html, email_text):
+    if send_email(email_address, email_subject, email_html, email_text):
         # Store code_verifier in database or cache with state as key
         db = DatabaseManager()
         if db.connect():
             try:
                 # Save the code verifier temporarly (it expires in 10 minutes)
-                db.store_pending_auth(email_id, state, code_verifier)
+                db.store_pending_auth(device_id, state, code_verifier)
             finally:
                 db.close()
-        return render_template('auth_email_sent_confirmation.html', address_name=address_name)
+        return render_template('auth_email_sent_confirmation.html', email_address=email_address)
     else:
-        flash_translated('flash.email_send_error', 'danger')
+        flash_translated('flash.device_send_error', 'danger')
         return redirect(url_for('home'))
 
 
@@ -1863,84 +1857,84 @@ def export_user_intraday(user_id):
     finally:
         db.close()
 
-@app.route('/livelyageing/unlink_user', methods=['POST'])
-@login_required
-def unlink_user():
-    """
-    Handles unlinking a user from their Fitbit device.
-    When unlinking:
-    1. The original instance is preserved with its name and data (becomes historical)
-    2. A new instance is created with the same email but no name/tokens (becomes unassigned)
-    """
-    user_id = request.form.get('user_id')
-    if not user_id:
-        flash_translated('flash.user_id_not_provided', 'danger')
-        return redirect(url_for('user_stats'))
+# @app.route('/livelyageing/unlink_user', methods=['POST'])
+# @login_required
+# def unlink_user():
+#     """
+#     Handles unlinking a user from their Fitbit device.
+#     When unlinking:
+#     1. The original instance is preserved with its name and data (becomes historical)
+#     2. A new instance is created with the same email but no name/tokens (becomes unassigned)
+#     """
+#     user_id = request.form.get('user_id')
+#     if not user_id:
+#         flash_translated('flash.user_id_not_provided', 'danger')
+#         return redirect(url_for('user_stats'))
 
-    db = DatabaseManager()
-    if db.connect():
-        try:
-            # First, get the email of the user being unlinked
-            user_email = db.execute_query("""
-                SELECT email FROM users WHERE id = %s
-            """, (user_id,))
+#     db = DatabaseManager()
+#     if db.connect():
+#         try:
+#             # First, get the email of the user being unlinked
+#             user_email = db.execute_query("""
+#                 SELECT email FROM users WHERE id = %s
+#             """, (user_id,))
 
-            if not user_email:
-                flash_translated('flash.user_not_found', 'danger')
-                return redirect(url_for('user_stats'))
+#             if not user_email:
+#                 flash_translated('flash.user_not_found', 'danger')
+#                 return redirect(url_for('user_stats'))
 
-            email = user_email[0][0]
+#             email = user_email[0][0]
 
-            # Start a transaction
-            db.execute_query("BEGIN")
+#             # Start a transaction
+#             db.execute_query("BEGIN")
 
-            try:
-                # 1. Create a new unassigned instance with the same email
-                db.execute_query("""
-                    INSERT INTO users (name, email, access_token, refresh_token)
-                    VALUES ('', %s, NULL, NULL)
-                """, (email,))
+#             try:
+#                 # 1. Create a new unassigned instance with the same email
+#                 db.execute_query("""
+#                     INSERT INTO users (name, email, access_token, refresh_token)
+#                     VALUES ('', %s, NULL, NULL)
+#                 """, (email,))
 
-                # 2. Remove tokens from the original instance (but keep name and data)
-                db.execute_query("""
-                    UPDATE users
-                    SET access_token = NULL,
-                        refresh_token = NULL
-                    WHERE id = %s
-                """, (user_id,))
+#                 # 2. Remove tokens from the original instance (but keep name and data)
+#                 db.execute_query("""
+#                     UPDATE users
+#                     SET access_token = NULL,
+#                         refresh_token = NULL
+#                     WHERE id = %s
+#                 """, (user_id,))
 
-                # Commit the transaction
-                db.execute_query("COMMIT")
+#                 # Commit the transaction
+#                 db.execute_query("COMMIT")
 
-                flash_translated('flash.device_unlinked_success', 'success')
-            except Exception as e:
-                # If anything fails, rollback the transaction
-                db.execute_query("ROLLBACK")
-                app.logger.error(f"Error in unlink transaction: {e}")
-                flash_translated('flash.unlink_user_failed', 'danger')
-                raise
+#                 flash_translated('flash.device_unlinked_success', 'success')
+#             except Exception as e:
+#                 # If anything fails, rollback the transaction
+#                 db.execute_query("ROLLBACK")
+#                 app.logger.error(f"Error in unlink transaction: {e}")
+#                 flash_translated('flash.unlink_user_failed', 'danger')
+#                 raise
 
-        except Exception as e:
-            app.logger.error(f"Failed to unlink user: {e}")
-            flash_translated('flash.unlink_user_failed', 'danger')
-        finally:
-            db.close()
-    else:
-        flash_translated('flash.database_connection_error', 'danger')
+#         except Exception as e:
+#             app.logger.error(f"Failed to unlink user: {e}")
+#             flash_translated('flash.unlink_user_failed', 'danger')
+#         finally:
+#             db.close()
+#     else:
+#         flash_translated('flash.database_connection_error', 'danger')
 
-    return redirect(url_for('user_stats'))
+#     return redirect(url_for('user_stats'))
 
-@app.route('/livelyageing/debug_static')
-def debug_static():
-    """Temporary route to debug static file URLs"""
-    style_url = url_for('static', filename='css/style.css', _external=True)
-    styles_url = url_for('static', filename='css/styles.css', _external=True)
-    app.logger.info(f"style.css URL: {style_url}")
-    app.logger.info(f"styles.css URL: {styles_url}")
-    return {
-        'style_url': style_url,
-        'styles_url': styles_url
-    }
+# @app.route('/livelyageing/debug_static')
+# def debug_static():
+#     """Temporary route to debug static file URLs"""
+#     style_url = url_for('static', filename='css/style.css', _external=True)
+#     styles_url = url_for('static', filename='css/styles.css', _external=True)
+#     app.logger.info(f"style.css URL: {style_url}")
+#     app.logger.info(f"styles.css URL: {styles_url}")
+#     return {
+#         'style_url': style_url,
+#         'styles_url': styles_url
+#     }
 
 # Run the Flask app
 if __name__ == '__main__':
