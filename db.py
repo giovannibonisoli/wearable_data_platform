@@ -116,14 +116,13 @@ class DatabaseManager:
         """
         result = self.execute_query(query, (admin_user_id,))
         return {"username": result[0][0], "full_name": result[0][1], "created_at": result[0][2], "last_login": result[0][3]} if result else None
-       
 
 
-    def get_admin_user_email_addresses(self, admin_user_id):
-        """Get all email addresses owned by an admin user"""
+    def get_admin_user_devices(self, admin_user_id):
+        """Get all devices owned by an admin user"""
         query = """
-            SELECT id, address_name, status, created_at, device_type
-            FROM email_addresses
+            SELECT id, email_address, authorization_status, device_type
+            FROM devices
             WHERE admin_user_id = %s
             ORDER BY created_at DESC
         """
@@ -498,14 +497,14 @@ class DatabaseManager:
             return {'code_verifier': result[0][0], 'email_id': result[0][1]}
         return None
 
-    def check_pending_auth(self, email_id):
-        """Check if there is a pending authorization for an inserted mail"""
+    def check_pending_auth(self, device_id):
+        """Check if there is a pending authorization for the mail of an inserted device"""
         query = """
             SELECT *
             FROM pending_authorizations
-            WHERE email_id = %s AND expires_at > NOW()
+            WHERE device_id = %s AND expires_at > NOW()
         """
-        result = self.execute_query(query, (email_id,))
+        result = self.execute_query(query, (device_id,))
         if result:
             return True
         return False

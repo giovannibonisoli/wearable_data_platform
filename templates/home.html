@@ -66,8 +66,8 @@
             </div>
         </div>
 
-        <!-- Email addresses List -->
-        {% if email_addresses %}
+        <!-- Devices List -->
+        {% if devices %}
         <div class="card devices-table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -96,21 +96,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for email_address in email_addresses %}
+                            {% for device in devices %}
                             <tr class="device-row">
                                 <td>
                                     <div class="d-flex align-items-center">
 
                                         <div>
-                                            <strong class="text-primary">{{ email_address.address_name }}</strong>
+                                            <strong class="text-primary">{{ device.email_address }}</strong>
                                             <br>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    {% if email_address.status == 'authorized' %}
+                                    {% if device.auth_status == 'authorized' %}
                                     <div>
-                                        <strong class="text-primary">{{ email_address.device_type }}</strong>
+                                        <strong class="text-primary">{{ device.device_type }}</strong>
                                         <br>
                                     </div>
                                     {% else %}
@@ -121,21 +121,21 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if email_address.status == 'inserted' %}
+                                    {% if device.auth_status == 'inserted' %}
                                         <div class="status-indicator status-warning"
                                             data-bs-toggle="tooltip" 
                                             title="{{ _('Authorization must be requested and granted before downloading data from the cloud') }}">
                                             <i class="fa fa-warning status-icon"></i>
                                             <span class="status-text">{{ _('Not Authorized') }}</span>
                                         </div>
-                                    {% elif email_address.status == 'pending_auth_request' %}
+                                    {% elif device.auth_status == 'pending_auth_request' %}
                                         <div class="status-indicator status-info"
                                             data-bs-toggle="tooltip" 
                                             title="{{ _('The authorization request has been sent and is awaiting approval') }}">
                                             <i class="fas fa-clock status-icon"></i>
                                             <span class="status-text">{{ _('Pending Request') }}</span>
                                         </div>
-                                    {% elif email_address.status == 'authorized' %}
+                                    {% elif device.auth_status == 'authorized' %}
                                         <div class="status-indicator status-success"
                                             data-bs-toggle="tooltip" 
                                             title="{{ _('Access authorization for this device’s data has been obtained') }}">
@@ -150,50 +150,50 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if email_address.status == 'authorized' %}
-                                        {% if email_address.data_reception_status == 'ok' %}
-                                            {% if email_address.data_reception_details.sync_days > 0 %}
+                                    {% if device.auth_status == 'authorized' %}
+                                        {% if device.data_reception_status == 'ok' %}
+                                            {% if device.data_reception_details.sync_days > 0 %}
                                                 <div class="status-indicator status-success" style="min-width: 180px;"
                                                     data-bs-toggle="tooltip" 
                                                     title="{{ _('Data are updated to the last synchronization') }}">
                                                     <i class="fas fa-check-circle status-icon"></i>
-                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                                 </div>
                                             {% else %}
-                                                {% if email_address.data_reception_details.sync_hours > 0 %}
+                                                {% if device.data_reception_details.sync_hours > 0 %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
                                                         title="{{ _('Data are updated to the last synchronization') }}">
                                                         <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
                                                     </div>
                                                 {% else %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
                                                         title="{{ _('Data are updated to the last synchronization') }}">
                                                         <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
                                                     </div>
                                                 {% endif %}
                                             {% endif %}
                                         
-                                        {% elif email_address.data_reception_status == 'sync_warning' %}
+                                        {% elif device.data_reception_status == 'sync_warning' %}
                                             <div class="status-indicator status-danger" style="min-width: 180px;" 
                                                  data-bs-toggle="tooltip" 
                                                  title="{{ _('Resync with the cloud to avoid data loss') }}">
                                                 <i class="fa fa-warning status-icon"></i>
-                                                <span class="status-text">{{ _('last_sync') }}:<br>{{ email_address.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                             </div>
                                         
-                                        {% elif email_address.data_reception_status == 'gap_warning' %}
+                                        {% elif device.data_reception_status == 'gap_warning' %}
                                             <div class="status-indicator status-primary" style="min-width: 180px;"
                                                  data-bs-toggle="tooltip" 
-                                                 title="{{ _('Updating data to the last synchronization')}}: {{ email_address.data_reception_details.sync_days}} {{ _('days') }}">
+                                                 title="{{ _('Updating data to the last synchronization')}}: {{ device.data_reception_details.sync_days}} {{ _('days') }}">
                                                  <i class="fas fa-cloud-download-alt status-icon"></i>
                                                 <span class="status-text">{{ _('Updating data...') }}</span>
                                             </div>
                                         
-                                        {% elif email_address.data_reception_status == 'no_data' %}
+                                        {% elif device.data_reception_status == 'no_data' %}
                                             <div class="status-indicator status-info" style="min-width: 180px;">
                                                 <i class="fas fa-info-circle status-icon"></i>
                                                 <span class="status-text">{{ _('No data yet') }}</span>
@@ -213,8 +213,8 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if email_address.status == 'authorized' %}
-                                        {% if email_address.device_usage_details.average_hours_per_day > 8 %}
+                                    {% if device.auth_status == 'authorized' %}
+                                        {% if device.device_usage_details.average_hours_per_day > 8 %}
                                             <div class="status-indicator status-success" style="min-width: 180px;"
                                                 data-bs-toggle="tooltip" 
                                                 title="{{ _('The patient has used the device for more than 8 hours a day over the past week') }}">
@@ -237,10 +237,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if email_address.status == 'inserted' %}
+                                    {% if device.auth_status == 'inserted' %}
                                     <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="addressIdAuth" value="{{ email_address.id }}">
-                                        <input type="hidden" name="addressNameAuth" value="{{ email_address.address_name }}">
+                                        <input type="hidden" name="addressIdAuth" value="{{ device.id }}">
+                                        <input type="hidden" name="addressNameAuth" value="{{ device.address_name }}">
                                         <button type="submit" 
                                                 class="btn btn-primary btn-sm action-btn" 
                                                 data-bs-toggle="tooltip"
@@ -248,15 +248,15 @@
                                             <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
                                         </button>
                                     </form>
-                                    {% elif email_address.status == 'authorized' %}
+                                    {% elif device.auth_status == 'authorized' %}
                                     {#<form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
+                                        <input type="hidden" name="DeactivateId" value="{{ device.id }}">
                                         <button type="submit" class="btn btn-danger btn-sm action-btn">
                                             <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
                                         </button>
                                     </form>#}
                        
-                                    <a href="{{ url_for('device_details', device_id=email_address.id) }}"
+                                    <a href="{{ url_for('device_details', device_id=device.id) }}"
                                         class="btn btn-info btn-sm action-btn"
                                         data-bs-toggle="tooltip"
                                         title="{{ _('View detailed device information') }}">
@@ -264,7 +264,7 @@
                                     </a>                         
                                     <button type="button" class="btn btn-danger btn-sm action-btn" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#deactivateModal{{ email_address.id }}">
+                                            data-bs-target="#deactivateModal{{ device.id }}">
                                         <i class="far fa-times-circle me-2"></i>{{ _('Disable') }}
                                     </button>
                                 
@@ -289,8 +289,8 @@
                 <div class="empty-icon mb-4">
                     <i class="fas fa-watch fa-4x text-muted"></i>
                 </div>
-                <h4 class="text-muted mb-3">{{ _('No Email Addresses inserted') }}</h4>
-                <p class="text-muted mb-4">{{ _('Start monitoring patient health by adding an email address.') }}</p>
+                <h4 class="text-muted mb-3">{{ _('No devices inserted') }}</h4>
+                <p class="text-muted mb-4">{{ _('Add devices and start monitoring') }}</p>
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>{{ _('Getting Started:') }}</strong> {{ _('Use the form above to add a new email address and begin monitoring the associated wearable.') }}
@@ -302,13 +302,13 @@
 </div>
 
 <!-- Deactivation Confirmation Modals -->
-{% for email_address in email_addresses %}
-<div class="modal fade" id="deactivateModal{{ email_address.id }}" tabindex="-1" aria-labelledby="deactivateModalLabel{{ email_address.id }}" aria-hidden="true">
+{% for device in devices %}
+<div class="modal fade" id="deactivateModal{{ device.id }}" tabindex="-1" aria-labelledby="deactivateModalLabel{{ device.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 1rem; overflow: hidden; border: none;">
             <!-- Modal Header -->
             <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 1.5rem;">
-                <h5 class="modal-title" id="deactivateModalLabel{{ email_address.id }}" style="font-weight: 600;">
+                <h5 class="modal-title" id="deactivateModalLabel{{ device.id }}" style="font-weight: 600;">
                     <i class="fas fa-exclamation-triangle me-2"></i>{{ _('Confirm Deactivation') }}
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -328,7 +328,7 @@
                 
                 <div class="alert alert-warning" style="border-radius: 0.75rem; border-left: 4px solid #ffc107; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
                     <strong><i class="fas fa-info-circle me-2"></i>{{ _('Email Address:') }}</strong><br>
-                    <span style="font-size: 1.1rem; color: #856404;">{{ email_address.address_name }}</span>
+                    <span style="font-size: 1.1rem; color: #856404;">{{ device.email_address }}</span>
                 </div>
                 
                 <p class="text-muted text-center mb-0" style="font-size: 0.9rem;">
@@ -342,7 +342,7 @@
                     <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
                 </button>
                 <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
-                    <input type="hidden" name="DeactivateId" value="{{ email_address.id }}">
+                    <input type="hidden" name="DeactivateId" value="{{ device.id }}">
                     <button type="submit" class="btn btn-danger" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
                         <i class="fas fa-check me-2"></i>{{ _('confirm') }}
                     </button>

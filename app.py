@@ -154,12 +154,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# Protect all routes with `@login_required`.
-# @app.before_request
-# def require_login():
-#     if not current_user.is_authenticated and request.endpoint != 'login':
-#         return redirect(url_for('login'))
-
 
 @app.before_request
 def require_login():
@@ -191,134 +185,6 @@ def index():
     """
     return redirect(url_for('home'))
 
-@app.route('/livelyageing/preload_dashboard')
-@login_required
-def preload_dashboard():
-    """
-    Preload dashboard data and store it in session.
-    This route should be called via AJAX when the user is likely to access the dashboard.
-    """
-    db = DatabaseManager()
-    if db.connect():
-        try:
-            # Get the latest daily summary for each user
-            daily_summaries = db.execute_query("""
-                SELECT u.name, u.email, d.*
-                FROM users u
-                LEFT JOIN daily_summaries d ON u.id = d.user_id
-                WHERE d.date = (SELECT MAX(date) FROM daily_summaries WHERE user_id = u.id)
-                OR d.date IS NULL
-                ORDER BY d.date DESC NULLS LAST
-            """)
-
-            # Get the latest intraday metrics for each user
-            intraday_metrics = db.execute_query("""
-                SELECT u.name, u.email, i.type, i.value, i.time
-                FROM users u
-                LEFT JOIN intraday_metrics i ON u.id = i.user_id
-                WHERE i.time = (SELECT MAX(time) FROM intraday_metrics WHERE user_id = u.id AND type = i.type)
-                OR i.time IS NULL
-                ORDER BY i.time DESC NULLS LAST
-            """)
-
-            # Get the latest sleep logs for each user
-            sleep_logs = db.execute_query("""
-                SELECT u.name, u.email, s.*
-                FROM users u
-                LEFT JOIN sleep_logs s ON u.id = s.user_id
-                WHERE s.start_time = (SELECT MAX(start_time) FROM sleep_logs WHERE user_id = u.id)
-                OR s.start_time IS NULL
-                ORDER BY s.start_time DESC NULLS LAST
-            """)
-
-            # Transform intraday_metrics to new 4-column format for dashboard
-            intraday_metrics_4col = []
-            for metric in intraday_metrics:
-                dt = metric[4]
-                metric_type = metric[2]
-                value = metric[3]
-                intraday_metrics_4col.append([
-                    dt.date().isoformat(),
-                    dt.time().isoformat(timespec='minutes'),
-                    metric_type,
-                    value
-                ])
-
-            # Initialize empty filters_dict and alerts
-            filters_dict = {}
-            alerts = []
-
-            # Store the processed data in the session for later use
-            session['dashboard_data'] = {
-                'daily_summaries': daily_summaries,
-                'intraday_metrics': intraday_metrics_4col,
-                'sleep_logs': sleep_logs,
-                'filters_dict': filters_dict,
-                'alerts': alerts,
-                'timestamp': datetime.now(timezone.utc).isoformat()
-            }
-
-            return jsonify({'success': True, 'timestamp': session['dashboard_data']['timestamp']})
-
-        except Exception as e:
-            app.logger.error(f"Error fetching data for dashboard: {e}")
-            return jsonify({'error': str(e)}), 500
-        finally:
-            db.close()
-
-    return jsonify({'error': 'Database connection error'}), 500
-
-@app.route('/livelyageing/check_dashboard_updates')
-@login_required
-def check_dashboard_updates():
-    """
-    Check if there are any updates to the dashboard data since the last preload.
-    """
-    last_timestamp = request.args.get('timestamp')
-    if not last_timestamp:
-        return jsonify({'error': 'No timestamp provided'}), 400
-
-    try:
-        last_timestamp = datetime.fromisoformat(last_timestamp)
-        current_time = datetime.now(timezone.utc)
-
-        # Check if we need to refresh (more than 5 minutes old)
-        if (current_time - last_timestamp).total_seconds() > 300:
-            return jsonify({'needs_refresh': True})
-
-        # Check for new alerts
-        db = DatabaseManager()
-        if db.connect():
-            try:
-                new_alerts = db.execute_query("""
-                    SELECT COUNT(*)
-                    FROM alerts
-                    WHERE alert_time > %s
-                """, (last_timestamp,))
-
-                if new_alerts and new_alerts[0][0] > 0:
-                    return jsonify({'needs_refresh': True})
-
-                return jsonify({'needs_refresh': False})
-            finally:
-                db.close()
-
-        return jsonify({'error': 'Database connection error'}), 500
-
-    except Exception as e:
-        app.logger.error(f"Error checking dashboard updates: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-# @app.route('/livelyageing/home')
-# @login_required
-# def home():
-#     """
-#     Render the home page with recent activity.
-#     """
-#     return render_template('home.html')
-    
-
 
 @app.route('/livelyageing/admin_user_profile')
 @login_required
@@ -334,7 +200,8 @@ def admin_user_profile():
             admin_user['id'] = int(current_user.id)
 
             admin_user.update(db.get_admin_user_by_id(admin_user['id']))
-            admin_user['num_email_addresses'] = len(db.get_admin_user_email_addresses(admin_user['id']))
+            # admin_user['num_email_addresses'] = len(db.get_admin_user_email_addresses(admin_user['id']))
+            admin_user['num_devices'] = len(db.get_admin_user_devices(admin_user['id']))
 
             return render_template('admin_user_profile.html', admin_user=admin_user)
 
@@ -405,31 +272,31 @@ def home():
                 return redirect(url_for('home'))
             else:
                 # Get only the email addresses owned by current user
-                result = db.get_admin_user_email_addresses(current_user.id)
+                # result = db.get_admin_user_email_addresses(current_user.id)
+                result = db.get_admin_user_devices(current_user.id)
                 
-                email_addresses = []
-                for email_address in result:
-                    status = email_address[2]
+                devices = []
+                for device in result:
+                    auth_status = device[2]
                     
-                    if status == 'inserted':
-                        if db.check_pending_auth(email_address[0]):
-                            status = 'pending_auth_request'
+                    if auth_status == 'inserted':
+                        if db.check_pending_auth(device[0]):
+                            auth_status = 'pending_auth_request'
 
                     # Get data reception status
                     data_reception_status = 'no_data'
                     data_reception_details = {}
                     device_usage_details = {}
  
-                    if status == 'authorized':
-                        data_reception_status, data_reception_details = get_device_sync_data(email_address[0])
-                        device_usage_details = get_last_device_usage_statistics(email_address[0], timedelta(days=7))
+                    if auth_status == 'authorized':
+                        data_reception_status, data_reception_details = get_device_sync_data(device[0])
+                        device_usage_details = get_last_device_usage_statistics(device[0], timedelta(days=7))
                     
-                    email_addresses.append({
-                        "id": email_address[0],
-                        "address_name": email_address[1],
-                        "status": status,
-                        "created_at": email_address[3],
-                        "device_type": email_address[4] if email_address[4] else "",
+                    devices.append({
+                        "id": device[0],
+                        "email_address": device[1],
+                        "auth_status": auth_status,
+                        "device_type": device[3] if device[3] else "",
                         "data_reception_status": data_reception_status,
                         "data_reception_details": data_reception_details,
                         "device_usage_details": device_usage_details
@@ -437,7 +304,7 @@ def home():
                 
                 return render_template(
                     'home.html', 
-                    email_addresses=email_addresses
+                    devices=devices
                 )
         except Exception as e:
             app.logger.error(f"Error fetching email addresses: {e}")
