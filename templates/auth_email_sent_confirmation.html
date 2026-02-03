@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Email Sent') }} - Lively Ageing Wearable Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card text-center">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>{{ _('Email Sent Successfully!') }}
+                        </h4>
+                    </div>
+                    <div class="card-body py-5">
+                        <!-- Success Animation -->
+                        <div class="tick-animation mb-4"></div>
+                        
+                        <!-- Success Message -->
+                        <h5 class="text-success mb-3">{{ _('Authorization Request Sent') }}</h5>
+                        <p class="text-muted mb-4">
+                            {{ _('We have sent the Fitbit authorization link to:') }}
+                        </p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-envelope me-2"></i>
+                            <strong>{{ email_address }}</strong>
+                        </div>
+                        
+                        <!-- Instructions -->
+                        <div class="alert alert-light border-start border-info border-4">
+                            <h6 class="text-info mb-2">
+                                <i class="fas fa-info-circle me-2"></i>{{ _('Next Steps:') }}
+                            </h6>
+                            <ol class="text-start mb-0">
+                                <li>{{ _('Check your email inbox') }}</li>
+                                <li>{{ _('Click on the authorization link') }}</li>
+                                <li>{{ _('Complete the Fitbit authorization process') }}</li>
+                                <li>{{ _('Return to the devices page') }}</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>{{ _('Back to Home') }}
+                            </a>
+                        </div>
+                        
+                        <!-- Additional Info -->
+                        <div class="mt-4 pt-3 border-top">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ _('The authorization link will expire in 10 minutes for security reasons.') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+    
+    .card-header.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    }
+    
+    .alert-light {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+    }
+    
+    .border-info {
+        border-color: #17a2b8 !important;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Use enhanced tick animation from shared CSS */
+    .tick-animation {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        margin: 0 auto 20px;
+        position: relative;
+        animation: tick-animation 0.8s ease;
+        box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+    }
+    
+    .tick-animation::before {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 32px;
+        border-right: 4px solid white;
+        border-bottom: 4px solid white;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -60%) rotate(45deg);
+    }
+    
+    @keyframes tick-animation {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

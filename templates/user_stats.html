@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Patient Statistics') }} - Lively Ageing Medical Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-5">
+        <!-- Medical Patient Statistics Header -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="page-header">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-container me-3">
+                            <i class="fas fa-chart-pie fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h1 class="display-5 fw-bold text-primary mb-2">{{ _('Patient Statistics') }}</h1>
+                            <p class="lead text-muted mb-0">{{ _('Comprehensive patient health monitoring and analytics dashboard') }}</p>
+                        </div>
+                    </div>
+                    <div class="badge-container">
+                        <span class="badge bg-primary me-2">
+                            <i class="fas fa-users me-1"></i>{{ _('Patient Management') }}
+                        </span>
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-chart-line me-1"></i>{{ _('Health Analytics') }}
+                        </span>
+                        <span class="badge bg-info">
+                            <i class="fas fa-shield-alt me-1"></i>{{ _('HIPAA Compliant') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Search and Filter Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card search-card">
+                    <div class="card-body">
+                        <form method="get" class="search-form">
+                            <div class="input-group">
+                                <span class="input-group-text input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control search-input" name="search" 
+                                       placeholder="{{ _('Search patients by name or email address') }}" 
+                                       value="{{ search|default('') }}">
+                                <button class="btn btn-primary search-btn" type="submit">
+                                    <i class="fas fa-search me-2"></i>{{ _('Search') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-overview text-center">
+                    <div class="stats-card">
+                        <div class="stats-number">{{ users|selectattr('status', 'equalto', 'active')|list|length }}</div>
+                        <div class="stats-label">{{ _('Active Patients') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Patients -->
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="card patients-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-check me-2"></i>{{ _('Active Patients') }}
+                        </h5>
+                        <small class="text-muted">{{ _('Patients with active wearable devices and recent health data') }}</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if users|selectattr('status', 'equalto', 'active')|list|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover patients-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="table-header">
+                                            <i class="fas fa-user me-2"></i>{{ _('Patient Name') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-clock me-2"></i>{{ _('Last Data Sync') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-watch me-2"></i>{{ _('Health Status') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        {% if user.status == 'active' %}
+                                        <tr class="patient-row">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="patient-avatar me-3">
+                                                        <i class="fas fa-user-md text-primary"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong class="text-primary">{{ user.name }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">{{ _('Active Patient') }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="patient-info">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    {{ user.email }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if user.last_update %}
+                                                    <span class="sync-status">
+                                                        <i class="fas fa-sync-alt text-success me-2"></i>
+                                                        {{ user.last_update.strftime('%d/%m/%Y %H:%M') }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="sync-status text-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        {{ _('No data') }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>{{ _('Monitoring') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('user_detail', user_id=user.id) }}" class="btn btn-primary btn-sm action-btn">
+                                                        <i class="fas fa-eye me-2"></i>{{ _('View Details') }}
+                                                    </a>
+                                                    <button class="btn btn-danger btn-sm action-btn" onclick="showUnlinkModal('{{ user.id }}', '{{ user.name }}')" title="{{ _('Unlink patient') }}">
+                                                        <i class="fas fa-unlink me-2"></i>{{ _('Unlink') }}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state p-5 text-center">
+                            <div class="empty-icon mb-4">
+                                <i class="fas fa-user-check fa-4x text-muted"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">{{ _('No Active Patients') }}</h4>
+                            <p class="text-muted mb-4">{{ _('No patients are currently being monitored. Add devices to start monitoring patient health.') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unassigned Patients -->
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="card unassigned-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-plus me-2"></i>{{ _('Unassigned Patients') }}
+                        </h5>
+                        <small class="text-muted">{{ _('Patients awaiting device assignment and health monitoring setup') }}</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if users|selectattr('is_latest', 'equalto', true)|selectattr('status', 'equalto', 'unassigned')|list|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover unassigned-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="table-header">
+                                            <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-info-circle me-2"></i>{{ _('Status') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-calendar me-2"></i>{{ _('Registration Date') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        {% if user.is_latest and user.status == 'unassigned' %}
+                                        <tr class="unassigned-row">
+                                            <td>
+                                                <div class="patient-info">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    {{ user.email }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>{{ _('Pending Assignment') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="registration-date">
+                                                    <i class="fas fa-calendar text-muted me-2"></i>
+                                                    {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('link_device') }}" class="btn btn-success btn-sm action-btn">
+                                                    <i class="fas fa-user-plus me-2"></i>{{ _('Assign Device') }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state p-5 text-center">
+                            <div class="empty-icon mb-4">
+                                <i class="fas fa-user-plus fa-4x text-muted"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">{{ _('No Unassigned Patients') }}</h4>
+                            <p class="text-muted mb-4">{{ _('All registered patients have been assigned to devices.') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient History -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card history-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>{{ _('Patient History') }}
+                        </h5>
+                        <small class="text-muted">{{ _('Historical patient data and previously monitored cases') }}</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if users|selectattr('status', 'equalto', 'historical')|list|length > 0 or users|selectattr('is_latest', 'equalto', true)|selectattr('status', 'equalto', 'unlinked')|list|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover history-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="table-header">
+                                            <i class="fas fa-user me-2"></i>{{ _('Patient Name') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-clock me-2"></i>{{ _('Last Data Sync') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-info-circle me-2"></i>{{ _('Status') }}
+                                        </th>
+                                        <th class="table-header">
+                                            <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        {% if user.status == 'historical' or (user.is_latest and user.status == 'unlinked') %}
+                                        <tr class="history-row">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="patient-avatar me-3">
+                                                        <i class="fas fa-user-md text-secondary"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong class="text-secondary">{{ user.name }}</strong>
+                                                        {% if user.is_latest and user.status == 'unlinked' %}
+                                                            <span class="badge bg-warning ms-2">{{ _('Recently Unlinked') }}</span>
+                                                        {% endif %}
+                                                        <br>
+                                                        <small class="text-muted">{{ _('Historical Patient') }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="patient-info">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    {{ user.email }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if user.last_update %}
+                                                    <span class="sync-status">
+                                                        <i class="fas fa-sync-alt text-muted me-2"></i>
+                                                        {{ user.last_update.strftime('%d/%m/%Y %H:%M') }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="sync-status text-muted">
+                                                        <i class="fas fa-times-circle me-2"></i>
+                                                        {{ _('No data') }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.is_latest and user.status == 'unlinked' %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-unlink me-1"></i>{{ _('Unlinked') }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-archive me-1"></i>{{ _('Historical') }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.is_latest and user.status == 'unlinked' %}
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ url_for('user_detail', user_id=user.id) }}" class="btn btn-primary btn-sm action-btn">
+                                                            <i class="fas fa-eye me-2"></i>{{ _('View Details') }}
+                                                        </a>
+                                                        <a href="{{ url_for('link_device') }}" class="btn btn-success btn-sm action-btn">
+                                                            <i class="fas fa-user-plus me-2"></i>{{ _('Reassign') }}
+                                                        </a>
+                                                    </div>
+                                                {% else %}
+                                                    <a href="{{ url_for('user_detail', user_id=user.id) }}" class="btn btn-primary btn-sm action-btn">
+                                                        <i class="fas fa-history me-2"></i>{{ _('View History') }}
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state p-5 text-center">
+                            <div class="empty-icon mb-4">
+                                <i class="fas fa-history fa-4x text-muted"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">{{ _('No Patient History') }}</h4>
+                            <p class="text-muted mb-4">{{ _('No historical patient data available.') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medical Unlink Confirmation Modal -->
+<div class="modal fade" id="unlinkUserModal" tabindex="-1" aria-labelledby="unlinkUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="unlinkUserModalLabel">
+          <i class="fas fa-exclamation-triangle me-2 text-warning"></i>{{ _('Unlink Patient') }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning" role="alert">
+          <i class="fas fa-warning me-2"></i>
+          <strong>{{ _('Warning:') }}</strong> {{ _('This action will stop monitoring this patient and remove them from active care.') }}
+        </div>
+        <p>{{ _('Are you sure you want to unlink patient') }} <strong id="unlinkUserName"></strong>?</p>
+        <small class="text-muted">{{ _('This action can be reversed by reassigning a device to the patient.') }}</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+        <form method="post" id="unlinkUserForm" action="/livelyageing/unlink_user" style="display:inline;">
+          <input type="hidden" name="user_id" id="unlinkUserId">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-unlink me-2"></i>{{ _('Unlink Patient') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(74, 144, 164, 0.05) 100%);
+        padding: 2rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .icon-container {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .badge-container .badge {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+    }
+    
+    .search-card {
+        border-left: 4px solid var(--primary);
+        box-shadow: 0 4px 15px rgba(44, 90, 160, 0.1);
+    }
+    
+    .input-group-text {
+        background: var(--gradient);
+        color: var(--white);
+        border: none;
+        border-radius: 0.75rem 0 0 0.75rem;
+    }
+    
+    .search-input {
+        border: 2px solid var(--border);
+        border-left: none;
+        border-radius: 0;
+        padding: 1rem 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: none;
+    }
+    
+    .search-btn {
+        border-radius: 0 0.75rem 0.75rem 0;
+        border: 2px solid var(--primary);
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    .patients-card {
+        border-left: 4px solid var(--success);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .unassigned-card {
+        border-left: 4px solid var(--warning);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .history-card {
+        border-left: 4px solid var(--secondary);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+    }
+    
+    .table-header {
+        background: var(--gradient);
+        color: var(--white);
+        font-weight: 600;
+        padding: 1.25rem 1rem;
+        border: none;
+    }
+    
+    .patient-row,
+    .unassigned-row,
+    .history-row {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(44, 90, 160, 0.1);
+    }
+    
+    .patient-row:hover,
+    .unassigned-row:hover,
+    .history-row:hover {
+        background-color: var(--accent);
+    }
+    
+    .patient-row td,
+    .unassigned-row td,
+    .history-row td {
+        padding: 1.5rem 1rem;
+        vertical-align: middle;
+    }
+    
+    .patient-avatar {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .patient-info {
+        display: flex;
+        align-items: center;
+        color: var(--text);
+    }
+    
+    .sync-status {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .registration-date {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .action-btn {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin: 0 0.25rem;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+    }
+    
+    .empty-state {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.02) 0%, rgba(74, 144, 164, 0.02) 100%);
+    }
+    
+    .empty-icon {
+        background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(74, 144, 164, 0.1) 100%);
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    .modal .modal-content {
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 15px 50px rgba(44, 90, 160, 0.2);
+    }
+    
+    .modal .modal-header {
+        background: var(--gradient);
+        color: var(--white);
+        border-radius: 1rem 1rem 0 0;
+        border: none;
+    }
+    
+    .modal .btn-close {
+        filter: invert(1);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .icon-container {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .patient-row td,
+        .unassigned-row td,
+        .history-row td {
+            padding: 1rem 0.5rem;
+        }
+        
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+<script>
+function showUnlinkModal(userId, userName) {
+    document.getElementById('unlinkUserId').value = userId;
+    document.getElementById('unlinkUserName').textContent = userName;
+    var modal = new bootstrap.Modal(document.getElementById('unlinkUserModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

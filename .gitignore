@@ -1,0 +1,83 @@
+# .gitignore
+config.js
+.codegpt
+.env
+.vscode
+.venv/
+credentials.json
+venv
+test.py
+access.pem
+app.log
+.qodo
+.ssh
+.codebuddy
+config
+# Translation files
+messages.pot
+translate.py
+*.mo
+__pycache__/
+*.pyc
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Environment and credentials
+.env
+*.env
+*.pem
+credentials.json
+access.pem
+
+# IDE and editor files
+.vscode/
+.codegpt/
+.idea/
+*.swp
+*~
+.DS_Store
+
+
+# Logs and databases
+fitbit_error.log
+fitbit_intraday_debug.log
+fitbit_intraday_error.log
+fitbit_intraday.log
+fitbit.log
+*.db
+*.sqlite
+app.log
+
+# Backup and temporary files
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.pdf
+*.txt
+
+# Project specific
+.qodo/
+.ssh/
+test.py
+messages.pot
+translate.py
+*.mo
+
+# Documentation
+Tfg_bueno*.doc
+Tfg_bueno*.pdf
+Tfg_bueno*.txt
+get_tokens.py

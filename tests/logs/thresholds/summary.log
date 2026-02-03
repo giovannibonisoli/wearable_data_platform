@@ -1,0 +1,255 @@
+=== Alert Test Summary ===
+
+
+User ID: 2
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Activity drop alert triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Sedentary increase alert triggered
+
+sleep_duration_change:
+  Status: ✗
+  Expected: True
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Heart rate anomaly alert triggered
+
+data_quality:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Intraday activity drop alert triggered
+
+NORMAL DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Activity drop alert not triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sedentary increase alert not triggered
+
+sleep_duration_change:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Heart rate anomaly alert not triggered
+
+data_quality:
+  Status: ✗
+  Expected: False
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Intraday activity drop alert not triggered
+
+User ID: 3
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Activity drop alert triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Sedentary increase alert triggered
+
+sleep_duration_change:
+  Status: ✗
+  Expected: True
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Heart rate anomaly alert triggered
+
+data_quality:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Intraday activity drop alert triggered
+
+NORMAL DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Activity drop alert not triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sedentary increase alert not triggered
+
+sleep_duration_change:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Heart rate anomaly alert not triggered
+
+data_quality:
+  Status: ✗
+  Expected: False
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Intraday activity drop alert not triggered
+
+User ID: 4
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Activity drop alert triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Sedentary increase alert triggered
+
+sleep_duration_change:
+  Status: ✗
+  Expected: True
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Heart rate anomaly alert triggered
+
+data_quality:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: True
+  Actual: True
+  Reason: Intraday activity drop alert triggered
+
+NORMAL DATA:
+------------------------------
+
+activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Activity drop alert not triggered
+
+sedentary_increase:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sedentary increase alert not triggered
+
+sleep_duration_change:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Sleep duration change alert not triggered
+
+heart_rate_anomaly:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Heart rate anomaly alert not triggered
+
+data_quality:
+  Status: ✗
+  Expected: False
+  Actual: True
+  Reason: Data quality alert triggered
+
+intraday_activity_drop:
+  Status: ✓
+  Expected: False
+  Actual: False
+  Reason: Intraday activity drop alert not triggered
+
+=== Overall Statistics ===
+Total Alerts Tested: 36
+Expected Triggers: 18
+Actual Triggers: 18
+False Positives: 0
+False Negatives: 3
+
+Detection Rate: 100.0%
+Precision: 100.0%

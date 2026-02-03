@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ _('Medical Alerts Dashboard') }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .priority-high {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545 !important;
+        }
+        .priority-medium {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107 !important;
+        }
+        .priority-low {
+            background-color: #d1e7dd;
+            border-left: 5px solid #198754 !important;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .stats-card {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .acknowledge-btn {
+            cursor: pointer;
+        }
+        .acknowledge-btn:hover {
+            opacity: 0.8;
+        }
+        .alert-row {
+            cursor: pointer;
+        }
+        .alert-row:hover {
+            background-color: #e7f1ff;
+            color: #003366;
+        }
+        .severity-indicator {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .modal-lg {
+            max-width: 800px;
+        }
+        .priority-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .priority-indicator.high {
+            background-color: #dc3545;
+        }
+        .priority-indicator.medium {
+            background-color: #ffc107;
+        }
+        .priority-indicator.low {
+            background-color: #198754;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+        }
+        .badge.bg-high {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+        .badge.bg-medium {
+            background-color: #ffc107 !important;
+            color: black !important;
+        }
+        .badge.bg-low {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+        .priority-high {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        .priority-medium {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        .priority-low {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-light">
+<!-- Navbar estilo base.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="/livelyageing/home">
+      <i class="fas fa-watch me-2"></i>Lively Ageing
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/livelyageing/home">
+            <i class="fas fa-home me-1"></i>{{ _('Welcome') }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/livelyageing/dashboard/alerts">
+            <i class="fas fa-chart-line me-1"></i>{{ _('Alert Dashboard') }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/livelyageing/link">
+            <i class="fas fa-plus-circle me-1"></i>{{ _('Link Device') }}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/livelyageing/logout">
+            <i class="fas fa-sign-out-alt me-1"></i>{{ _('Logout') }}
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-globe"></i> {{ _('Language') }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('change_language', lang='it') }}">{{ _('Italian') }}</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('change_language', lang='en') }}">{{ _('English') }}</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Botón de volver -->
+<a href="javascript:history.back()" class="btn btn-outline-secondary mb-3" style="position:relative;z-index:2;">
+  <i class="bi bi-arrow-left"></i> {{ _('Back') }}
+</a>
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="mb-4 text-center">📊 {{ _('Medical Alerts Dashboard') }}</h2>
+        <a href="{{ url_for('export_alerts', **filters_dict) }}" class="btn btn-outline-success ms-2" title="{{ _('Export to CSV') }}">
+            <i class="fas fa-file-csv"></i> {{ _('Export to CSV') }}
+        </a>
+    </div>
+
+    <!-- Resumen de Alertas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="text-danger stats-number">{{ alerts|selectattr('priority', 'equalto', 'high')|list|length }}</div>
+                <div>{{ _('High Priority Alerts') }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="text-warning stats-number">{{ alerts|selectattr('priority', 'equalto', 'medium')|list|length }}</div>
+                <div>{{ _('Medium Priority Alerts') }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="text-success stats-number">{{ alerts|selectattr('priority', 'equalto', 'low')|list|length }}</div>
+                <div>{{ _('Low Priority Alerts') }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="text-primary stats-number">{{ alerts|selectattr('acknowledged', 'equalto', false)|list|length }}</div>
+                <div>{{ _('Unacknowledged Alerts') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda de Prioridades -->
+    <div class="alert alert-info mb-4">
+        <h5 class="mb-2"><i class="fas fa-info-circle"></i> {{ _('Priority Legend') }}</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="priority-indicator high me-2"></div>
+                    <span><strong>{{ _('High') }}:</strong> {{ _('Requires immediate attention (e.g., cardiac anomalies)') }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="priority-indicator medium me-2"></div>
+                    <span><strong>{{ _('Medium') }}:</strong> {{ _('Attention needed in the next hours (e.g., activity changes)') }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="priority-indicator low me-2"></div>
+                    <span><strong>{{ _('Low') }}:</strong> {{ _('Routine monitoring (e.g., sleep patterns)') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Date From') }}</label>
+                <input type="date" class="form-control" name="date_from" value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Date To') }}</label>
+                <input type="date" class="form-control" name="date_to" value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('User') }}</label>
+                <input type="text" class="form-control" name="user_query" placeholder="{{ _('Name or email') }}" value="{{ request.args.get('user_query', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Alert Type') }}</label>
+                <select class="form-select" name="alert_type">
+                    <option value="">{{ _('All') }}</option>
+                    <option value="heart_rate" {% if request.args.get('alert_type') == 'heart_rate' %}selected{% endif %}>{{ _('Cardiac') }}</option>
+                    <option value="activity" {% if request.args.get('alert_type') == 'activity' %}selected{% endif %}>{{ _('Activity') }}</option>
+                    <option value="sleep" {% if request.args.get('alert_type') == 'sleep' %}selected{% endif %}>{{ _('Sleep') }}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Priority') }}</label>
+                <select class="form-select" name="priority">
+                    <option value="">{{ _('All') }}</option>
+                    <option value="high" {% if request.args.get('priority') == 'high' %}selected{% endif %}>{{ _('High') }}</option>
+                    <option value="medium" {% if request.args.get('priority') == 'medium' %}selected{% endif %}>{{ _('Medium') }}</option>
+                    <option value="low" {% if request.args.get('priority') == 'low' %}selected{% endif %}>{{ _('Low') }}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ _('Status') }}</label>
+                <select class="form-select" name="acknowledged">
+                    <option value="">{{ _('All') }}</option>
+                    <option value="false" {% if request.args.get('acknowledged') == 'false' %}selected{% endif %}>{{ _('Unacknowledged') }}</option>
+                    <option value="true" {% if request.args.get('acknowledged') == 'true' %}selected{% endif %}>{{ _('Acknowledged') }}</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="urgent_only" id="urgent_only" {% if request.args.get('urgent_only') %}checked{% endif %}>
+                    <label class="form-check-label" for="urgent_only">
+                        {{ _('Show only urgent alerts (unacknowledged for more than 24h)') }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">{{ _('Filter') }}</button>
+                <a href="{{ url_for('alerts_dashboard') }}" class="btn btn-outline-secondary">{{ _('Clear Filters') }}</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Alertas -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover shadow-sm bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>{{ _('Date/Time') }}</th>
+                    <th>{{ _('Time Since Alert') }}</th>
+                    <th>{{ _('User') }}</th>
+                    <th>{{ _('Alert Type') }}</th>
+                    <th>{{ _('Priority') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr class="priority-{{ alert.priority|lower }} alert-row" data-alert-id="{{ alert.id }}">
+                    <td>{{ alert.alert_time }}</td>
+                    <td>
+                        {% set time_since = ((now - alert.raw_alert_time).total_seconds() / 3600)|round %}
+                        {% if time_since < 24 %}
+                            {{ time_since|int }} {{ _('hours') }}
+                        {% else %}
+                            {{ (time_since / 24)|round|int }} {{ _('days') }}
+                        {% endif %}
+                    </td>
+                    <td>{{ alert.user_name }} ({{ alert.user_email }})</td>
+                    <td>{{ alert.alert_type }}</td>
+                    <td>
+                        <span class="badge bg-{{ alert.priority|lower }}">
+                            {{ _(alert.priority|title) }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if alert.acknowledged %}
+                            <span class="badge bg-success">{{ _('Acknowledged') }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ _('Pending') }}</span>
+                            {% if time_since > 48 %}
+                                <span class="badge bg-danger">{{ _('Urgent') }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not alert.acknowledged %}
+                        <button class="btn btn-sm btn-outline-success acknowledge-btn"
+                                type="button"
+                                data-alert-id="{{ alert.id }}"
+                                title="{{ _('Mark as acknowledged') }}">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="{{ _('Page navigation') }}">
+            <ul class="pagination">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('alerts_dashboard', page=pagination.prev_num, **filters_dict) }}" aria-label="{{ _('Previous') }}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('alerts_dashboard', page=page_num, **filters_dict) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('alerts_dashboard', page=pagination.next_num, **filters_dict) }}" aria-label="{{ _('Next') }}">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Detalles de Alerta -->
+<div class="modal fade" id="alertDetailsModal" tabindex="-1" aria-labelledby="alertDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="alertDetailsTitle">{{ _('Alert Details') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ _('General Information') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>{{ _('User') }}:</th>
+                                <td id="modal-user"></td>
+                            </tr>
+                            <tr>
+                                <th>{{ _('Date/Time') }}:</th>
+                                <td id="modal-time"></td>
+                            </tr>
+                            <tr>
+                                <th>{{ _('Alert Type') }}:</th>
+                                <td id="modal-type"></td>
+                            </tr>
+                            <tr>
+                                <th>{{ _('Priority') }}:</th>
+                                <td id="modal-priority"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ _('Technical Details') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>{{ _('Detected Value') }}:</th>
+                                <td id="modal-triggering"></td>
+                            </tr>
+                            <tr>
+                                <th>{{ _('Threshold') }}:</th>
+                                <td id="modal-threshold"></td>
+                            </tr>
+                            <tr>
+                                <th>{{ _('Status') }}:</th>
+                                <td id="modal-status"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div id="intraday-chart-container" class="row mt-4 d-none">
+                    <div class="col-12">
+                        <h6>{{ _('Intraday Data (Last 24h)') }}</h6>
+                        <div class="chart-container" style="position: relative; height:200px;">
+                            <canvas id="intraday-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Additional Information') }}</h6>
+                        <div id="modal-details" class="alert alert-info"></div>
+                        <div id="modal-intraday-warning"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
+                <button type="button" class="btn btn-success" id="modal-acknowledge-btn" onclick="acknowledgeAlert()">
+                    <i class="bi bi-check-circle"></i> {{ _('Acknowledge Alert') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Reconocimiento -->
+<div class="modal fade" id="acknowledgeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Acknowledge Alert') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="acknowledgeForm">
+                    <input type="hidden" id="alertId" name="alertId">
+                    <div class="mb-3">
+                        <label for="note" class="form-label">{{ _('Doctor Note') }}:</label>
+                        <textarea class="form-control" id="note" name="note" rows="3" placeholder="{{ _('Add a note about the action taken...') }}"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="acknowledgeAlert()">{{ _('Acknowledge') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Añadir al principio del script las traducciones como variables globales
+const translations = {
+    notEnoughData: '{{ _("Not enough intraday data to show activity pattern (<6 points).") }}',
+    deviceNotWorn: '{{ _("This may be due to insufficient data recorded by the device or the device not being worn during the day.") }}',
+    noAdditionalInfo: '{{ _("No additional information available") }}',
+    noStepsBetween: '{{ _("No steps recorded between") }}',
+    and: '{{ _("and") }}',
+    prolongedInactivity: '{{ _("Prolonged period without activity detected") }}',
+    heartRateAbove: '{{ _("Heart rate above normal threshold") }}',
+    significantDecrease: '{{ _("Significant decrease in daily steps") }}',
+    unusualSleep: '{{ _("Unusual sleep duration detected") }}',
+    currentValue: '{{ _("Current value") }}',
+    comparedToAverage: '{{ _("compared to average") }}',
+    hours: '{{ _("hours") }}'
+};
+
+// Variable global para almacenar los datos de las alertas
+let alertsData = [];
+
+// Función para inicializar los datos
+function initializeAlertsData() {
+    try {
+        alertsData = JSON.parse('{{ alerts|tojson|safe }}');
+    } catch (error) {
+        console.error("Error parsing alerts data:", error);
+        alertsData = [];
+    }
+}
+
+// Llamar a la función de inicialización cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAlertsData();
+
+    // Add event listeners for the alert rows
+    document.querySelectorAll('.alert-row').forEach(function(row) {
+        row.addEventListener('click', function() {
+            const alertId = parseInt(this.dataset.alertId);
+            showAlertDetails(alertId);
+        });
+    });
+
+    // Add event listeners for the acknowledge buttons
+    document.querySelectorAll('.acknowledge-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent row click
+            const alertId = parseInt(this.dataset.alertId);
+            showAcknowledgeModal(alertId);
+        });
+    });
+});
+
+// Función para mostrar detalles de la alerta
+function showAlertDetails(alertId) {
+    const alert = alertsData.find(function(a) { return a.id === alertId; });
+    if (!alert) {
+        return;
+    }
+
+    // Extraer el tipo base de la alerta
+    const alertType = alert.alert_type;
+    const baseAlertType = alertType.includes('_') ? alertType.split('_')[0] : alertType;
+
+    // Configurar el título y los detalles
+    document.getElementById('alertDetailsTitle').textContent = '{{ _("Alert Details") }}';
+    document.getElementById('modal-user').textContent = `${alert.user_name} (${alert.user_email})`;
+    document.getElementById('modal-time').textContent = alert.alert_time;
+    document.getElementById('modal-type').textContent = '{{ _("' + alert.alert_type + '") }}';
+    document.getElementById('modal-priority').textContent = '{{ _("' + alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1) + '") }}';
+    document.getElementById('modal-triggering').textContent = alert.triggering_value || 'N/A';
+    document.getElementById('modal-threshold').textContent = alert.threshold_value || 'N/A';
+    document.getElementById('modal-status').textContent = alert.acknowledged ? '{{ _("Acknowledged") }}' : '{{ _("Pending") }}';
+  // Configurar el botón de reconocimiento
+  const acknowledgeBtn = document.getElementById('modal-acknowledge-btn');
+    acknowledgeBtn.setAttribute('data-alert-id', alert.id);
+    acknowledgeBtn.style.display = alert.acknowledged ? 'none' : 'block';
+    // Mostrar el gráfico solo si hay datos intradía y el tipo es compatible
+    const chartContainer = document.getElementById('intraday-chart-container');
+    const chartCanvas = document.getElementById('intraday-chart');
+    const tieneDatos = alert.intraday_data && alert.intraday_data.times && alert.intraday_data.times.length > 0;
+    let tipoCompatible = ['heart', 'heart_rate', 'steps', 'calories', 'active_zone_minutes'].includes(baseAlertType);
+    // Lógica especial para activity_drop por pasos
+    if (alert.alert_type === 'activity_drop') {
+        if (alert.details && alert.details.toLowerCase().includes('pasos')) {
+            tipoCompatible = true;
+        } else {
+            tipoCompatible = false;
+        }
+    }
+    // NUEVO: Ocultar gráfica si hay menos de 6 puntos
+    if (tieneDatos && tipoCompatible && alert.intraday_data.values.length >= 6) {
+        chartContainer.classList.remove('d-none');
+        chartCanvas.style.display = '';
+        // Eliminar mensaje informativo si existe
+        let warningDiv = document.getElementById('modal-intraday-warning');
+        if (warningDiv) warningDiv.innerHTML = '';
+        const ctx = document.getElementById('intraday-chart').getContext('2d');
+        if (window.intradayChart) {
+            window.intradayChart.destroy();
+        }
+        // Colores y etiquetas
+        let borderColor, backgroundColor, metricLabel, yAxisLabel, anomalyIndices = [], anomalyValue = null, anomalyTime = null;
+        if (alert.alert_type === 'activity_drop' && alert.details && alert.details.toLowerCase().includes('pasos')) {
+            borderColor = 'rgb(54, 162, 235)';
+            backgroundColor = 'rgba(54, 162, 235, 0.2)';
+            metricLabel = 'Pasos';
+            yAxisLabel = 'Pasos';
+            // Buscar el mínimo (punto anómalo)
+            let minValue = Math.min(...alert.intraday_data.values);
+            anomalyIndices = alert.intraday_data.values.map((v, i) => v === minValue ? i : -1).filter(i => i !== -1);
+            anomalyValue = minValue;
+            anomalyTime = alert.intraday_data.times[anomalyIndices[0]];
+        } else if (baseAlertType === 'heart' || baseAlertType === 'heart_rate') {
+                    borderColor = 'rgb(255, 99, 132)';
+                    backgroundColor = 'rgba(255, 99, 132, 0.2)';
+                    metricLabel = 'Frecuencia Cardíaca';
+                    yAxisLabel = 'Frecuencia Cardíaca (bpm)';
+            // Buscar el valor máximo anómalo
+            let maxValue = Math.max(...alert.intraday_data.values);
+            anomalyIndices = alert.intraday_data.values.map((v, i) => v === maxValue ? i : -1).filter(i => i !== -1);
+            anomalyValue = maxValue;
+            anomalyTime = alert.intraday_data.times[anomalyIndices[0]];
+        } else if (alert.alert_type === 'intraday_activity_drop') {
+            borderColor = 'rgb(40, 167, 69)';
+            backgroundColor = 'rgba(40, 167, 69, 0.2)';
+                    metricLabel = 'Pasos';
+                    yAxisLabel = 'Pasos';
+
+            // Extraer horas de inicio y fin del intervalo sin actividad de los detalles
+            const detailsText = alert.details || '';
+            const timeRegex = /sin pasos entre (\d{2}:\d{2}) y (\d{2}:\d{2})/;
+            const timeMatch = detailsText.match(timeRegex);
+
+            let startTime = null;
+            let endTime = null;
+            if (timeMatch && timeMatch.length === 3) {
+                startTime = timeMatch[1];
+                endTime = timeMatch[2];
+            }
+
+            // Crear área sombreada para la zona de inactividad
+            let annotations = {};
+
+            if (startTime && endTime) {
+                // Intentar encontrar los índices correspondientes a las horas de inicio y fin
+                const startIdx = alert.intraday_data.times.findIndex(t => t === startTime);
+                const endIdx = alert.intraday_data.times.findIndex(t => t === endTime);
+
+                if (startIdx !== -1 && endIdx !== -1) {
+                    // Marcar todos los puntos en el intervalo de inactividad
+                    anomalyIndices = Array.from({length: endIdx - startIdx + 1}, (_, i) => startIdx + i);
+                }
+
+                // Añadir anotación de área sombreada
+                annotations = {
+                    box1: {
+                        type: 'box',
+                        xMin: startTime,
+                        xMax: endTime,
+                        yMin: 0,
+                        yMax: 'max',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        borderColor: 'rgba(255, 0, 0, 0.5)',
+                        borderWidth: 1,
+                        label: {
+                            display: true,
+                            content: 'Período de inactividad',
+                            position: 'start'
+                        }
+                    }
+                };
+            }
+
+            // Crear una línea para resaltar visualmente los períodos sin pasos
+            // Transformamos los valores para que los periodos con 0 pasos se vean claramente
+            const enhancedData = alert.intraday_data.values.map(v => v === 0 ? null : v);
+
+            window.intradayChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: alert.intraday_data.times,
+                    datasets: [{
+                        label: metricLabel,
+                        data: enhancedData,
+                        borderColor: borderColor,
+                        backgroundColor: backgroundColor,
+                        tension: 0.1,
+                        spanGaps: false,
+                        pointRadius: alert.intraday_data.values.map((v, i) => anomalyIndices.includes(i) ? 7 : 3),
+                        pointBackgroundColor: alert.intraday_data.values.map((v, i) =>
+                            v === 0 ? 'red' : (anomalyIndices.includes(i) ? 'orange' : borderColor)
+                        ),
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Períodos de inactividad',
+                        data: alert.intraday_data.values.map(v => v === 0 ? 0 : null),
+                        borderColor: 'rgba(255, 0, 0, 0.7)',
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 5,
+                        pointBackgroundColor: 'red',
+                        fill: true,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const datasetLabel = context.dataset.label;
+                                    const value = context.parsed.y;
+                                    const time = context.label;
+
+                                    if (datasetLabel === 'Períodos de inactividad') {
+                                        return `Sin actividad a las ${time}`;
+                                    }
+
+                                    if (value === null) {
+                                        return `${datasetLabel}: Sin pasos a las ${time}`;
+                                    }
+
+                                    return `${datasetLabel}: ${value}\nHora: ${time}`;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: annotations
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: yAxisLabel
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Añadir una explicación clínica más detallada para médicos y para la presentación del TFG
+            const clinicalDetails = document.createElement('div');
+            clinicalDetails.className = 'alert alert-danger mt-3';
+            clinicalDetails.innerHTML = `
+                <h6><i class="fas fa-exclamation-triangle"></i> Relevancia Clínica</h6>
+                <p><strong>Intervalo de inactividad detectado:</strong> ${startTime || 'N/A'} - ${endTime || 'N/A'}</p>
+                <p>Los periodos prolongados de inactividad (≥2 horas) en ancianos están asociados con:</p>
+                <ul>
+                    <li>Mayor riesgo de eventos cardiovasculares (Barone Gibbs et al., 2021)</li>
+                    <li>Pérdida acelerada de masa muscular y fuerza (sarcopenia)</li>
+                    <li>Deterioro de la capacidad funcional y mayor riesgo de caídas</li>
+                </ul>
+                <p><strong>Recomendación:</strong> Verificar si el usuario estaba durmiendo durante este intervalo o si representa una inactividad anormal que requiere seguimiento.</p>
+            `;
+
+            // Insertar después del gráfico
+            document.querySelector('#intraday-chart-container .chart-container').after(clinicalDetails);
+
+            return; // Salimos para evitar ejecutar el código estándar del gráfico
+        } else {
+            // Para otros tipos, no mostrar gráfica
+            chartContainer.classList.add('d-none');
+            // Mostrar mensaje informativo SIEMPRE debajo de la nota azul
+            let warningDiv = document.getElementById('modal-intraday-warning');
+            if (warningDiv) {
+                warningDiv.innerHTML = `
+                    <div class="alert alert-warning mt-2">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${translations.notEnoughData}<br>
+                        <small>${translations.deviceNotWorn}</small>
+                    </div>`;
+            }
+            // Si existe un gráfico previo, destruirlo
+            if (window.intradayChart) {
+                window.intradayChart.destroy();
+            }
+            return;
+        }
+        window.intradayChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: alert.intraday_data.times,
+                datasets: [{
+                    label: metricLabel,
+                    data: alert.intraday_data.values,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                    tension: 0.1,
+                    pointRadius: alert.intraday_data.values.map((v, i) => anomalyIndices.includes(i) ? 7 : 3),
+                    pointBackgroundColor: alert.intraday_data.values.map((v, i) => anomalyIndices.includes(i) ? 'red' : borderColor),
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = `${metricLabel}: ${context.parsed.y}`;
+                                if (anomalyIndices.includes(context.dataIndex)) {
+                                    label += ' (Anómalo)';
+                                }
+                                return label + `\nHora: ${context.label}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: yAxisLabel
+                        }
+                    }
+                }
+            }
+        });
+        // Mostrar valor y hora anómala en detalles técnicos si existe
+        if (anomalyValue !== null && anomalyTime !== null) {
+            document.getElementById('modal-triggering').textContent = `${anomalyValue} (a las ${anomalyTime})`;
+        }
+    } else {
+        chartContainer.classList.add('d-none');
+        // Mostrar mensaje informativo SIEMPRE debajo de la nota azul
+        let warningDiv = document.getElementById('modal-intraday-warning');
+        if (warningDiv) {
+            warningDiv.innerHTML = `
+                <div class="alert alert-warning mt-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${translations.notEnoughData}<br>
+                    <small>${translations.deviceNotWorn}</small>
+                </div>`;
+        }
+        // Si existe un gráfico previo, destruirlo
+        if (window.intradayChart) {
+            window.intradayChart.destroy();
+        }
+    }
+
+    // Configurar el contenido de información adicional
+    const modalDetails = document.getElementById('modal-details');
+    if (alert.details) {
+        // Traducir los detalles según el tipo de alerta
+        let translatedDetails = alert.details;
+
+        if (alert.alert_type === 'intraday_activity_drop') {
+            const matches = alert.details.match(/sin pasos entre (\d{2}:\d{2}) y (\d{2}:\d{2})/);
+            if (matches) {
+                translatedDetails = `${translations.noStepsBetween} ${matches[1]} ${translations.and} ${matches[2]}`;
+            }
+        } else if (alert.alert_type === 'heart_rate_anomaly') {
+            translatedDetails = translations.heartRateAbove;
+            if (alert.triggering_value && alert.threshold_value) {
+                translatedDetails += ` (${translations.currentValue}: ${alert.triggering_value}, ${translations.comparedToAverage}: ${alert.threshold_value})`;
+            }
+        } else if (alert.alert_type === 'activity_drop') {
+            translatedDetails = translations.significantDecrease;
+            if (alert.triggering_value && alert.threshold_value) {
+                translatedDetails += ` (${translations.currentValue}: ${alert.triggering_value}, ${translations.comparedToAverage}: ${alert.threshold_value})`;
+            }
+        } else if (alert.alert_type === 'sleep_duration_change') {
+            translatedDetails = translations.unusualSleep;
+            if (alert.triggering_value && alert.threshold_value) {
+                translatedDetails += ` (${translations.currentValue}: ${alert.triggering_value} ${translations.hours}, ${translations.comparedToAverage}: ${alert.threshold_value} ${translations.hours})`;
+            }
+        }
+
+        modalDetails.textContent = translatedDetails;
+    } else {
+        modalDetails.textContent = translations.noAdditionalInfo;
+    }
+
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('alertDetailsModal'));
+    modal.show();
+}
+
+function showAcknowledgeModal(alertId) {
+    document.getElementById('alertId').value = alertId;
+    document.getElementById('note').value = '';
+    const acknowledgeModal = new bootstrap.Modal(document.getElementById('acknowledgeModal'));
+    acknowledgeModal.show();
+}
+
+function acknowledgeAlert() {
+    // Obtener el ID de la alerta del botón o del formulario
+    const alertId = document.getElementById('modal-acknowledge-btn').getAttribute('data-alert-id') ||
+                   document.getElementById('alertId').value;
+
+    if (!alertId) {
+        return;
+    }
+
+    fetch(`/livelyageing/api/alerts/${alertId}/acknowledge`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar ambos modales si están abiertos
+            const acknowledgeModal = bootstrap.Modal.getInstance(document.getElementById('acknowledgeModal'));
+            if (acknowledgeModal) {
+                acknowledgeModal.hide();
+            }
+            const alertDetailsModal = bootstrap.Modal.getInstance(document.getElementById('alertDetailsModal'));
+            if (alertDetailsModal) {
+                alertDetailsModal.hide();
+            }
+            // Recargar la página para actualizar la lista
+            window.location.reload();
+        } else {
+            alert('Error al reconocer la alerta: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error al reconocer la alerta');
+    });
+}
+
+// Inicializar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+</body>
+</html>

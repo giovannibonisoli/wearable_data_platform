@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ _('Device Details') }}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="deviceTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active"
+                    data-bs-toggle="tab"
+                    data-bs-target="#status"
+                    type="button">
+                <i class="bi bi-cloud-check me-2"></i>
+                {{ _('Device Status') }}
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#metrics"
+                    type="button">
+                <i class="bi bi-graph-up me-2"></i>
+                {{ _('Wearable Metrics & Anomalies') }}
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ================= TAB 1 ================= -->
+        <div class="tab-pane fade show active" id="status">
+
+            <div class="row g-4">
+          
+              <!-- ================= LEFT COLUMN ================= -->
+              <div class="col-lg-8">
+          
+                <!-- DEVICE STATUS (COMPACT) -->
+                <div class="card mb-4">
+                  <div class="card-body py-3">
+          
+                    <h6 class="mb-3 text-primary">
+                      <i class="bi bi-smartwatch me-2"></i>
+                      {{ _('Device status') }}
+                    </h6>
+          
+                    <div class="row">
+                      <div class="col-md-6">
+                        <ul class="list-unstyled mb-0">
+                          <li class="mb-2">
+                            <i class="bi bi-arrow-repeat text-success me-2"></i>
+                            <strong>{{ _('Last cloud sync') }}:</strong>
+                            <span class="text-muted">{{ device.last_sync }}</span>
+                          </li>
+                          <li>
+                            <i class="bi bi-cloud-check text-success me-2"></i>
+                            <strong>{{ _('Data update') }}:</strong>
+                            <span class="text-muted">{{ device.last_intraday }}</span>
+                          </li>
+                        </ul>
+                      </div>
+          
+                      <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                        <span class="badge bg-success px-3 py-2">
+                          {{ _('Device active') }}
+                        </span>
+                      </div>
+                    </div>
+          
+                  </div>
+                </div>
+          
+                <!-- DATA CONTINUITY / REGISTRO DISPOSITIVO -->
+                <div class="card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                      <i class="bi bi-bar-chart-line me-2"></i>
+                      {{ _('Device log') }}
+                    </span>
+          
+                    <!-- Range selector -->
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-primary active">{{ _('Day') }}</button>
+                      <button class="btn btn-outline-primary">{{ _('Week') }}</button>
+                      <button class="btn btn-outline-primary">{{ _('Month') }}</button>
+                    </div>
+                  </div>
+          
+                  <div class="card-body">
+          
+                    <!-- GRAPH PLACEHOLDER -->
+                    <div class="chart-container" style="height: 220px;">
+                      <canvas id="deviceContinuityChart"></canvas>
+                    </div>
+          
+                    <!-- LEGEND -->
+                    <div class="d-flex gap-4 mt-3 flex-wrap small">
+                      <div>
+                        <span class="badge bg-success">&nbsp;</span>
+                        {{ _('Cloud sync') }}
+                      </div>
+                      <div>
+                        <span class="badge bg-warning">&nbsp;</span>
+                        {{ _('Sync intervals') }}
+                      </div>
+                      <div>
+                        <span class="badge bg-primary">&nbsp;</span>
+                        {{ _('Incomplete sync') }}
+                      </div>
+                    </div>
+          
+                  </div>
+                </div>
+          
+              </div>
+          
+              <!-- ================= RIGHT COLUMN ================= -->
+              <div class="col-lg-4">
+          
+
+          
+                <!-- ALERTS -->
+                <div class="card border-danger">
+                  <div class="card-body">
+                    <h6 class="text-danger mb-3">
+                      <i class="bi bi-exclamation-triangle me-2"></i>
+                      {{ _('Usage alerts') }}
+                    </h6>
+          
+                    {% if alerts %}
+                      <ul class="list-unstyled mb-0">
+                        {% for alert in alerts %}
+                        <li class="mb-2">
+                          <i class="bi bi-dot text-danger"></i>
+                          {{ alert }}
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p class="text-muted mb-0">
+                        {{ _('No alerts detected') }}
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+          
+              </div>
+          
+            </div>
+        </div>
+          
+
+        <!-- ================= TAB 2 ================= -->
+        <div class="tab-pane fade" id="metrics">
+
+            <div class="row g-4">
+          
+              <!-- =============== LEFT MAIN (8 col) =============== -->
+              <div class="col-lg-8">
+          
+                <!-- ====== ATTIVITA' FISICA IN ALTO ====== -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h6 class="mb-0">
+                      <i class="bi bi-walking me-2"></i> {{ _('Attività Fisica') }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+          
+                    <div class="row text-center gy-3">
+          
+                      <!-- Passi -->
+                      <div class="col-md-6 col-lg-3">
+                        <div class="metric-card">
+                          <h4 class="metric-value">{{ metrics.steps.value }}</h4>
+                          <p class="metric-label">{{ _('Passi') }}</p>
+                          <!-- mini-chart embed -->
+                          <canvas id="stepsMiniChart" height="50"></canvas>
+                        </div>
+                      </div>
+          
+                      <!-- Distanza -->
+                      <div class="col-md-6 col-lg-3">
+                        <div class="metric-card">
+                          <h4 class="metric-value">{{ metrics.distance.value }} km</h4>
+                          <p class="metric-label">{{ _('Distanza') }}</p>
+                          <canvas id="distanceMiniChart" height="50"></canvas>
+                        </div>
+                      </div>
+          
+                      <!-- Elevazione -->
+                      <div class="col-md-6 col-lg-3">
+                        <div class="metric-card">
+                          <h4 class="metric-value">{{ metrics.elevation.value }} m</h4>
+                          <p class="metric-label">{{ _('Elevazione') }}</p>
+                          <canvas id="elevationMiniChart" height="50"></canvas>
+                        </div>
+                      </div>
+          
+                      <!-- Piani -->
+                      <div class="col-md-6 col-lg-3">
+                        <div class="metric-card">
+                          <h4 class="metric-value">{{ metrics.floors.value }}</h4>
+                          <p class="metric-label">{{ _('Piani') }}</p>
+                          <canvas id="floorsMiniChart" height="50"></canvas>
+                        </div>
+                      </div>
+          
+                    </div>
+          
+                  </div>
+                </div>
+          
+                <!-- ====== GRAFICO ATTIVITA' FISICA PRINCIPALE ====== -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h6 class="mb-0">
+                      <i class="bi bi-bar-chart-line me-2"></i>{{ _('Grafico attività fisica giornaliera') }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="activityMainChart" style="height:200px"></canvas>
+                  </div>
+                </div>
+          
+                <!-- ====== BATTITO CARDIOACO IN BASSO ====== -->
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h6 class="mb-0">
+                      <i class="bi bi-heart-pulse me-2 text-danger"></i>{{ _('Battito Cardiaco') }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+          
+                    <div class="row align-items-center">
+                      <div class="col-sm-4 text-center">
+                        <h2 class="text-danger">{{ metrics.heart_rate.value }} bpm</h2>
+                        <p class="text-muted small">({{ metrics.heart_rate.range }})</p>
+                      </div>
+          
+                      <div class="col-sm-8">
+                        <canvas id="heartRateChart" style="height:120px"></canvas>
+                      </div>
+                    </div>
+          
+                  </div>
+                </div>
+          
+              </div>
+          
+              <!-- =============== RIGHT SIDEBAR (4 col) =============== -->
+              <div class="col-lg-4">
+          
+                <!-- ====== ALERTS MEDICALI ====== -->
+                <div class="card border-danger mb-4">
+                  <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                      <i class="bi bi-exclamation-triangle me-2"></i>{{ _('Alert Medici') }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+          
+                    {% if medical_alerts %}
+                      <ul class="list-group list-group-flush">
+                        {% for alert in medical_alerts %}
+                        <li class="list-group-item text-danger">
+                          <i class="bi bi-dot"></i> {{ alert }}
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p class="text-muted small">{{ _('Nessun alert rilevato') }}</p>
+                    {% endif %}
+          
+                  </div>
+                </div>
+          
+                <!-- ====== ALERT ATTIVITA' ====== -->
+                <div class="card border-warning">
+                  <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                      <i class="bi bi-exclamation-circle me-2"></i>{{ _('Alert Attività') }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+          
+                    {% if activity_alerts %}
+                      <ul class="list-group list-group-flush">
+                        {% for alert in activity_alerts %}
+                        <li class="list-group-item text-warning">
+                          <i class="bi bi-dot"></i> {{ alert }}
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p class="text-muted small">{{ _('Nessun alert di attività') }}</p>
+                    {% endif %}
+          
+                  </div>
+                </div>
+          
+              </div>
+          
+            </div>
+          
+          </div>
+    </div>
+
+</div>
+
+<script>
+    const ctx = document.getElementById('deviceContinuityChart');
+    
+    new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['17 Apr', '18 Apr', '19 Apr', '20 Apr', '21 Apr', '22 Apr'],
+                        datasets: [
+                        {
+                            label: 'Cloud sync',
+                            data: [30, 45, 50, 48, 46, 42],
+                            backgroundColor: '#198754'
+                        },
+                        {
+                            label: 'Sync intervals',
+                            data: [10, 12, 8, 9, 7, 6],
+                            backgroundColor: '#ffc107'
+                        },
+                        {
+                            label: 'Incomplete sync',
+                            data: [2, 1, 0, 1, 0, 1],
+                            backgroundColor: '#0d6efd'
+                        }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                        },
+                        plugins: {
+                        legend: { display: false }
+                        }
+                    }
+                    });
+
+    const activityCtx = document.getElementById('activityMainChart');
+
+    new Chart(activityCtx, {
+    type: 'bar',
+    data: {
+                labels: [],
+                datasets: [
+                        {
+                            label: '{{ _("Passi") }}',
+                            data: [],
+                            backgroundColor: '#0d6efd'
+                        },
+                        {
+                            label: '{{ _("Distanza (km)") }}',
+                            data: [],
+                            backgroundColor: '#198754'
+                        }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                x: { stacked: true },
+                y: { beginAtZero: true }
+                }
+            }
+    });
+
+    function createMiniLine(id, data, color) {
+        new Chart(document.getElementById(id), {
+            type: 'line',
+            data: {
+            labels: data.map((_, i) => i),
+            datasets: [{
+                data: data,
+                borderColor: color,
+                fill: false,
+                pointRadius: 0
+            }]
+            },
+            options: { 
+            responsive: true,
+            scales: { x: { display: false }, y: { display: false } },
+            plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    createMiniLine("stepsMiniChart", {{ metrics.steps.history | safe }}, '#0d6efd');
+    createMiniLine("distanceMiniChart", {{ metrics.distance.history | safe }}, '#198754');
+    createMiniLine("elevationMiniChart", {{ metrics.elevation.history | safe }}, '#fd7e14');
+    createMiniLine("floorsMiniChart", {{ metrics.floors.history | safe }}, '#6f42c1');
+    
+</script>
+{% endblock %}

@@ -1,0 +1,2183 @@
+# ES translations for Lively Ageing.
+# Copyright (C) 2025 Lively Ageing
+# This file is distributed under the same license as the PROJECT project.
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-06-18 18:13+0200\n"
+"PO-Revision-Date: 2025-05-18 19:04+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: app.py:477
+#, fuzzy
+msgid "Error: Missing user name."
+msgstr "No se pudo verificar el nombre de usuario"
+
+#: app.py:481
+msgid "Error: No email in session. Please start from device linking."
+msgstr ""
+
+#: app.py:1739
+msgid "Please provide an email address."
+msgstr ""
+
+#: app.py:1744
+#, fuzzy
+msgid "Database connection error."
+msgstr "Error de conexión a la base de datos"
+
+#: app.py:1751
+msgid "This email is already registered in the system."
+msgstr ""
+
+#: app.py:1756
+msgid "Email added successfully. You can now link a device to it."
+msgstr ""
+
+#: app.py:1761
+msgid "An error occurred while adding the email."
+msgstr ""
+
+#: templates/add_email.html:3
+msgid "Lively Ageing - Add New Email"
+msgstr "Lively Ageing - Añadir Nuevo Correo"
+
+#: templates/add_email.html:11
+msgid "Add New Email"
+msgstr "Añadir Nuevo Correo"
+
+#: templates/add_email.html:16
+msgid "Email Address"
+msgstr "Dirección de Correo"
+
+#: templates/add_email.html:18
+msgid "Please enter the email address to add to the system."
+msgstr "Por favor, ingrese la dirección de correo para añadir al sistema."
+
+#: templates/add_email.html:21
+msgid "Add Email"
+msgstr "Añadir Correo"
+
+#: templates/add_email.html:22 templates/alerts_dashboard.html:462
+#: templates/assign_user.html:21 templates/reassign_device.html:20
+#: templates/user_stats.html:200
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: templates/alerts_dashboard.html:5 templates/alerts_dashboard.html:157
+msgid "Medical Alerts Dashboard"
+msgstr "Panel de Alertas Médicas"
+
+#: templates/alerts_dashboard.html:143 templates/base.html:121
+#: templates/user_detail.html:117
+msgid "Spanish"
+msgstr "Español"
+
+#: templates/alerts_dashboard.html:144 templates/base.html:127
+#: templates/user_detail.html:118
+msgid "English"
+msgstr "Inglés"
+
+#: templates/alerts_dashboard.html:153 templates/user_detail.html:127
+msgid "Back"
+msgstr ""
+
+#: templates/alerts_dashboard.html:158 templates/alerts_dashboard.html:159
+#: templates/user_detail.html:425 templates/user_detail.html:475
+msgid "Export to CSV"
+msgstr "Exportar a CSV"
+
+#: templates/alerts_dashboard.html:168
+msgid "High Priority Alerts"
+msgstr "Alertas de Alta Prioridad"
+
+#: templates/alerts_dashboard.html:174
+msgid "Medium Priority Alerts"
+msgstr "Alertas de Media Prioridad"
+
+#: templates/alerts_dashboard.html:180
+msgid "Low Priority Alerts"
+msgstr "Alertas de Baja Prioridad"
+
+#: templates/alerts_dashboard.html:186
+msgid "Unacknowledged Alerts"
+msgstr "Alertas No Reconocidas"
+
+#: templates/alerts_dashboard.html:193
+msgid "Priority Legend"
+msgstr "Leyenda de Prioridades"
+
+#: templates/alerts_dashboard.html:198 templates/alerts_dashboard.html:244
+msgid "High"
+msgstr "Alta"
+
+#: templates/alerts_dashboard.html:198
+msgid "Requires immediate attention (e.g., cardiac anomalies)"
+msgstr "Requiere atención inmediata (ej: anomalías cardíacas)"
+
+#: templates/alerts_dashboard.html:204 templates/alerts_dashboard.html:245
+msgid "Medium"
+msgstr "Media"
+
+#: templates/alerts_dashboard.html:204
+msgid "Attention needed in the next hours (e.g., activity changes)"
+msgstr "Atención necesaria en las próximas horas (ej: cambios en actividad)"
+
+#: templates/alerts_dashboard.html:210 templates/alerts_dashboard.html:246
+msgid "Low"
+msgstr "Baja"
+
+#: templates/alerts_dashboard.html:210
+msgid "Routine monitoring (e.g., sleep patterns)"
+msgstr "Seguimiento rutinario (ej: patrones de sueño)"
+
+#: templates/alerts_dashboard.html:220
+msgid "Date From"
+msgstr "Fecha Desde"
+
+#: templates/alerts_dashboard.html:224
+msgid "Date To"
+msgstr "Fecha Hasta"
+
+#: templates/alerts_dashboard.html:228 templates/alerts_dashboard.html:279
+#: templates/alerts_dashboard.html:383 templates/home.html:70
+msgid "User"
+msgstr "Usuario"
+
+#: templates/alerts_dashboard.html:229
+msgid "Name or email"
+msgstr "Nombre o email"
+
+#: templates/alerts_dashboard.html:232 templates/alerts_dashboard.html:280
+#: templates/alerts_dashboard.html:391
+msgid "Alert Type"
+msgstr "Tipo de Alerta"
+
+#: templates/alerts_dashboard.html:234 templates/alerts_dashboard.html:243
+#: templates/alerts_dashboard.html:252
+msgid "All"
+msgstr "Todos"
+
+#: templates/alerts_dashboard.html:235
+msgid "Cardiac"
+msgstr "Cardíacas"
+
+#: templates/alerts_dashboard.html:236
+msgid "Activity"
+msgstr "Actividad"
+
+#: templates/alerts_dashboard.html:237
+msgid "Sleep"
+msgstr "Sueño"
+
+#: templates/alerts_dashboard.html:241 templates/alerts_dashboard.html:281
+#: templates/alerts_dashboard.html:395
+msgid "Priority"
+msgstr "Prioridad"
+
+#: templates/alerts_dashboard.html:250 templates/alerts_dashboard.html:282
+#: templates/alerts_dashboard.html:412 templates/user_stats.html:88
+#: templates/user_stats.html:131
+msgid "Status"
+msgstr "Estado"
+
+#: templates/alerts_dashboard.html:253
+msgid "Unacknowledged"
+msgstr "No Reconocidas"
+
+#: templates/alerts_dashboard.html:254 templates/alerts_dashboard.html:307
+#: templates/alerts_dashboard.html:543 templates/user_detail.html:501
+msgid "Acknowledged"
+msgstr "Reconocida"
+
+#: templates/alerts_dashboard.html:261
+msgid "Show only urgent alerts (unacknowledged for more than 24h)"
+msgstr "Mostrar solo alertas urgentes (sin reconocer por más de 24h)"
+
+#: templates/alerts_dashboard.html:266
+msgid "Filter"
+msgstr "Filtrar"
+
+#: templates/alerts_dashboard.html:267
+msgid "Clear Filters"
+msgstr "Limpiar Filtros"
+
+#: templates/alerts_dashboard.html:277 templates/alerts_dashboard.html:387
+msgid "Date/Time"
+msgstr "Fecha/Hora"
+
+#: templates/alerts_dashboard.html:278
+msgid "Time Since Alert"
+msgstr "Tiempo desde Alerta"
+
+#: templates/alerts_dashboard.html:283 templates/home.html:74
+#: templates/user_stats.html:38 templates/user_stats.html:90
+#: templates/user_stats.html:132
+msgid "Actions"
+msgstr "Acciones"
+
+#: templates/alerts_dashboard.html:293 templates/alerts_dashboard.html:486
+msgid "hours"
+msgstr "horas"
+
+#: templates/alerts_dashboard.html:295
+msgid "days"
+msgstr "días"
+
+#: templates/alerts_dashboard.html:309 templates/alerts_dashboard.html:543
+msgid "Pending"
+msgstr "Pendiente"
+
+#: templates/alerts_dashboard.html:311
+msgid "Urgent"
+msgstr "Urgente"
+
+#: templates/alerts_dashboard.html:320
+msgid "Mark as acknowledged"
+msgstr "Marcar como reconocida"
+
+#: templates/alerts_dashboard.html:334
+msgid "Page navigation"
+msgstr "Navegación de páginas"
+
+#: templates/alerts_dashboard.html:338
+msgid "Previous"
+msgstr "Anterior"
+
+#: templates/alerts_dashboard.html:358
+msgid "Next"
+msgstr "Siguiente"
+
+#: templates/alerts_dashboard.html:374 templates/alerts_dashboard.html:536
+msgid "Alert Details"
+msgstr "Detalles de la Alerta"
+
+#: templates/alerts_dashboard.html:375 templates/alerts_dashboard.html:435
+#: templates/base.html:145
+msgid "Close"
+msgstr "Cerrar"
+
+#: templates/alerts_dashboard.html:380
+msgid "General Information"
+msgstr "Información General"
+
+#: templates/alerts_dashboard.html:401
+msgid "Technical Details"
+msgstr "Detalles Técnicos"
+
+#: templates/alerts_dashboard.html:404
+msgid "Detected Value"
+msgstr "Valor Detectado"
+
+#: templates/alerts_dashboard.html:408
+msgid "Threshold"
+msgstr "Umbral"
+
+#: templates/alerts_dashboard.html:420
+msgid "Intraday Data (Last 24h)"
+msgstr "Datos Intradía (Últimas 24h)"
+
+#: templates/alerts_dashboard.html:428
+msgid "Additional Information"
+msgstr "Información Adicional"
+
+#: templates/alerts_dashboard.html:437 templates/alerts_dashboard.html:449
+msgid "Acknowledge Alert"
+msgstr "Reconocer Alerta"
+
+#: templates/alerts_dashboard.html:456
+msgid "Doctor Note"
+msgstr "Nota del médico"
+
+#: templates/alerts_dashboard.html:457
+msgid "Add a note about the action taken..."
+msgstr "Añade una nota sobre la acción tomada..."
+
+#: templates/alerts_dashboard.html:463 templates/user_detail.html:498
+msgid "Acknowledge"
+msgstr "Reconocer"
+
+#: templates/alerts_dashboard.html:475 templates/user_detail.html:431
+#: templates/user_detail.html:741
+msgid "Not enough intraday data to show activity pattern (<6 points)."
+msgstr ""
+"No hay suficientes datos intradía para mostrar el patrón de actividad (<6"
+" puntos)."
+
+#: templates/alerts_dashboard.html:476 templates/user_detail.html:434
+#: templates/user_detail.html:742
+msgid ""
+"This may be due to insufficient data recorded by the device or the device"
+" not being worn during the day."
+msgstr ""
+"Esto puede deberse a que el dispositivo no registró datos suficientes o "
+"no se llevó puesto durante el día."
+
+#: templates/alerts_dashboard.html:477
+#, fuzzy
+msgid "No additional information available"
+msgstr "Información Adicional"
+
+#: templates/alerts_dashboard.html:478
+msgid "No steps recorded between"
+msgstr "Sin pasos registrados entre"
+
+#: templates/alerts_dashboard.html:479
+msgid "and"
+msgstr "y"
+
+#: templates/alerts_dashboard.html:480
+msgid "Prolonged period without activity detected"
+msgstr "Detectado período prolongado sin actividad"
+
+#: templates/alerts_dashboard.html:481
+msgid "Heart rate above normal threshold"
+msgstr "Frecuencia cardíaca por encima del umbral normal"
+
+#: templates/alerts_dashboard.html:482
+msgid "Significant decrease in daily steps"
+msgstr "Disminución significativa en los pasos diarios"
+
+#: templates/alerts_dashboard.html:483
+msgid "Unusual sleep duration detected"
+msgstr "Detectada duración del sueño inusual"
+
+#: templates/alerts_dashboard.html:484
+msgid "Current value"
+msgstr "Valor actual"
+
+#: templates/alerts_dashboard.html:485
+msgid "compared to average"
+msgstr "comparado con el promedio"
+
+#: templates/alerts_dashboard.html:539
+msgid "' + alert.alert_type + '"
+msgstr ""
+
+#: templates/alerts_dashboard.html:540
+msgid "' + alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1) + '"
+msgstr ""
+
+#: templates/assign_user.html:3
+#, fuzzy
+msgid "Assign User - Fitbit Dashboard"
+msgstr "Reasignar Dispositivo - Panel de Fitbit"
+
+#: templates/assign_user.html:7
+msgid "Assign New User"
+msgstr "Asignar Nuevo Usuario"
+
+#: templates/assign_user.html:17 templates/reassign_device.html:16
+msgid "Name of new user:"
+msgstr "Nombre del nuevo usuario:"
+
+#: templates/assign_user.html:20
+msgid "Assign"
+msgstr "Asignar"
+
+#: templates/base.html:92 templates/user_detail.html:92
+msgid "Welcome"
+msgstr "Bienvenido"
+
+#: templates/base.html:97 templates/home.html:34 templates/user_detail.html:97
+msgid "Alert Dashboard"
+msgstr "Panel de Alertas"
+
+#: templates/base.html:102 templates/home.html:20 templates/home.html:23
+#: templates/user_detail.html:102
+msgid "Link Device"
+msgstr "Vincular Dispositivo"
+
+#: templates/base.html:107 templates/user_detail.html:107
+msgid "Logout"
+msgstr "Cerrar sesión"
+
+#: templates/base.html:115 templates/user_detail.html:114
+msgid "Language"
+msgstr "Idioma"
+
+#: templates/base.html:157
+#, fuzzy
+msgid "All rights reserved"
+msgstr "Todos los derechos reservados"
+
+#: templates/confirmation.html:3
+msgid "Device Linking Confirmation"
+msgstr "Confirmación de Vinculación de Dispositivo"
+
+#: templates/confirmation.html:3
+msgid "Fitbit Dashboard"
+msgstr "Panel de Fitbit"
+
+#: templates/confirmation.html:12
+msgid "Device Linking Successful!"
+msgstr "¡Vinculación de Dispositivo Exitosa!"
+
+#: templates/confirmation.html:25
+msgid "Device linked to:"
+msgstr "Dispositivo vinculado a:"
+
+#: templates/confirmation.html:26
+msgid "User:"
+msgstr "Usuario:"
+
+#: templates/confirmation.html:27
+msgid "Email:"
+msgstr "Correo:"
+
+#: templates/confirmation.html:31
+#, fuzzy
+msgid "Return to Home (5)"
+msgstr "Volver al Inicio (%d)"
+
+#: templates/confirmation.html:184 templates/confirmation.html:186
+msgid "Return to Home"
+msgstr "Volver al Inicio"
+
+#: templates/home.html:3
+msgid "Home"
+msgstr "Inicio"
+
+#: templates/home.html:9
+msgid "Welcome to Lively Ageing"
+msgstr "Bienvenido a Lively Ageing"
+
+#: templates/home.html:10
+msgid "Monitor and manage Fitbit users physical activity data"
+msgstr "Monitorea y gestiona los datos de actividad física de usuarios Fitbit"
+
+#: templates/home.html:21
+msgid "Connect a new Fitbit device or reassign an existing one to a user"
+msgstr "Conecta un nuevo dispositivo Fitbit o reasigna uno existente a un usuario"
+
+#: templates/home.html:35
+msgid "View a general summary of the most recent data from all users"
+msgstr "Ver un resumen general de los datos más recientes de todos los usuarios"
+
+#: templates/home.html:37
+msgid "View Dashboard"
+msgstr "Ver Panel"
+
+#: templates/home.html:48
+msgid "Users"
+msgstr "Usuarios"
+
+#: templates/home.html:49
+msgid "Access detailed statistics for each individual user"
+msgstr "Accede a estadísticas detalladas para cada usuario individual"
+
+#: templates/home.html:51
+msgid "View Users"
+msgstr "Ver Usuarios"
+
+#: templates/home.html:63
+msgid "Recent Activity"
+msgstr "Actividad Reciente"
+
+#: templates/home.html:71 templates/user_stats.html:36
+#: templates/user_stats.html:87 templates/user_stats.html:129
+msgid "Email"
+msgstr "Correo electrónico"
+
+#: templates/home.html:72
+msgid "Last Update"
+msgstr "Última Actualización"
+
+#: templates/home.html:73
+msgid "State"
+msgstr "Estado"
+
+#: templates/home.html:107 templates/user_stats.html:57
+#: templates/user_stats.html:164
+msgid "View Details"
+msgstr "Ver detalles"
+
+#: templates/link_auth.html:3
+msgid "Authorize Fitbit - Fitbit Dashboard"
+msgstr "Autorizar Fitbit - Panel de Fitbit"
+
+#: templates/link_auth.html:7 templates/link_auth.html:12
+#: templates/link_device.html:32
+msgid "Authorize Fitbit"
+msgstr "Autorizar Fitbit"
+
+#: templates/link_auth.html:8
+msgid "Please click the following link to authorize your Fitbit account:"
+msgstr ""
+"Por favor, haz clic en el siguiente enlace para autorizar tu cuenta de "
+"Fitbit:"
+
+#: templates/link_auth.html:16
+msgid "You will be redirected to the Fitbit authorization page"
+msgstr "Serás redirigido a la página de autorización de Fitbit"
+
+#: templates/link_auth.html:33
+msgid "Authorizing..."
+msgstr "Autorizando..."
+
+#: templates/link_device.html:3 templates/link_device.html:11
+msgid "Link Fitbit Device"
+msgstr "Vincular Dispositivo Fitbit"
+
+#: templates/link_device.html:17
+msgid "Select Fitbit email"
+msgstr "Seleccionar correo de Fitbit"
+
+#: templates/link_device.html:19 templates/link_device.html:51
+msgid "Select email..."
+msgstr "Seleccionar correo..."
+
+#: templates/link_device.html:26
+msgid ""
+"Each email is linked to a Fitbit device. When authorized, data will be "
+"assigned to the selected user."
+msgstr ""
+"Cada correo está vinculado a un dispositivo Fitbit. Cuando se autorice, "
+"los datos se asignarán al usuario seleccionado."
+
+#: templates/link_device.html:35
+msgid "Missing email? Add new"
+msgstr "¿Falta un correo? Añadir nuevo"
+
+#: templates/login.html:3
+#, fuzzy
+msgid "Login"
+msgstr "Línea"
+
+#: templates/login.html:7
+#, fuzzy
+msgid "Login to your account"
+msgstr "Iniciar sesión en tu cuenta"
+
+#: templates/login.html:12
+#, fuzzy
+msgid "Username"
+msgstr "Nombre (Antiguo)"
+
+#: templates/login.html:16
+#, fuzzy
+msgid "Password"
+msgstr "Contraseña"
+
+#: templates/login.html:19
+#, fuzzy
+msgid "Sign In"
+msgstr "Iniciar sesión"
+
+#: templates/reassign_device.html:3
+msgid "Reassign Device - Fitbit Dashboard"
+msgstr "Reasignar Dispositivo - Panel de Fitbit"
+
+#: templates/reassign_device.html:7
+msgid "Reassign Fitbit Device"
+msgstr "Reasignar Dispositivo Fitbit"
+
+#: templates/reassign_device.html:9
+#, python-format
+msgid ""
+"The email <strong>%(email)s</strong> is already being used by "
+"<strong>%(current_user_name)s</strong>."
+msgstr ""
+"El correo <strong>%(email)s</strong> ya está siendo usado por "
+"<strong>%(current_user_name)s</strong>."
+
+#: templates/reassign_device.html:11
+msgid "Do you want to reassign the watch to a new person?"
+msgstr "¿Deseas reasignar el reloj a una nueva persona?"
+
+#: templates/reassign_device.html:19
+msgid "Reassign"
+msgstr "Reasignar"
+
+#: templates/user_detail.html:5
+msgid "User Details"
+msgstr "Ficha de Usuario"
+
+#: templates/user_detail.html:137
+msgid "Registered on"
+msgstr "Registrado el"
+
+#: templates/user_detail.html:139
+msgid "years old"
+msgstr ""
+
+#: templates/user_detail.html:146
+msgid "Last update"
+msgstr "Última actualización"
+
+#: templates/user_detail.html:148
+msgid "less than a minute ago"
+msgstr "hace menos de 1 minuto"
+
+#: templates/user_detail.html:150
+msgid "minutes ago"
+msgstr "minutos"
+
+#: templates/user_detail.html:152
+msgid "hours ago"
+msgstr "horas"
+
+#: templates/user_detail.html:154
+msgid "days ago"
+msgstr "días"
+
+#: templates/user_detail.html:161
+#, fuzzy
+msgid "Refresh Data"
+msgstr "Actualizar datos"
+
+#: templates/user_detail.html:175
+#, fuzzy
+msgid "Physical activity below average"
+msgstr "Actividad Física"
+
+#: templates/user_detail.html:181 templates/user_detail.html:400
+#: templates/user_detail.html:951
+msgid "Steps"
+msgstr "Pasos"
+
+#: templates/user_detail.html:190
+msgid "Abnormal Heart Rate"
+msgstr "Frecuencia cardíaca anormal"
+
+#: templates/user_detail.html:196
+msgid "Heart Rate (bpm)"
+msgstr "Frecuencia Cardíaca (bpm)"
+
+#: templates/user_detail.html:205
+msgid "Significant change in sleep pattern"
+msgstr "Cambio significativo en el patrón de sueño"
+
+#: templates/user_detail.html:211 templates/user_detail.html:957
+msgid "Sleep Hours"
+msgstr "Horas de Sueño"
+
+#: templates/user_detail.html:223 templates/user_detail.html:402
+msgid "Calories"
+msgstr "Calorías"
+
+#: templates/user_detail.html:232
+msgid "Daily Summary"
+msgstr "Resumen Diario"
+
+#: templates/user_detail.html:237 templates/user_detail.html:389
+msgid "Intraday Data"
+msgstr "Datos Intradía"
+
+#: templates/user_detail.html:242
+msgid "Weekly Summary"
+msgstr "Resumen Semanal"
+
+#: templates/user_detail.html:247 templates/user_detail.html:472
+msgid "Recent Alerts"
+msgstr "Alertas Recientes"
+
+#: templates/user_detail.html:252
+msgid "Inactivity Patterns"
+msgstr "Patrones de Inactividad"
+
+#: templates/user_detail.html:264
+msgid "Physical Activity"
+msgstr "Actividad Física"
+
+#: templates/user_detail.html:274
+msgid "Distance (km)"
+msgstr "Distancia (km)"
+
+#: templates/user_detail.html:284
+msgid "Floors"
+msgstr "Pisos"
+
+#: templates/user_detail.html:291
+msgid "Activity vs Sedentary"
+msgstr "Actividad vs Sedentarismo"
+
+#: templates/user_detail.html:301 templates/user_detail.html:403
+#: templates/user_detail.html:960
+msgid "Active Minutes"
+msgstr "Minutos Activos"
+
+#: templates/user_detail.html:311
+msgid "Sedentary Hours"
+msgstr "Horas Sedentarias"
+
+#: templates/user_detail.html:320
+msgid "Nutrition"
+msgstr "Nutrición"
+
+#: templates/user_detail.html:330
+msgid "Calories Consumed"
+msgstr "Calorías Consumidas"
+
+#: templates/user_detail.html:340
+msgid "Water (L)"
+msgstr "Agua (L)"
+
+#: templates/user_detail.html:347
+msgid "Body Composition"
+msgstr "Composición Corporal"
+
+#: templates/user_detail.html:357
+msgid "Weight (kg)"
+msgstr "Peso (kg)"
+
+#: templates/user_detail.html:367
+msgid "BMI"
+msgstr "IMC"
+
+#: templates/user_detail.html:377
+msgid "Fat"
+msgstr "Grasa"
+
+#: templates/user_detail.html:394 templates/user_detail.html:556
+msgid "Date"
+msgstr "Fecha"
+
+#: templates/user_detail.html:398
+msgid "Metric"
+msgstr "Metricas"
+
+#: templates/user_detail.html:401 templates/user_detail.html:954
+msgid "Heart Rate"
+msgstr "Frecuencia Cardíaca"
+
+#: templates/user_detail.html:407
+msgid "Chart Type"
+msgstr "Tipo de Gráfico"
+
+#: templates/user_detail.html:409
+msgid "Line"
+msgstr "Línea"
+
+#: templates/user_detail.html:410
+msgid "Bar"
+msgstr "Barra"
+
+#: templates/user_detail.html:411
+msgid "Area"
+msgstr "Área"
+
+#: templates/user_detail.html:474
+#, fuzzy
+msgid "Export alerts to CSV"
+msgstr "Exportar a CSV"
+
+#: templates/user_detail.html:487
+msgid "Prolonged period without activity"
+msgstr "Período prolongado sin actividad"
+
+#: templates/user_detail.html:522
+msgid ""
+"Prolonged periods without activity are associated with increased "
+"cardiovascular risk and functional decline."
+msgstr ""
+"Los periodos prolongados sin actividad están asociados con mayor riesgo "
+"cardiovascular y deterioro funcional."
+
+#: templates/user_detail.html:545
+msgid "No recent alerts for this user."
+msgstr "No hay alertas recientes para este usuario."
+
+#: templates/user_detail.html:554
+msgid "Inactivity Pattern Analysis"
+msgstr "Análisis de Patrones de Inactividad"
+
+#: templates/user_detail.html:562
+msgid "Clinical Relevance"
+msgstr "Relevancia Clínica"
+
+#: templates/user_detail.html:563
+msgid "Prolonged periods of inactivity (≥2 hours) may indicate:"
+msgstr "Los períodos prolongados de inactividad (≥2 horas) pueden indicar:"
+
+#: templates/user_detail.html:565
+msgid "Excessive sedentary behavior"
+msgstr "Comportamiento sedentario excesivo"
+
+#: templates/user_detail.html:566
+msgid "Possible mobility issues"
+msgstr "Posibles problemas de movilidad"
+
+#: templates/user_detail.html:567
+msgid "Undetected falls or emergency situations"
+msgstr "Caídas no detectadas o situaciones de emergencia"
+
+#: templates/user_detail.html:568
+msgid "Changes in daily routines that require attention"
+msgstr "Cambios en las rutinas diarias que requieren atención"
+
+#: templates/user_detail.html:577
+msgid "Periods without activity"
+msgstr "Períodos sin actividad"
+
+#: templates/user_detail.html:578
+msgid "Low activity (≤100 steps/hour)"
+msgstr "Baja actividad (≤100 pasos/hora)"
+
+#: templates/user_detail.html:579
+msgid "Normal activity"
+msgstr "Actividad normal"
+
+#: templates/user_detail.html:585
+msgid "Detected inactivity periods:"
+msgstr "Períodos de inactividad detectados:"
+
+#: templates/user_detail.html:589
+msgid "Loading..."
+msgstr "Cargando..."
+
+#: templates/user_detail.html:989
+msgid "Mon"
+msgstr "Lun"
+
+#: templates/user_detail.html:989
+msgid "Tue"
+msgstr "Mar"
+
+#: templates/user_detail.html:989
+msgid "Wed"
+msgstr "Mié"
+
+#: templates/user_detail.html:989
+msgid "Thu"
+msgstr "Jue"
+
+#: templates/user_detail.html:989
+msgid "Fri"
+msgstr "Vie"
+
+#: templates/user_detail.html:989
+msgid "Sat"
+msgstr "Sáb"
+
+#: templates/user_detail.html:989
+msgid "Sun"
+msgstr "Dom"
+
+#: templates/user_detail.html:1080
+msgid "No data available for the selected date."
+msgstr "No hay datos disponibles para la fecha seleccionada."
+
+#: templates/user_stats.html:3
+msgid "Lively Ageing - User Statistics"
+msgstr "Lively Ageing - Estadísticas de Usuarios"
+
+#: templates/user_stats.html:9
+msgid "User Statistics"
+msgstr "Estadísticas de Usuarios"
+
+#: templates/user_stats.html:10
+msgid "View and manage all users in the system."
+msgstr "Ver y gestionar todos los usuarios en el sistema."
+
+#: templates/user_stats.html:17
+msgid "Search by name or email"
+msgstr "Buscar por nombre o email"
+
+#: templates/user_stats.html:18
+msgid "Search"
+msgstr "Buscar"
+
+#: templates/user_stats.html:28
+msgid "Active Users"
+msgstr "Usuarios Activos"
+
+#: templates/user_stats.html:35
+msgid "Name"
+msgstr "Nombre"
+
+#: templates/user_stats.html:37 templates/user_stats.html:130
+msgid "Last Sync"
+msgstr "Última Sincronización"
+
+#: templates/user_stats.html:51 templates/user_stats.html:150
+msgid "No data"
+msgstr "Sin datos"
+
+#: templates/user_stats.html:59
+msgid "Unlink user"
+msgstr "Desvincular usuario"
+
+#: templates/user_stats.html:60 templates/user_stats.html:203
+msgid "Unlink"
+msgstr "Desvincular"
+
+#: templates/user_stats.html:80
+msgid "Unassigned Users"
+msgstr "Usuarios Sin Asignar"
+
+#: templates/user_stats.html:89
+msgid "Registration Date"
+msgstr "Fecha de Registro"
+
+#: templates/user_stats.html:98
+msgid "Unassigned"
+msgstr "Sin Asignar"
+
+#: templates/user_stats.html:102 templates/user_stats.html:167
+msgid "Assign User"
+msgstr "Asignar Usuario"
+
+#: templates/user_stats.html:121
+msgid "User History"
+msgstr "Historial de Usuarios"
+
+#: templates/user_stats.html:128
+msgid "Name (Old)"
+msgstr "Nombre (Antiguo)"
+
+#: templates/user_stats.html:142 templates/user_stats.html:155
+msgid "Unlinked"
+msgstr "Desvinculado"
+
+#: templates/user_stats.html:157
+msgid "Historical"
+msgstr "Histórico"
+
+#: templates/user_stats.html:172
+msgid "View History"
+msgstr "Ver Historial"
+
+#: templates/user_stats.html:193
+msgid "Unlink User"
+msgstr "Desvincular Usuario"
+
+#: templates/user_stats.html:197
+msgid "Are you sure you want to unlink"
+msgstr "¿Estás seguro de que quieres desvincular a"
+
+#: venv/Lib/site-packages/click/_termui_impl.py:556
+#, python-brace-format
+msgid "{editor}: Editing failed"
+msgstr ""
+
+#: venv/Lib/site-packages/click/_termui_impl.py:560
+#, python-brace-format
+msgid "{editor}: Editing failed: {e}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1124
+msgid "Aborted!"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1349
+#: venv/Lib/site-packages/click/core.py:1379
+#, python-brace-format
+msgid "(Deprecated) {text}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1396
+#, fuzzy
+msgid "Options"
+msgstr "Acciones"
+
+#: venv/Lib/site-packages/click/core.py:1422
+#, python-brace-format
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/core.py:1438
+#, python-brace-format
+msgid "DeprecationWarning: The command {name!r} is deprecated."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1645
+#, fuzzy
+msgid "Commands"
+msgstr "Español"
+
+#: venv/Lib/site-packages/click/core.py:1677
+#, fuzzy
+msgid "Missing command."
+msgstr "Dato faltante"
+
+#: venv/Lib/site-packages/click/core.py:1755
+#, python-brace-format
+msgid "No such command {name!r}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2313
+msgid "Value must be an iterable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2334
+#, python-brace-format
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/core.py:2783
+#, python-brace-format
+msgid "env var: {var}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2813
+msgid "(dynamic)"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2828
+#, python-brace-format
+msgid "default: {default}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2841
+msgid "required"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:457
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:520
+msgid "Show the version and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:541
+msgid "Show this message and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:49
+#: venv/Lib/site-packages/click/exceptions.py:88
+#, python-brace-format
+msgid "Error: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:80
+#, python-brace-format
+msgid "Try '{command} {option}' for help."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:129
+#, python-brace-format
+msgid "Invalid value: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:131
+#, python-brace-format
+msgid "Invalid value for {param_hint}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:187
+#, fuzzy
+msgid "Missing argument"
+msgstr "Dato faltante"
+
+#: venv/Lib/site-packages/click/exceptions.py:189
+#, fuzzy
+msgid "Missing option"
+msgstr "Dato faltante"
+
+#: venv/Lib/site-packages/click/exceptions.py:191
+#, fuzzy
+msgid "Missing parameter"
+msgstr "Dato faltante"
+
+#: venv/Lib/site-packages/click/exceptions.py:193
+#, fuzzy, python-brace-format
+msgid "Missing {param_type}"
+msgstr "Dato faltante"
+
+#: venv/Lib/site-packages/click/exceptions.py:200
+#, python-brace-format
+msgid "Missing parameter: {param_name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:220
+#, python-brace-format
+msgid "No such option: {name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:232
+#, python-brace-format
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/exceptions.py:270
+msgid "unknown error"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:277
+#, python-brace-format
+msgid "Could not open file {filename!r}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/formatting.py:156
+#, fuzzy
+msgid "Usage:"
+msgstr "Usuario:"
+
+#: venv/Lib/site-packages/click/parser.py:233
+#, python-brace-format
+msgid "Argument {name!r} takes {nargs} values."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:415
+#, python-brace-format
+msgid "Option {name!r} does not take a value."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:476
+#, python-brace-format
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:326
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:158
+#, fuzzy
+msgid "Repeat for confirmation"
+msgstr "Confirmación de Vinculación de Dispositivo"
+
+#: venv/Lib/site-packages/click/termui.py:174
+msgid "Error: The value you entered was invalid."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:176
+#, python-brace-format
+msgid "Error: {e.message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:187
+msgid "Error: The two entered values do not match."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:243
+#, fuzzy
+msgid "Error: invalid input"
+msgstr "Entrada inválida"
+
+#: venv/Lib/site-packages/click/termui.py:773
+msgid "Press any key to continue..."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:267
+#, python-brace-format
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:299
+#, python-brace-format
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/types.py:393
+#, python-brace-format
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/types.py:415
+#, python-brace-format
+msgid "{value!r} is not a valid {number_type}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:471
+#, python-brace-format
+msgid "{value} is not in the range {range}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:612
+#, python-brace-format
+msgid "{value!r} is not a valid boolean."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:636
+#, python-brace-format
+msgid "{value!r} is not a valid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:826
+#, fuzzy
+msgid "file"
+msgstr "Filtrar"
+
+#: venv/Lib/site-packages/click/types.py:828
+msgid "directory"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:830
+#, fuzzy
+msgid "path"
+msgstr "a las"
+
+#: venv/Lib/site-packages/click/types.py:881
+#, python-brace-format
+msgid "{name} {filename!r} does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:890
+#, python-brace-format
+msgid "{name} {filename!r} is a file."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:898
+#, python-brace-format
+msgid "{name} {filename!r} is a directory."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:907
+#, python-brace-format
+msgid "{name} {filename!r} is not readable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:916
+#, python-brace-format
+msgid "{name} {filename!r} is not writable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:925
+#, python-brace-format
+msgid "{name} {filename!r} is not executable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:992
+#, python-brace-format
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:408
+#, python-format
+msgid "Content purported to be compressed with %s but failed to decompress."
+msgstr ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:572
+#, python-format
+msgid "Unsupported value for qop: %s."
+msgstr ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:576
+#: venv/Lib/site-packages/httplib2/__init__.py:654
+#, python-format
+msgid "Unsupported value for algorithm: %s.algorithm"
+msgstr ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:649
+msgid "The challenge doesn't contain a server nonce, or this one is empty."
+msgstr ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:659
+#, python-format
+msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
+msgstr ""
+
+#: venv/Lib/site-packages/httplib2/__init__.py:1468
+msgid "Redirected but the response is missing a Location: header."
+msgstr ""
+
+#~ msgid "common.welcome"
+#~ msgstr "Bienvenido"
+
+#~ msgid "common.login"
+#~ msgstr "Iniciar sesión"
+
+#~ msgid "common.logout"
+#~ msgstr "Cerrar sesión"
+
+#~ msgid "common.register"
+#~ msgstr "Registrarse"
+
+#~ msgid "common.profile"
+#~ msgstr "Perfil"
+
+#~ msgid "common.dashboard"
+#~ msgstr "Panel de control"
+
+#~ msgid "common.alerts_dashboard"
+#~ msgstr "Panel de alertas"
+
+#~ msgid "common.settings"
+#~ msgstr "Configuración"
+
+#~ msgid "common.save"
+#~ msgstr "Guardar"
+
+#~ msgid "common.cancel"
+#~ msgstr "Cancelar"
+
+#~ msgid "common.delete"
+#~ msgstr "Eliminar"
+
+#~ msgid "common.edit"
+#~ msgstr "Editar"
+
+#~ msgid "common.loading"
+#~ msgstr "Cargando..."
+
+#~ msgid "common.error"
+#~ msgstr "Error"
+
+#~ msgid "common.success"
+#~ msgstr "Éxito"
+
+#~ msgid "common.confirm"
+#~ msgstr "Confirmar"
+
+#~ msgid "common.language"
+#~ msgstr "Idioma"
+
+#~ msgid "common.english"
+#~ msgstr "Inglés"
+
+#~ msgid "common.user"
+#~ msgstr "Usuario"
+
+#~ msgid "common.date"
+#~ msgstr "Fecha"
+
+#~ msgid "common.time"
+#~ msgstr "Hora"
+
+#~ msgid "common.type"
+#~ msgstr "Tipo"
+
+#~ msgid "common.value"
+#~ msgstr "Valor"
+
+#~ msgid "common.actions"
+#~ msgstr "Acciones"
+
+#~ msgid "common.name"
+#~ msgstr "Nombre"
+
+#~ msgid "common.email"
+#~ msgstr "Correo electrónico"
+
+#~ msgid "common.created_at"
+#~ msgstr "Fecha de creación"
+
+#~ msgid "common.back"
+#~ msgstr "Volver"
+
+#~ msgid "common.refresh"
+#~ msgstr "Actualizar"
+
+#~ msgid "common.export"
+#~ msgstr "Exportar"
+
+#~ msgid "common.filter"
+#~ msgstr "Filtrar"
+
+#~ msgid "common.search"
+#~ msgstr "Buscar"
+
+#~ msgid "common.details"
+#~ msgstr "Detalles"
+
+#~ msgid "common.status"
+#~ msgstr "Estado"
+
+#~ msgid "common.priority"
+#~ msgstr "Prioridad"
+
+#~ msgid "common.threshold"
+#~ msgstr "Umbral"
+
+#~ msgid "common.notes"
+#~ msgstr "Notas"
+
+#~ msgid "common.acknowledge"
+#~ msgstr "Reconocer"
+
+#~ msgid "common.acknowledged"
+#~ msgstr "Reconocida"
+
+#~ msgid "common.pending"
+#~ msgstr "Pendiente"
+
+#~ msgid "common.urgent"
+#~ msgstr "Urgente"
+
+#~ msgid "common.high"
+#~ msgstr "Alta"
+
+#~ msgid "common.medium"
+#~ msgstr "Media"
+
+#~ msgid "common.low"
+#~ msgstr "Baja"
+
+#~ msgid "common.sync_status.ok"
+#~ msgstr "Datos actualizados"
+
+#~ msgid "common.sync_status.warning"
+#~ msgstr "Datos desactualizados"
+
+#~ msgid "common.sync_status.critical"
+#~ msgstr "Sin datos recientes"
+
+#~ msgid "common.sync_status.never"
+#~ msgstr "Nunca sincronizado"
+
+#~ msgid "auth.email"
+#~ msgstr "Correo electrónico"
+
+#~ msgid "auth.remember_me"
+#~ msgstr "Recordarme"
+
+#~ msgid "auth.forgot_password"
+#~ msgstr "¿Olvidaste tu contraseña?"
+
+#~ msgid "auth.login_success"
+#~ msgstr "Has iniciado sesión correctamente"
+
+#~ msgid "auth.login_error"
+#~ msgstr "Error al iniciar sesión"
+
+#~ msgid "auth.logout_success"
+#~ msgstr "Has cerrado sesión correctamente"
+
+#~ msgid "dashboard.daily_summary"
+#~ msgstr "Resumen diario"
+
+#~ msgid "dashboard.steps"
+#~ msgstr "Pasos"
+
+#~ msgid "dashboard.distance"
+#~ msgstr "Distancia"
+
+#~ msgid "dashboard.calories"
+#~ msgstr "Calorías"
+
+#~ msgid "dashboard.active_minutes"
+#~ msgstr "Minutos activos"
+
+#~ msgid "dashboard.sedentary_minutes"
+#~ msgstr "Minutos sedentarios"
+
+#~ msgid "dashboard.heart_rate"
+#~ msgstr "Ritmo cardíaco"
+
+#~ msgid "dashboard.sleep"
+#~ msgstr "Sueño"
+
+#~ msgid "dashboard.sleep_efficiency"
+#~ msgstr "Eficiencia del sueño"
+
+#~ msgid "dashboard.refresh_data"
+#~ msgstr "Actualizar datos"
+
+#~ msgid "dashboard.last_sync"
+#~ msgstr "Última sincronización"
+
+#~ msgid "dashboard.no_data"
+#~ msgstr "No hay datos disponibles"
+
+#~ msgid "dashboard.intraday_metrics"
+#~ msgstr "Métricas intradiarias"
+
+#~ msgid "dashboard.floors"
+#~ msgstr "Plantas"
+
+#~ msgid "dashboard.sleep_start"
+#~ msgstr "Hora de inicio"
+
+#~ msgid "dashboard.sleep_end"
+#~ msgstr "Hora de fin"
+
+#~ msgid "dashboard.sleep_duration"
+#~ msgstr "Duración"
+
+#~ msgid "dashboard.deep_sleep"
+#~ msgstr "Sueño profundo"
+
+#~ msgid "dashboard.light_sleep"
+#~ msgstr "Sueño ligero"
+
+#~ msgid "dashboard.rem_sleep"
+#~ msgstr "Sueño REM"
+
+#~ msgid "dashboard.awake"
+#~ msgstr "Despierto"
+
+#~ msgid "dashboard.elevation"
+#~ msgstr "Elevación"
+
+#~ msgid "fitbit.link_device"
+#~ msgstr "Vincular dispositivo Fitbit"
+
+#~ msgid "fitbit.unlink_device"
+#~ msgstr "Desvincular dispositivo"
+
+#~ msgid "fitbit.sync_data"
+#~ msgstr "Sincronizar datos"
+
+#~ msgid "fitbit.sync_success"
+#~ msgstr "Datos sincronizados correctamente"
+
+#~ msgid "fitbit.sync_error"
+#~ msgstr "Error al sincronizar datos"
+
+#~ msgid "fitbit.device_linked"
+#~ msgstr "Dispositivo vinculado correctamente"
+
+#~ msgid "fitbit.device_unlinked"
+#~ msgstr "Dispositivo desvinculado correctamente"
+
+#~ msgid "fitbit.select_email"
+#~ msgstr "Seleccionar un correo electrónico"
+
+#~ msgid "fitbit.authorize_fitbit"
+#~ msgstr "Autorizar Fitbit"
+
+#~ msgid "fitbit.authorizing"
+#~ msgstr "Autorizando..."
+
+#~ msgid "fitbit.device_linking_confirmation"
+#~ msgstr "Confirmación de vinculación de dispositivo"
+
+#~ msgid "fitbit.linking_successful"
+#~ msgstr "¡Vinculación exitosa!"
+
+#~ msgid "fitbit.device_linked_success"
+#~ msgstr "El dispositivo Fitbit ha sido vinculado exitosamente."
+
+#~ msgid "fitbit.return_home"
+#~ msgstr "Volver al inicio"
+
+#~ msgid "fitbit.reassign_device"
+#~ msgstr "Reasignar dispositivo Fitbit"
+
+#~ msgid "fitbit.reassign_device_message"
+#~ msgstr "El correo ya está siendo usado por"
+
+#~ msgid "fitbit.reassign_question"
+#~ msgstr "¿Deseas reasignar el reloj a una nueva persona?"
+
+#~ msgid "fitbit.new_user_name"
+#~ msgstr "Nombre del nuevo usuario"
+
+#~ msgid "fitbit.select_fitbit_email"
+#~ msgstr "Seleccionar correo de Fitbit"
+
+#~ msgid "fitbit.select_email_placeholder"
+#~ msgstr "Seleccionar correo..."
+
+#~ msgid "fitbit.email_device_info"
+#~ msgstr ""
+#~ "Cada correo está vinculado a un "
+#~ "dispositivo Fitbit. Cuando se autorice, "
+#~ "los datos se asignarán al usuario "
+#~ "seleccionado."
+
+#~ msgid "fitbit.missing_email"
+#~ msgstr "¿Falta un correo? Añadir nuevo"
+
+#~ msgid "fitbit.add_new_email"
+#~ msgstr "Añadir nuevo correo"
+
+#~ msgid "fitbit.email_address"
+#~ msgstr "Dirección de correo"
+
+#~ msgid "fitbit.email_add_instruction"
+#~ msgstr "Por favor, ingrese el correo electrónico para añadir al sistema."
+
+#~ msgid "fitbit.add_email"
+#~ msgstr "Añadir correo"
+
+#~ msgid "fitbit.cancel"
+#~ msgstr "Cancelar"
+
+#~ msgid "user.user_statistics"
+#~ msgstr "Estadísticas de usuario"
+
+#~ msgid "user.view_statistics"
+#~ msgstr "Ver estadísticas de todos los usuarios en el sistema."
+
+#~ msgid "user.user_details"
+#~ msgstr "Detalles del usuario"
+
+#~ msgid "user.detailed_info"
+#~ msgstr "Información detallada para"
+
+#~ msgid "user.user_information"
+#~ msgstr "Información del usuario"
+
+#~ msgid "user.no_users_found"
+#~ msgstr "No se encontraron usuarios."
+
+#~ msgid "user.no_daily_summaries"
+#~ msgstr "No se encontraron resúmenes diarios."
+
+#~ msgid "user.no_intraday_metrics"
+#~ msgstr "No se encontraron métricas intradiarias."
+
+#~ msgid "user.view_details"
+#~ msgstr "Ver detalles"
+
+#~ msgid "user.search_placeholder"
+#~ msgstr "Buscar por nombre o email"
+
+#~ msgid "user.search_button"
+#~ msgstr "Buscar"
+
+#~ msgid "user.active_users"
+#~ msgstr "Usuarios Activos"
+
+#~ msgid "user.unassigned_users"
+#~ msgstr "Usuarios Sin Asignar"
+
+#~ msgid "user.user_history"
+#~ msgstr "Historial de Usuarios"
+
+#~ msgid "user.last_sync"
+#~ msgstr "Última Sincronización"
+
+#~ msgid "user.no_data"
+#~ msgstr "Sin datos"
+
+#~ msgid "user.unlink_user"
+#~ msgstr "Desvincular usuario"
+
+#~ msgid "user.assign_user"
+#~ msgstr "Asignar usuario"
+
+#~ msgid "user.view_history"
+#~ msgstr "Ver Historial"
+
+#~ msgid "user.unlinked"
+#~ msgstr "Desvinculado"
+
+#~ msgid "user.historical"
+#~ msgstr "Histórico"
+
+#~ msgid "user.unlink_confirmation"
+#~ msgstr "¿Estás seguro de que quieres desvincular a {name}?"
+
+#~ msgid "user.cancel"
+#~ msgstr "Cancelar"
+
+#~ msgid "user.unlink"
+#~ msgstr "Desvincular"
+
+#~ msgid "user.registration_date"
+#~ msgstr "Fecha de Registro"
+
+#~ msgid "user.unassigned"
+#~ msgstr "Sin asignar"
+
+#~ msgid "home.welcome_message"
+#~ msgstr "Bienvenido a Lively Ageing"
+
+#~ msgid "home.app_description"
+#~ msgstr "Monitorea y gestiona datos de actividad física de usuarios Fitbit"
+
+#~ msgid "home.link_device"
+#~ msgstr "Vincular Dispositivo"
+
+#~ msgid "home.link_device_desc"
+#~ msgstr ""
+#~ "Conecta un nuevo dispositivo Fitbit o"
+#~ " reasigna uno existente a un usuario"
+
+#~ msgid "home.alert_dashboard"
+#~ msgstr "Panel de Alertas"
+
+#~ msgid "home.alert_dashboard_desc"
+#~ msgstr "Ver un resumen general de los datos más recientes de todos los usuarios"
+
+#~ msgid "home.users"
+#~ msgstr "Usuarios"
+
+#~ msgid "home.users_desc"
+#~ msgstr "Accede a estadísticas detalladas para cada usuario individual"
+
+#~ msgid "home.recent_activity"
+#~ msgstr "Actividad Reciente"
+
+#~ msgid "home.user"
+#~ msgstr "Usuario"
+
+#~ msgid "home.email"
+#~ msgstr "Correo electrónico"
+
+#~ msgid "home.last_update"
+#~ msgstr "Última actualización"
+
+#~ msgid "home.state"
+#~ msgstr "Estado"
+
+#~ msgid "home.actions"
+#~ msgstr "Acciones"
+
+#~ msgid "home.view_details"
+#~ msgstr "Ver detalles"
+
+#~ msgid "home.sync_status.ok"
+#~ msgstr "OK"
+
+#~ msgid "home.sync_status.ok_desc"
+#~ msgstr "Datos actualizados en las últimas 24h"
+
+#~ msgid "home.sync_status.warning"
+#~ msgstr "Atención"
+
+#~ msgid "home.sync_status.warning_desc"
+#~ msgstr "Sin datos en las últimas 24-72h"
+
+#~ msgid "home.sync_status.critical"
+#~ msgstr "Crítico"
+
+#~ msgid "home.sync_status.critical_desc"
+#~ msgstr "Sin datos en más de 72h"
+
+#~ msgid "home.sync_status.no_data"
+#~ msgstr "Sin datos"
+
+#~ msgid "home.sync_status.no_data_desc"
+#~ msgstr "Nunca sincronizado"
+
+#~ msgid "home.add_new_user"
+#~ msgstr "Añadir nuevo usuario"
+
+#~ msgid "home.loading"
+#~ msgstr "Cargando..."
+
+#~ msgid "home.error_loading"
+#~ msgstr "Error al cargar los datos"
+
+#~ msgid "home.no_recent_activity"
+#~ msgstr "No hay actividad reciente"
+
+#~ msgid "home.dashboard_preload.success"
+#~ msgstr "Datos del panel precargados correctamente"
+
+#~ msgid "home.dashboard_preload.error"
+#~ msgstr "Error al precargar datos del panel"
+
+#~ msgid "home.dashboard_preload.checking"
+#~ msgstr "Comprobando actualizaciones..."
+
+#~ msgid "home.dashboard_preload.new_updates"
+#~ msgstr "Hay nuevas actualizaciones disponibles"
+
+#~ msgid "home.dashboard_preload.refreshing"
+#~ msgstr "Actualizando datos..."
+
+#~ msgid "errors.invalid_credentials"
+#~ msgstr "Usuario o contraseña incorrectos"
+
+#~ msgid "errors.fetch_home_data"
+#~ msgstr "No se pudieron obtener los datos para la página de inicio"
+
+#~ msgid "errors.db_connection"
+#~ msgstr "No se pudo conectar a la base de datos"
+
+#~ msgid "errors.fetch_stats"
+#~ msgstr "No se pudieron obtener las estadísticas de usuarios"
+
+#~ msgid "errors.user_not_found"
+#~ msgstr "Usuario no encontrado"
+
+#~ msgid "errors.fetch_user_details"
+#~ msgstr "No se pudieron obtener los detalles del usuario"
+
+#~ msgid "errors.email_required"
+#~ msgstr "Por favor, proporciona un email"
+
+#~ msgid "errors.invalid_state"
+#~ msgstr "Parámetro de estado inválido. Posible ataque CSRF"
+
+#~ msgid "errors.email_missing"
+#~ msgstr "No se proporcionó un correo electrónico. Por favor, inténtalo de nuevo"
+
+#~ msgid "errors.username_missing"
+#~ msgstr "No se proporcionó un nombre de usuario. Por favor, inténtalo de nuevo"
+
+#~ msgid "errors.auth_problem"
+#~ msgstr "Problema de autorización. Por favor, inténtalo de nuevo"
+
+#~ msgid "errors.auth_code_missing"
+#~ msgstr ""
+#~ "No se proporcionó un código de "
+#~ "autorización. Por favor, inténtalo de "
+#~ "nuevo"
+
+#~ msgid "errors.auth_required"
+#~ msgstr "Se requiere autorización para reasignar el dispositivo"
+
+#~ msgid "errors.username_required"
+#~ msgstr "Se requiere un nombre de usuario para reasignar el dispositivo"
+
+#~ msgid "errors.auth_required_new"
+#~ msgstr "Se requiere autorización para vincular un nuevo correo"
+
+#~ msgid "errors.username_required_new"
+#~ msgstr "Se requiere un nombre de usuario para vincular un nuevo correo"
+
+#~ msgid "errors.token_exchange"
+#~ msgstr "Error durante el intercambio de tokens: {error}"
+
+#~ msgid "errors.email_not_in_use"
+#~ msgstr "El correo no está en uso"
+
+#~ msgid "errors.generic_error"
+#~ msgstr "Error: {error}"
+
+#~ msgid "errors.invalid_value"
+#~ msgstr "El valor ingresado no es válido"
+
+#~ msgid "errors.values_not_match"
+#~ msgstr "Los valores ingresados no coinciden"
+
+#~ msgid "errors.preload_error"
+#~ msgstr "Error al precargar datos del panel"
+
+#~ msgid "errors.update_check_error"
+#~ msgstr "Error al comprobar actualizaciones"
+
+#~ msgid "errors.refresh_error"
+#~ msgstr "Error al actualizar los datos"
+
+#~ msgid "alerts.dashboard.title"
+#~ msgstr "Dashboard de Alertas Médicas"
+
+#~ msgid "alerts.dashboard.summary"
+#~ msgstr "Resumen de Alertas"
+
+#~ msgid "alerts.dashboard.high_priority"
+#~ msgstr "Alertas de Alta Prioridad"
+
+#~ msgid "alerts.dashboard.medium_priority"
+#~ msgstr "Alertas de Media Prioridad"
+
+#~ msgid "alerts.dashboard.low_priority"
+#~ msgstr "Alertas de Baja Prioridad"
+
+#~ msgid "alerts.dashboard.unacknowledged"
+#~ msgstr "Alertas No Reconocidas"
+
+#~ msgid "alerts.dashboard.filters.date_from"
+#~ msgstr "Fecha Desde"
+
+#~ msgid "alerts.dashboard.filters.date_to"
+#~ msgstr "Fecha Hasta"
+
+#~ msgid "alerts.dashboard.filters.user"
+#~ msgstr "Usuario"
+
+#~ msgid "alerts.dashboard.filters.priority"
+#~ msgstr "Prioridad"
+
+#~ msgid "alerts.dashboard.filters.status"
+#~ msgstr "Estado"
+
+#~ msgid "alerts.dashboard.filters.all"
+#~ msgstr "Todos"
+
+#~ msgid "alerts.dashboard.filters.unacknowledged"
+#~ msgstr "No Reconocidas"
+
+#~ msgid "alerts.dashboard.filters.acknowledged"
+#~ msgstr "Reconocidas"
+
+#~ msgid "alerts.dashboard.table.datetime"
+#~ msgstr "Fecha/Hora"
+
+#~ msgid "alerts.dashboard.table.user"
+#~ msgstr "Usuario"
+
+#~ msgid "alerts.dashboard.table.type"
+#~ msgstr "Tipo de Alerta"
+
+#~ msgid "alerts.dashboard.table.priority"
+#~ msgstr "Prioridad"
+
+#~ msgid "alerts.dashboard.table.status"
+#~ msgstr "Estado"
+
+#~ msgid "alerts.dashboard.table.actions"
+#~ msgstr "Acciones"
+
+#~ msgid "alerts.dashboard.modal.title"
+#~ msgstr "Detalles de la Alerta"
+
+#~ msgid "alerts.dashboard.modal.triggering_value"
+#~ msgstr "Valor Disparador"
+
+#~ msgid "alerts.dashboard.modal.threshold_value"
+#~ msgstr "Umbral"
+
+#~ msgid "alerts.dashboard.modal.time_since"
+#~ msgstr "Tiempo desde alerta"
+
+#~ msgid "alerts.dashboard.modal.hours"
+#~ msgstr "horas"
+
+#~ msgid "alerts.dashboard.modal.doctor_note"
+#~ msgstr "Nota del médico"
+
+#~ msgid "alerts.dashboard.modal.add_note"
+#~ msgstr "Añade una nota sobre la acción tomada..."
+
+#~ msgid "alerts.dashboard.modal.intraday_data"
+#~ msgstr "Datos Intradía (Últimas 24h)"
+
+#~ msgid "alerts.dashboard.export.title"
+#~ msgstr "Exportar a CSV"
+
+#~ msgid "alerts.dashboard.export.filename"
+#~ msgstr "alertas_{date}.csv"
+
+#~ msgid "alerts.types.activity_drop"
+#~ msgstr "Caída de Actividad"
+
+#~ msgid "alerts.types.sedentary_increase"
+#~ msgstr "Aumento de Tiempo Sedentario"
+
+#~ msgid "alerts.types.sleep_duration_change"
+#~ msgstr "Cambio en Duración del Sueño"
+
+#~ msgid "alerts.types.heart_rate_anomaly"
+#~ msgstr "Anomalía en Frecuencia Cardíaca"
+
+#~ msgid "alerts.types.data_quality"
+#~ msgstr "Calidad de Datos"
+
+#~ msgid "alerts.types.intraday_anomaly"
+#~ msgstr "Anomalía en Datos Intradía"
+
+#~ msgid "alerts.messages.acknowledge_success"
+#~ msgstr "Alerta reconocida correctamente"
+
+#~ msgid "alerts.messages.acknowledge_error"
+#~ msgstr "Error al reconocer la alerta"
+
+#~ msgid "alerts.messages.load_error"
+#~ msgstr "Error al cargar los detalles de la alerta"
+
+#~ msgid "alerts.messages.export_error"
+#~ msgstr "Error al exportar las alertas"
+
+#~ msgid "alerts.messages.no_alerts"
+#~ msgstr "No hay alertas que coincidan con los filtros"
+
+#~ msgid "sync.status.ok"
+#~ msgstr "Datos actualizados en las últimas 24h"
+
+#~ msgid "sync.status.warning"
+#~ msgstr "Sin datos en 24-72h"
+
+#~ msgid "sync.status.critical"
+#~ msgstr "Sin datos en más de 72h"
+
+#~ msgid "sync.status.never"
+#~ msgstr "Nunca sincronizado"
+
+#~ msgid "sync.actions.sync_now"
+#~ msgstr "Sincronizar ahora"
+
+#~ msgid "sync.actions.last_sync"
+#~ msgstr "Última sincronización"
+
+#~ msgid "sync.actions.sync_error"
+#~ msgstr "Error en la sincronización"
+
+#~ msgid "sync.actions.sync_success"
+#~ msgstr "Sincronización completada"
+
+#~ msgid "No activity at"
+#~ msgstr "Sin actividad a las"
+
+#~ msgid "Low activity"
+#~ msgstr "Baja actividad"
+
+#~ msgid "steps"
+#~ msgstr "pasos"
+
+#~ msgid "Time of day"
+#~ msgstr "Hora del día"
+
+#~ msgid "Steps per interval"
+#~ msgstr "Pasos por intervalo"
+
+#~ msgid "Error processing data"
+#~ msgstr "Error al procesar datos"
+
+#~ msgid "Error loading inactivity data"
+#~ msgstr "Error al cargar datos de inactividad"
+
+#~ msgid "No significant periods of inactivity detected."
+#~ msgstr "No se detectaron períodos significativos de inactividad."
+
+#~ msgid "1 interval"
+#~ msgstr "1 intervalo"
+
+#~ msgid "intervals"
+#~ msgstr "intervalos"
+
+#~ msgid "No activity from"
+#~ msgstr "Sin actividad desde"
+
+#~ msgid "to"
+#~ msgstr "hasta"
+
+#~ msgid "Below Average Physical Activity"
+#~ msgstr "Actividad física por debajo del promedio"
+
+#~ msgid "Prolonged Period Without Activity"
+#~ msgstr "Período prolongado sin actividad"
+
+#~ msgid "Prolonged periods of inactivity (≥2 hours) can indicate:"
+#~ msgstr "Los periodos de inactividad prolongada (≥2 horas) pueden indicar:"
+
+#~ msgid "Excessive sedentary patterns"
+#~ msgstr "Patrones de sedentarismo excesivo"
+
+#~ msgid "Unnoticed falls or emergency situations"
+#~ msgstr "Caídas o situaciones de emergencia no detectadas"
+
+#~ msgid "Changes in daily habits that require attention"
+#~ msgstr "Cambios en los hábitos diarios que requieren atención"
+
+#~ msgid "Periods Without Activity"
+#~ msgstr "Períodos sin actividad"
+
+#~ msgid "Low Activity (≤100 steps/hour)"
+#~ msgstr "Baja actividad (≤100 pasos/hora)"
+
+#~ msgid "Normal Activity"
+#~ msgstr "Actividad normal"
+
+#~ msgid "Detected Inactivity Periods:"
+#~ msgstr "Períodos de inactividad detectados:"
+
+#~ msgid ""
+#~ "Important data with zero values: "
+#~ "possible device or synchronization issue"
+#~ msgstr ""
+#~ "Datos importantes con valor cero: "
+#~ "posible problema con el dispositivo o"
+#~ " la sincronización"
+
+#~ msgid "Inactivity period detected"
+#~ msgstr "Período de inactividad detectado"
+
+#~ msgid ""
+#~ "Prolonged periods of inactivity (≥2 "
+#~ "hours) in elderly are associated with:"
+#~ msgstr ""
+#~ "Los períodos prolongados de inactividad "
+#~ "(≥2 horas) en ancianos están asociados"
+#~ " con:"
+
+#~ msgid "Increased risk of cardiovascular events"
+#~ msgstr "Mayor riesgo de eventos cardiovasculares"
+
+#~ msgid "Accelerated loss of muscle mass and strength (sarcopenia)"
+#~ msgstr "Pérdida acelerada de masa muscular y fuerza (sarcopenia)"
+
+#~ msgid "Deterioration of functional capacity and increased risk of falls"
+#~ msgstr "Deterioro de la capacidad funcional y mayor riesgo de caídas"
+
+#~ msgid "Recommendation"
+#~ msgstr "Recomendación"
+
+#~ msgid ""
+#~ "Verify if the user was sleeping "
+#~ "during this interval or if it "
+#~ "represents abnormal inactivity that requires"
+#~ " follow-up."
+#~ msgstr ""
+#~ "Verificar si el usuario estaba durmiendo"
+#~ " durante este intervalo o si "
+#~ "representa una inactividad anormal que "
+#~ "requiere seguimiento."
+
+#~ msgid "Value out of range"
+#~ msgstr "Valor fuera de rango"
+
+#~ msgid "intraday_activity_drop"
+#~ msgstr "Caída de actividad intradía"
+
+#~ msgid "heart_rate_anomaly"
+#~ msgstr "Anomalía en frecuencia cardíaca"
+
+#~ msgid "sleep_duration_change"
+#~ msgstr "Cambio en duración del sueño"
+
+#~ msgid "activity_drop"
+#~ msgstr "Caída de actividad"
+
+#~ msgid "No steps between"
+#~ msgstr "Sin pasos entre"
+
+#~ msgid "Moderate increase in sedentary time"
+#~ msgstr "Aumento moderado en tiempo sedentario"
+
+#~ msgid "from"
+#~ msgstr "de"
+
+#~ msgid "minutes"
+#~ msgstr "minutos"
+
+#~ msgid "sleep_minutes"
+#~ msgstr "minutos de sueño"
+
+#~ msgid "heart_rate"
+#~ msgstr "frecuencia cardíaca"
+
+#~ msgid "calories"
+#~ msgstr "calorías"
+
+#~ msgid "sedentary_minutes"
+#~ msgstr "minutos sedentarios"
+
+#~ msgid "active_minutes"
+#~ msgstr "minutos activos"
+
+#~ msgid "alerts.data_quality.zero_values"
+#~ msgstr ""
+#~ "Datos importantes con valor cero: "
+#~ "posible problema con el dispositivo o"
+#~ " la sincronización"
+
+#~ msgid "alerts.data_quality.out_of_range"
+#~ msgstr "Valor fuera de rango: {value}"
+
+#~ msgid "alerts.data_quality.missing_data"
+#~ msgstr "Dato faltante: {metric}"
+
+#~ msgid "alerts.sedentary_increase.moderate"
+#~ msgstr ""
+#~ "Aumento moderado en tiempo sedentario: "
+#~ "+{percent}% (de {avg} a {current} "
+#~ "minutos)"
+
+#~ msgid "alerts.sedentary_increase.significant"
+#~ msgstr ""
+#~ "Aumento significativo en tiempo sedentario:"
+#~ " +{percent}% (de {avg} a {current} "
+#~ "minutos)"
+
+#~ msgid "Toggle navigation"
+#~ msgstr "Alternar navegación"
+

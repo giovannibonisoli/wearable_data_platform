@@ -1,0 +1,170 @@
+=== RESUMEN DE PRUEBAS DE CALIDAD DE DATOS ===
+
+Usuario 1:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Usuario 2:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Usuario 3:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+    Nota: Las alertas adicionales son correctas según los criterios de calidad de datos
+
+==================================================
+

@@ -1,0 +1,257 @@
+=== LOG DETALLADO DE PRUEBAS DE CALIDAD DE DATOS ===
+
+Usuario 1:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+
+Datos de prueba:
+  steps: None
+  heart_rate: None
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+
+Datos de prueba:
+  steps: 100000
+  heart_rate: 250
+  sleep_minutes: 2000
+  oxygen_saturation: 18.5
+  respiratory_rate: 50
+  temperature: 45.0
+  heart_rate_data: [(datetime.time(10, 0), 250), (datetime.time(11, 0), 30), (datetime.time(12, 0), 250)]
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+
+Datos de prueba:
+  steps: 5000
+  heart_rate: 75
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+  temperature: None
+  heart_rate_data: [(datetime.time(10, 0), 75), (datetime.time(11, 0), 75), (datetime.time(12, 0), 75)]
+  sleep_data: {'start_time': datetime.datetime(2024, 4, 19, 22, 0), 'end_time': datetime.datetime(2024, 4, 20, 6, 0), 'duration_ms': 28800000, 'efficiency': 95, 'minutes_asleep': 480, 'minutes_awake': 20, 'minutes_in_rem': 120, 'minutes_in_light': 240, 'minutes_in_deep': 120}
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Usuario 2:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+
+Datos de prueba:
+  steps: None
+  heart_rate: None
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+
+Datos de prueba:
+  steps: 100000
+  heart_rate: 250
+  sleep_minutes: 2000
+  oxygen_saturation: 18.5
+  respiratory_rate: 50
+  temperature: 45.0
+  heart_rate_data: [(datetime.time(10, 0), 250), (datetime.time(11, 0), 30), (datetime.time(12, 0), 250)]
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+
+Datos de prueba:
+  steps: 5000
+  heart_rate: 75
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+  temperature: None
+  heart_rate_data: [(datetime.time(10, 0), 75), (datetime.time(11, 0), 75), (datetime.time(12, 0), 75)]
+  sleep_data: {'start_time': datetime.datetime(2024, 4, 19, 22, 0), 'end_time': datetime.datetime(2024, 4, 20, 6, 0), 'duration_ms': 28800000, 'efficiency': 95, 'minutes_asleep': 480, 'minutes_awake': 20, 'minutes_in_rem': 120, 'minutes_in_light': 240, 'minutes_in_deep': 120}
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Usuario 3:
+
+Fecha: 2024-04-17 00:00:00
+Escenario: missing_critical
+
+Datos de prueba:
+  steps: None
+  heart_rate: None
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-18 00:00:00
+Escenario: anomalous_values
+
+Datos de prueba:
+  steps: 100000
+  heart_rate: 250
+  sleep_minutes: 2000
+  oxygen_saturation: 18.5
+  respiratory_rate: 50
+  temperature: 45.0
+  heart_rate_data: [(datetime.time(10, 0), 250), (datetime.time(11, 0), 30), (datetime.time(12, 0), 250)]
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+
+Fecha: 2024-04-19 00:00:00
+Escenario: partial_data
+
+Datos de prueba:
+  steps: 5000
+  heart_rate: 75
+  sleep_minutes: None
+  oxygen_saturation: None
+  respiratory_rate: None
+  temperature: None
+  heart_rate_data: [(datetime.time(10, 0), 75), (datetime.time(11, 0), 75), (datetime.time(12, 0), 75)]
+  sleep_data: {'start_time': datetime.datetime(2024, 4, 19, 22, 0), 'end_time': datetime.datetime(2024, 4, 20, 6, 0), 'duration_ms': 28800000, 'efficiency': 95, 'minutes_asleep': 480, 'minutes_awake': 20, 'minutes_in_rem': 120, 'minutes_in_light': 240, 'minutes_in_deep': 120}
+
+Alertas esperadas:
+  - data_quality
+
+Alertas generadas:
+  - activity_drop
+  - sleep_duration_change
+  - sedentary_increase
+  - data_quality
+
+Análisis detallado:
+  ⚠ Diferencias encontradas:
+    - Alertas adicionales: sleep_duration_change, sedentary_increase, activity_drop
+      Justificación:
+
+==================================================
+

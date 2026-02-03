@@ -1,0 +1,452 @@
+=== Detailed Alert Test Results ===
+
+
+User ID: 2
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Activity drop alert triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 2000
+  steps_drop_percent: 81.82
+  avg_active_minutes: 100.5
+  today_active_minutes: 20.5
+  active_minutes_drop_percent: 79.6
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: True
+Triggered: True
+Reason: Sedentary increase alert triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 900
+  increase_percent: 125.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: True
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 300
+  change_percent: -28.57
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: True
+Triggered: True
+Reason: Heart rate anomaly alert triggered
+
+Details:
+  avg_heart_rate: 73.92
+  std_dev: 4.06
+  anomaly_percentage: 7.69
+  max_anomaly_value: 60.0
+  max_anomaly_time: 00:00
+  max_deviation: 13.92
+
+
+Alert Type: data_quality
+--------------------
+Expected: True
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Intraday activity drop alert triggered
+
+Details:
+  zero_streak_start: 00:00
+  zero_streak_end: 07:00
+  zero_streak_duration_hours: 8
+
+
+NORMAL DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Activity drop alert not triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 11000
+  steps_drop_percent: 0.0
+  avg_active_minutes: 100.5
+  today_active_minutes: 100.5
+  active_minutes_drop_percent: 0.0
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: False
+Triggered: False
+Reason: Sedentary increase alert not triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 400
+  increase_percent: 0.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: False
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 420
+  change_percent: 0.0
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: False
+Triggered: False
+Reason: Heart rate anomaly alert not triggered
+
+
+Alert Type: data_quality
+--------------------
+Expected: False
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Intraday activity drop alert not triggered
+
+
+User ID: 3
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Activity drop alert triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 2000
+  steps_drop_percent: 81.82
+  avg_active_minutes: 100.5
+  today_active_minutes: 20.5
+  active_minutes_drop_percent: 79.6
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: True
+Triggered: True
+Reason: Sedentary increase alert triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 900
+  increase_percent: 125.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: True
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 300
+  change_percent: -28.57
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: True
+Triggered: True
+Reason: Heart rate anomaly alert triggered
+
+Details:
+  avg_heart_rate: 73.82
+  std_dev: 4.03
+  anomaly_percentage: 7.69
+  max_anomaly_value: 60.0
+  max_anomaly_time: 00:00
+  max_deviation: 13.82
+
+
+Alert Type: data_quality
+--------------------
+Expected: True
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Intraday activity drop alert triggered
+
+Details:
+  zero_streak_start: 00:00
+  zero_streak_end: 07:00
+  zero_streak_duration_hours: 8
+
+
+NORMAL DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Activity drop alert not triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 11000
+  steps_drop_percent: 0.0
+  avg_active_minutes: 100.5
+  today_active_minutes: 100.5
+  active_minutes_drop_percent: 0.0
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: False
+Triggered: False
+Reason: Sedentary increase alert not triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 400
+  increase_percent: 0.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: False
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 420
+  change_percent: 0.0
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: False
+Triggered: False
+Reason: Heart rate anomaly alert not triggered
+
+
+Alert Type: data_quality
+--------------------
+Expected: False
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Intraday activity drop alert not triggered
+
+
+User ID: 4
+==================================================
+
+ANOMALOUS DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Activity drop alert triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 2000
+  steps_drop_percent: 81.82
+  avg_active_minutes: 100.5
+  today_active_minutes: 20.5
+  active_minutes_drop_percent: 79.6
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: True
+Triggered: True
+Reason: Sedentary increase alert triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 900
+  increase_percent: 125.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: True
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 300
+  change_percent: -28.57
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: True
+Triggered: True
+Reason: Heart rate anomaly alert triggered
+
+Details:
+  avg_heart_rate: 74.14
+  std_dev: 4.1
+  anomaly_percentage: 7.69
+  max_anomaly_value: 60.0
+  max_anomaly_time: 00:00
+  max_deviation: 14.14
+
+
+Alert Type: data_quality
+--------------------
+Expected: True
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: True
+Triggered: True
+Reason: Intraday activity drop alert triggered
+
+Details:
+  zero_streak_start: 00:00
+  zero_streak_end: 07:00
+  zero_streak_duration_hours: 8
+
+
+NORMAL DATA:
+------------------------------
+
+Alert Type: activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Activity drop alert not triggered
+
+Details:
+  avg_steps: 11000.0
+  today_steps: 11000
+  steps_drop_percent: 0.0
+  avg_active_minutes: 100.5
+  today_active_minutes: 100.5
+  active_minutes_drop_percent: 0.0
+
+
+Alert Type: sedentary_increase
+--------------------
+Expected: False
+Triggered: False
+Reason: Sedentary increase alert not triggered
+
+Details:
+  avg_sedentary_minutes: 400.0
+  today_sedentary_minutes: 400
+  increase_percent: 0.0
+
+
+Alert Type: sleep_duration_change
+--------------------
+Expected: False
+Triggered: False
+Reason: Sleep duration change alert not triggered
+
+Details:
+  avg_sleep_minutes: 420.0
+  today_sleep_minutes: 420
+  change_percent: 0.0
+
+
+Alert Type: heart_rate_anomaly
+--------------------
+Expected: False
+Triggered: False
+Reason: Heart rate anomaly alert not triggered
+
+
+Alert Type: data_quality
+--------------------
+Expected: False
+Triggered: True
+Reason: Data quality alert triggered
+
+Details:
+  missing_fields: []
+  out_of_range_fields: [{'field': 'oxygen_saturation', 'value': 18.5, 'range': '80-100'}]
+
+
+Alert Type: intraday_activity_drop
+--------------------
+Expected: False
+Triggered: False
+Reason: Intraday activity drop alert not triggered
+

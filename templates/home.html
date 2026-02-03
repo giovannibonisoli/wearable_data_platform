@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Device Management') }} - Lively Ageing Medical Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-5">
+    
+        <!-- Add New Email Button -->
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <h3 class="mb-0" style="color: var(--primary); font-weight: 600;">
+                <i class="bi bi-smartwatch"></i>{{ _('Devices') }}
+            </h3>
+            <div>
+                <form action="{{ url_for('update_devices_info') }}" class="d-inline me-2">
+                    <button type="submit" class="btn btn-info" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>{{ _('Update Devices') }} 
+                    </button>
+                </form>
+                
+                <button id="addDeviceBtn" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmailModal" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                    <i class="fas fa-plus-circle me-2"></i>{{ _('Add Device') }}
+                </button>
+                
+            </div>
+        </div>
+
+        <div class="modal fade" id="addEmailModal" tabindex="-1" aria-labelledby="addEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius: 1rem; overflow: hidden; border: none;">
+                    <!-- Modal Header -->
+                    <div class="modal-header" style="background: linear-gradient(135deg, #2c5aa0 0%, #4a90a4 100%); color: white; border: none; padding: 1.5rem;">
+                        <h5 class="modal-title" id="addEmailModalLabel" style="font-weight: 600;">
+                            <i class="fas fa-plus-circle me-2"></i>{{ _('Add Device') }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="modal-body" style="padding: 2rem;">
+                        <form id="addEmailForm" method="POST" action="{{ url_for('home') }}">
+                            <div class="form-group">
+                                <label for="addressNameInsert" class="form-label" style="font-weight: 600; color: var(--text); margin-bottom: 0.75rem;">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                </label>
+                                <input type="email" class="form-control" id="addressNameInsert" 
+                                    name="emailAddress" required placeholder="{{ _('Enter email address') }}"
+                                    style="border: 2px solid var(--border); border-radius: 0.75rem; padding: 1rem 1.25rem; font-size: 1rem;">
+                                <small class="form-text text-muted mt-2 d-block">
+                                    <i class="fas fa-info-circle me-1"></i>{{ _('Enter a valid email address linked to a device') }}
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
+                        </button>
+                        <button type="submit" form="addEmailForm" class="btn btn-success" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600;">
+                            <i class="fas fa-plus me-2"></i>{{ _('Add Device') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devices List -->
+        {% if devices %}
+        <div class="card devices-table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover devices-table mb-0">
+                        <thead>
+                            <tr>
+                                
+                                <th class="table-header">
+                                    <i class="fas fa-envelope me-2"></i>{{ _('Email Address') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="bi bi-smartwatch me-2"></i>{{ _('Device Type') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-lock me-2"></i>{{ _('Authorization') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-sync-alt me-2"></i>{{ _('Cloud Synchronization') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="bi bi-graph-up me-2"></i>{{ _('Usage') }}
+                                </th>
+                                <th class="table-header">
+                                    <i class="fas fa-cogs me-2"></i>{{ _('Actions') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in devices %}
+                            <tr class="device-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+
+                                        <div>
+                                            <strong class="text-primary">{{ device.email_address }}</strong>
+                                            <br>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if device.auth_status == 'authorized' %}
+                                    <div>
+                                        <strong class="text-primary">{{ device.device_type }}</strong>
+                                        <br>
+                                    </div>
+                                    {% else %}
+                                    <div class="no-action-indicator" style="min-width: 180px;">
+                                        <i class="fas fa-minus me-2"></i>
+                                        <span>{{ _('Not available') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if device.auth_status == 'inserted' %}
+                                        <div class="status-indicator status-warning"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('Authorization must be requested and granted before downloading data from the cloud') }}">
+                                            <i class="fa fa-warning status-icon"></i>
+                                            <span class="status-text">{{ _('Not Authorized') }}</span>
+                                        </div>
+                                    {% elif device.auth_status == 'pending_auth_request' %}
+                                        <div class="status-indicator status-info"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('The authorization request has been sent and is awaiting approval') }}">
+                                            <i class="fas fa-clock status-icon"></i>
+                                            <span class="status-text">{{ _('Pending Request') }}</span>
+                                        </div>
+                                    {% elif device.auth_status == 'authorized' %}
+                                        <div class="status-indicator status-success"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('Access authorization for this device’s data has been obtained') }}">
+                                            <i class="fas fa-check-circle status-icon"></i>
+                                            <span class="status-text">{{ _('Authorized') }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="status-indicator status-inactive">
+                                            <i class="fas fa-times-circle status-icon"></i>
+                                            <span class="status-text">{{ _('Not Active') }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if device.auth_status == 'authorized' %}
+                                        {% if device.data_reception_status == 'ok' %}
+                                            {% if device.data_reception_details.sync_days > 0 %}
+                                                <div class="status-indicator status-success" style="min-width: 180px;"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="{{ _('Data are updated to the last synchronization') }}">
+                                                    <i class="fas fa-check-circle status-icon"></i>
+                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                </div>
+                                            {% else %}
+                                                {% if device.data_reception_details.sync_hours > 0 %}
+                                                    <div class="status-indicator status-success" style="min-width: 180px;"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="{{ _('Data are updated to the last synchronization') }}">
+                                                        <i class="fas fa-check-circle status-icon"></i>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="status-indicator status-success" style="min-width: 180px;"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="{{ _('Data are updated to the last synchronization') }}">
+                                                        <i class="fas fa-check-circle status-icon"></i>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        
+                                        {% elif device.data_reception_status == 'sync_warning' %}
+                                            <div class="status-indicator status-danger" style="min-width: 180px;" 
+                                                 data-bs-toggle="tooltip" 
+                                                 title="{{ _('Resync with the cloud to avoid data loss') }}">
+                                                <i class="fa fa-warning status-icon"></i>
+                                                <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                            </div>
+                                        
+                                        {% elif device.data_reception_status == 'gap_warning' %}
+                                            <div class="status-indicator status-primary" style="min-width: 180px;"
+                                                 data-bs-toggle="tooltip" 
+                                                 title="{{ _('Updating data to the last synchronization')}}: {{ device.data_reception_details.sync_days}} {{ _('days') }}">
+                                                 <i class="fas fa-cloud-download-alt status-icon"></i>
+                                                <span class="status-text">{{ _('Updating data...') }}</span>
+                                            </div>
+                                        
+                                        {% elif device.data_reception_status == 'no_data' %}
+                                            <div class="status-indicator status-info" style="min-width: 180px;">
+                                                <i class="fas fa-info-circle status-icon"></i>
+                                                <span class="status-text">{{ _('No data yet') }}</span>
+                                            </div>
+                                        
+                                        {% else %}
+                                            <div class="status-indicator status-info" style="min-width: 180px;">
+                                                <i class="fas fa-question-circle status-icon"></i>
+                                                <span class="status-text">{{ _('Checking...') }}</span>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="no-action-indicator" style="min-width: 180px;">
+                                            <i class="fas fa-minus me-2"></i>
+                                            <span>{{ _('Not available') }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if device.auth_status == 'authorized' %}
+                                        {% if device.device_usage_details.average_hours_per_day > 8 %}
+                                            <div class="status-indicator status-success" style="min-width: 180px;"
+                                                data-bs-toggle="tooltip" 
+                                                title="{{ _('The patient has used the device for more than 8 hours a day over the past week') }}">
+                                                <i class="fas fa-check-circle status-icon"></i>
+                                                <span class="status-text"> >{{ _('8 hours a day') }}</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="status-indicator status-warning" style="min-width: 180px;" 
+                                                data-bs-toggle="tooltip" 
+                                                title="{{ _('The patient has used the device for less than 8 hours a day over the past week') }}">
+                                                <i class="fa fa-warning status-icon"></i>
+                                                <span class="status-text"> <{{ _('8 hours a day') }}</span>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="no-action-indicator" style="min-width: 180px;">
+                                            <i class="fas fa-minus me-2"></i>
+                                            <span>{{ _('Not available') }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if device.auth_status == 'inserted' %}
+                                    <form action="{{ url_for('send_auth_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
+                                        <input type="hidden" name="emailAddressAuth" value="{{ device.email_address }}">
+                                        <button type="submit" 
+                                                class="btn btn-primary btn-sm action-btn" 
+                                                data-bs-toggle="tooltip"
+                                                title="{{ _('Send an email to request authorization to download the data collected by the wearable device') }}">
+                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
+                                        </button>
+                                    </form>
+                                    {% elif device.auth_status == 'authorized' %}
+                                    {#<form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="DeactivateId" value="{{ device.id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm action-btn">
+                                            <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
+                                        </button>
+                                    </form>#}
+                       
+                                    <a href="{{ url_for('device_details', device_id=device.id) }}"
+                                        class="btn btn-info btn-sm action-btn"
+                                        data-bs-toggle="tooltip"
+                                        title="{{ _('View detailed device information') }}">
+                                            <i class="bi bi-info-circle me-2"></i>{{ _('Device Details') }}
+                                    </a>                         
+                                    <button type="button" class="btn btn-danger btn-sm action-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deactivateModal{{ device.id }}">
+                                        <i class="far fa-times-circle me-2"></i>{{ _('Disable') }}
+                                    </button>
+                                
+                                    {% else %}
+                                    <div class="no-action-indicator">
+                                        <i class="fas fa-ban me-2"></i>
+                                        <span>{{ _('No action allowed') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card empty-state-card">
+            <div class="card-body text-center py-5">
+                <div class="empty-icon mb-4">
+                    <i class="fas fa-watch fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">{{ _('No devices inserted') }}</h4>
+                <p class="text-muted mb-4">{{ _('Add devices and start monitoring') }}</p>
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{{ _('Getting Started:') }}</strong> {{ _('Use the form above to add a new email address and begin monitoring the associated wearable.') }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Deactivation Confirmation Modals -->
+{% for device in devices %}
+<div class="modal fade" id="deactivateModal{{ device.id }}" tabindex="-1" aria-labelledby="deactivateModalLabel{{ device.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1rem; overflow: hidden; border: none;">
+            <!-- Modal Header -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 1.5rem;">
+                <h5 class="modal-title" id="deactivateModalLabel{{ device.id }}" style="font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ _('Confirm Deactivation') }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="text-center mb-4">
+                    <div class="warning-icon" style="background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(200, 35, 51, 0.1) 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #dc3545;"></i>
+                    </div>
+                </div>
+                
+                <h6 class="text-center mb-3" style="color: #343a40; font-weight: 600;">
+                    {{ _('Are you sure you want to disable this device?') }}
+                </h6>
+                
+                <div class="alert alert-warning" style="border-radius: 0.75rem; border-left: 4px solid #ffc107; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
+                    <strong><i class="fas fa-info-circle me-2"></i>{{ _('Email Address:') }}</strong><br>
+                    <span style="font-size: 1.1rem; color: #856404;">{{ device.email_address }}</span>
+                </div>
+                
+                <p class="text-muted text-center mb-0" style="font-size: 0.9rem;">
+                    {{ _('This action will make the email address no longer usable in this service') }}
+                </p>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 1rem 1.5rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem;">
+                    <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
+                </button>
+                <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="DeactivateId" value="{{ device.id }}">
+                    <button type="submit" class="btn btn-danger" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
+                        <i class="fas fa-check me-2"></i>{{ _('confirm') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+
+{% block extra_css %}
+<style>
+    /* Device management specific styles that aren't in shared CSS */
+    
+    /* Status indicators - elegant, non-button-like design */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1.5px solid;
+        background-color: transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .status-indicator:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-icon {
+        margin-right: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .status-text {
+        line-height: 1.2;
+    }
+    
+    /* Status color variants */
+    .status-info {
+        color: #0dcaf0;
+        border-color: #0dcaf0;
+        background-color: rgba(13, 202, 240, 0.08);
+    }
+    
+    .status-info .status-icon {
+        color: #0dcaf0;
+    }
+
+    .status-primary {
+        color: #1d55cc;
+        border-color: #1d55cc;
+        background-color: rgb(208, 228, 255);
+    }
+
+    .status-primary .status-icon {
+        color: #1d55cc;
+    }
+    
+    .status-warning {
+        color: #ffc107;
+        border-color: #ffc107;
+        background-color: rgba(255, 193, 7, 0.08);
+    }
+    
+    .status-warning .status-icon {
+        color: #ffc107;
+    }
+    
+    .status-success {
+        color: #198754;
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.08);
+    }
+    
+    .status-success .status-icon {
+        color: #198754;
+    }
+    
+    .status-inactive {
+        color: #6c757d;
+        border-color: #6c757d;
+        background-color: rgba(108, 117, 125, 0.08);
+    }
+    
+    .status-inactive .status-icon {
+        color: #6c757d;
+    }
+
+    .status-danger {
+        color: #be0101;
+        border-color: #be0101;
+        background-color: rgba(239, 1, 1, 0.227);
+    }
+
+    .status-danger .status-icon {
+        color: #be0101;
+    }
+    
+    /* No action indicator - clearly non-clickable */
+    .no-action-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-style: italic;
+        opacity: 0.7;
+        user-select: none;
+        pointer-events: none;
+    }
+    
+    .no-action-indicator i {
+        font-size: 0.85rem;
+        opacity: 0.6;
+    }
+
+
+   #addDeviceBtn:hover {
+        background: linear-gradient(135deg,rgb(2, 63, 2) 0%,rgb(0, 96, 13) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+   }
+    
+
+    @keyframes spin-slow {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Action buttons container - align multiple buttons */
+    .actions-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Ensure buttons in forms display inline */
+    form.d-inline {
+        display: inline-block !important;
+    }
+
+    /* Mobile responsive - stack buttons on small screens */
+    @media (max-width: 768px) {
+        .actions-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .action-btn {
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+    }
+
+</style>
+{% endblock %}
+{% endblock %}
