@@ -1,18 +1,35 @@
 import psycopg2
-from psycopg2 import sql
-from config import DB_CONFIG
-from encryption import encrypt_token, decrypt_token
 import random
-from datetime import datetime, timedelta
 import bcrypt
 
+from encryption import encrypt_token, decrypt_token
+from psycopg2 import sql
+from datetime import datetime, timedelta, date
+from typing import Any, Optional, Union, List, Tuple, Dict
+
+from config import DB_CONFIG
+
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialize a DatabaseManager instance.
+
+        This sets up the connection and cursor attributes as None. Use
+        connect() before issuing any query to the database.
+        """
         self.connection = None
         self.cursor = None
 
-    def connect(self):
-        """Establish the connection with the database."""
+    def connect(self) -> bool:
+        """
+        Open a connection to the PostgreSQL database.
+
+        Uses credentials from config.DB_CONFIG. On success,
+        initializes a cursor for query execution.
+
+        Returns:
+            bool: True if connection succeeded, False otherwise.
+        """
         try:
 
             self.connection = psycopg2.connect(
@@ -29,8 +46,13 @@ class DatabaseManager:
             print(f"Error connecting to the database: {e}")
             return False
 
-    def close(self):
-        """Close the connection with the database."""
+    def close(self) -> None:
+        """
+        Close the open database cursor and connection.
+
+        Ensures cleanup of resources. Safe to call even if
+        connection was never established.
+        """
         try:
             if self.cursor:
                 self.cursor.close()
@@ -42,18 +64,41 @@ class DatabaseManager:
             self.cursor = None
             self.connection = None
 
-    def commit(self):
-        """Commit the current transaction."""
+    def commit(self) -> None:
+        """
+        Commit the current database transaction.
+
+        No-op if there is no active connection. Should be
+        called after INSERT/UPDATE/DELETE operations.
+        """
         if self.connection:
             self.connection.commit()
 
-    def rollback(self):
-        """Rollback the current transaction."""
+    def rollback(self) -> None:
+        """
+        Roll back the current transaction.
+
+        Useful to undo the last operation that raised an error.
+        """
         if self.connection:
             self.connection.rollback()
 
-    def execute_query(self, query, params=None):
-        """Execute a query and return the results."""
+    def execute_query(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Execute any SQL query with optional parameters.
+
+        This method handles execution, commits on success, and
+        returns fetched results if present.
+
+        Args:
+            query (str): A SQL query to execute.
+            params (tuple | list): Parameter values for parametric queries.
+
+        Returns:
+            list | bool | None: Fetched rows for SELECT,
+                                 True for successful DDL/DML,
+                                 None on failure.
+        """
         try:
             self.cursor.execute(query, params or ())
             if self.cursor.description:  # If the query returns results
@@ -67,8 +112,17 @@ class DatabaseManager:
             self.rollback()
             return None
 
-    def execute_many(self, query, params_list):
-        """Execute a query multiple times with different parameters."""
+    def execute_many(self, query: str, params_list: List[Tuple[Any, ...]]) -> bool:
+        """
+        Run the same query multiple times with batch parameters.
+
+        Args:
+            query (str): A SQL query with placeholders.
+            params_list (list): A list of parameter tuples.
+
+        Returns:
+            bool: True if successful for all executions, False on any failure.
+        """
         try:
             self.cursor.executemany(query, params_list)
             self.commit()
@@ -79,8 +133,21 @@ class DatabaseManager:
             return False
 
 
-    def verify_admin_user(self, username, password):
-        """Verify admin user credentials"""
+    def verify_admin_user(self, username: str, password: str) -> Optional[Dict[str, Any]]:
+        """
+        Authenticate an admin user.
+
+        Checks the username and bcrypt-hashed password against the admin_users table.
+        On success, updates last_login to the current timestamp.
+
+        Args:
+            username (str): The admin username.
+            password (str): The plaintext password to verify.
+
+        Returns:
+            dict | None: A dict with user id, username, and full name on success,
+                          None if credentials are invalid or user inactive.
+        """
 
         query = """
             SELECT id, username, password_hash, full_name
@@ -107,8 +174,16 @@ class DatabaseManager:
         return None
 
 
-    def get_admin_user_by_id(self, admin_user_id):
-        """Get all email addresses owned by an admin user"""
+    def get_admin_user_by_id(self, admin_user_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Fetch basic profile of a specific admin user.
+
+        Args:
+            admin_user_id (int): The ID of the admin user.
+
+        Returns:
+            dict | None: Profile fields, or None if no user found.
+        """
         query = """
             SELECT username, full_name, created_at, last_login
             FROM admin_users
@@ -118,8 +193,16 @@ class DatabaseManager:
         return {"username": result[0][0], "full_name": result[0][1], "created_at": result[0][2], "last_login": result[0][3]} if result else None
 
 
-    def get_admin_user_devices(self, admin_user_id):
-        """Get all devices owned by an admin user"""
+    def get_admin_user_devices(self, admin_user_id: int) -> Optional[List[Tuple[Any, ...]]]:
+        """
+        List all devices linked to a particular admin user.
+
+        Args:
+            admin_user_id (int): The admin user's primary key.
+
+        Returns:
+            list: A list of device rows sorted by creation date descending.
+        """
         query = """
             SELECT id, email_address, authorization_status, device_type
             FROM devices
@@ -129,8 +212,17 @@ class DatabaseManager:
         return self.execute_query(query, (admin_user_id,))
 
     
-    def update_admin_user_password(self, admin_user_id, new_password):
-        """Update admin user password"""
+    def update_admin_user_password(self, admin_user_id: int, new_password: str) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Change the stored password of an admin user.
+
+        Args:
+            admin_user_id (int): The user to update.
+            new_password (str): New plaintext password.
+
+        Returns:
+            bool: Result of password hash update query.
+        """
         password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         query = """
@@ -142,8 +234,13 @@ class DatabaseManager:
         return self.execute_query(query, (password_hash, admin_user_id))
 
 
-    def get_all_admin_users(self):
-        """Get all admin users (for super admin management)"""
+    def get_all_admin_users(self) -> Optional[List[Tuple[Any, ...]]]:
+        """
+        Retrieve all users from admin_users.
+
+        Returns:
+            list | None: All user records ordered by creation date.
+        """
         query = """
             SELECT id, username, email, full_name, created_at, last_login, is_active
             FROM admin_users
@@ -152,8 +249,28 @@ class DatabaseManager:
         return self.execute_query(query)
 
 
-    def add_device(self, admin_user_id, email_address, access_token=None, refresh_token=None):
-        """Add a new email address to the database"""
+    def add_device(
+        self,
+        admin_user_id: int,
+        email_address: str,
+        access_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+    ) -> Optional[int]:
+
+        """
+        Insert a new device for an admin user.
+
+        Tokens are encrypted if provided.
+
+        Args:
+            admin_user_id (int): Owner admin user.
+            email_address (str): Unique identifier for the device.
+            access_token (str | None): Token returned from an external provider.
+            refresh_token (str | None): Token used to refresh the access_token.
+
+        Returns:
+            int | None: The new device's id if successful, None otherwise.
+        """
         if access_token and refresh_token:
             encrypted_access_token = encrypt_token(access_token)
             encrypted_refresh_token = encrypt_token(refresh_token)
@@ -170,8 +287,41 @@ class DatabaseManager:
         return result[0][0] if result else None
 
 
-    def change_device_status(self, device_id, auth_status):
-        """Change device status"""
+    def change_device_status(
+        self, device_id: int, auth_status: str
+    ) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Update the authorization status of a specific device.
+
+        This function sets the `authorization_status` column of a device
+        to one of the predefined states. Only valid statuses are allowed:
+        - 'inserted'   : Newly inserted device awaiting authorization
+        - 'authorized' : Device has completed authorization
+        - 'non_active' : Device has been marked inactive
+
+        Args:
+            device_id (int): The primary key of the device to update.
+            auth_status (str): The new authorization status. Must be one of
+                            'inserted', 'authorized', or 'non_active'.
+
+        Returns:
+            list | bool | None:
+                - If the update succeeds, returns the result of the
+                underlying SQL execution (often True or a result list).
+                - If the database operation fails, returns None.
+
+        Raises:
+            AssertionError: If `auth_status` is not a permitted status value.
+
+        Side Effects:
+            - Updates the device’s row in the `devices` table.
+            - Commits the transaction when successful; rolls back on error.
+            - Logs a message to stdout indicating the result.
+
+        Example:
+            >>> db.change_device_status(42, 'authorized')
+            True
+        """
 
         assert auth_status in ['inserted', 'authorized', 'non_active']
 
@@ -182,29 +332,34 @@ class DatabaseManager:
         """
         result = self.execute_query(query, (auth_status, device_id))
         if result:
-            print(f"Status changed to {auth_status} for email {device_id}.")
+            print(f"Status changed to {auth_status} for device {device_id}.")
         return result
 
 
-    def get_daily_summaries(self, email_id, start_date=None, end_date=None):
+    def get_daily_summaries(
+        self,
+        email_id: int,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> List[Tuple[Any, ...]]:
+
         """
-        Gets the daily summaries of a user within a date range.
+        Retrieve daily summary records for a specific device/email within an optional date range.
+
+        Daily summaries represent high-level aggregated metrics (e.g., steps,
+        heart rate, calories) collected per day.
 
         Args:
-            email_id (int): User ID
-            start_date (datetime): Start date (inclusive)
-            end_date (datetime): End date (inclusive)
+            device_id (int): Identifier for the device whose summaries to fetch.
+            start_date (datetime.date | datetime | None): Include summaries on/after this date.
+            end_date (datetime.date | datetime | None): Include summaries on/before this date.
 
         Returns:
-            list: List of tuples with daily data, ordered by date
+            list: A chronologically ordered list of summary tuples.
+                  Returns an empty list if none are found.
         """
 
-        query = """
-            SELECT * FROM daily_summaries
-            WHERE email_id = %s
-        """
-
-        params = [email_id]
+        params = [device_id]
 
         if start_date:
             query += " AND date >= %s"
@@ -218,8 +373,28 @@ class DatabaseManager:
         result = self.execute_query(query, params)
         return result if result else []
 
-    def get_intraday_metrics(self, device_id, metric_type, start_time=None, end_time=None):
-        """Gets the intraday metrics associated to an email address."""
+    def get_intraday_metrics(
+        self,
+        device_id: int,
+        metric_type: str,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> Optional[List[Tuple[datetime, float]]]:
+        """
+        Fetch intraday (timestamped) metric records for a specific device.
+
+        Intraday metrics are time-series values such as heart rate, steps,
+        calories, or distance captured throughout the day.
+
+        Args:
+            device_id (int): The device/email identifier.
+            metric_type (str): Column name representing the metric (e.g., 'heart_rate').
+            start_time (datetime | None): Only include records after this timestamp.
+            end_time (datetime | None): Only include records before this timestamp.
+
+        Returns:
+            list: Time-ordered (time, value) tuples for the requested metric.
+        """
         query = """
             SELECT time, value FROM intraday_metrics
             WHERE device_id = %s AND type = %s
@@ -239,8 +414,15 @@ class DatabaseManager:
         return self.execute_query(query, params)
 
     
-    def get_last_synch(self, device_id):
+    def get_last_synch(self, device_id: int) -> Optional[datetime]:
         """
+        Return the most recent successful sync timestamp for a device.
+
+        Args:
+            device_id (int): The device to check.
+
+        Returns:
+            datetime | None: Last synchronization timestamp or None if unavailable.
         """
 
         query = """
@@ -256,10 +438,17 @@ class DatabaseManager:
         return None
 
 
-    def get_daily_summary_checkpoint(self, device_id):
+    def get_daily_summary_checkpoint(self, device_id: int) -> Optional[date]:
         """
-        Get the last date for which a daily summary was collected.
-        Returns a date object or None.
+        Return the checkpoint date up to which daily summaries have been collected.
+
+        Useful for incremental sync logic.
+
+        Args:
+            device_id (int): The corresponding device.
+
+        Returns:
+            date | None: The last saved summary date, or None if none exists.
         """
         query = """
             SELECT daily_summaries_checkpoint
@@ -273,10 +462,15 @@ class DatabaseManager:
         return None
 
 
-    def get_intraday_checkpoint(self, device_id):
+    def get_intraday_checkpoint(self, device_id: int) -> Optional[datetime]:
         """
-        Get the last date for which intraday data was collected.
-        Returns a date object or None.
+        Return the checkpoint timestamp up to which intraday metrics have been collected.
+
+        Args:
+            device_id (int): The corresponding device.
+
+        Returns:
+            datetime | None: Last intraday sync timestamp, or None.
         """
         query = """
             SELECT intraday_checkpoint
@@ -290,10 +484,15 @@ class DatabaseManager:
         return None
 
 
-    def get_sleep_checkpoint(self, device_id):
+    def get_sleep_checkpoint(self, device_id: int) -> Optional[date]:
         """
-        Get the last date for which a daily summary was collected.
-        Returns a date object or None.
+        Return the checkpoint date up to which sleep data has been collected.
+
+        Args:
+            device_id (int): The corresponding device.
+
+        Returns:
+            date | None: Last sleep summary date, or None.
         """
         query = """
             SELECT sleep_checkpoint
@@ -307,8 +506,16 @@ class DatabaseManager:
         return None
 
 
-    def update_last_synch(self, device_id, timestamp):
+    def update_last_synch(self, device_id: int, timestamp: datetime) -> Union[List[Tuple[Any, ...]], bool, None]:
         """
+        Save a new last-synch timestamp for a device.
+
+        Args:
+            device_id (int): The device identifier.
+            timestamp (datetime): The new synchronization timestamp.
+
+        Returns:
+            bool: True if the update succeeded.
         """
 
         query = """
@@ -323,10 +530,16 @@ class DatabaseManager:
         return result
 
     
-    def update_daily_summaries_checkpoint(self, device_id, date):
+    def update_daily_summaries_checkpoint(self, device_id: int, date_value: date) -> Union[List[Tuple[Any, ...]], bool, None]:
         """
-        Get the last date for which intraday data was collected.
-        Returns a date object or None.
+        Update the daily summary sync checkpoint.
+
+        Args:
+            device_id (int): The device identifier.
+            date (datetime.date): The date up to which daily summaries are collected.
+
+        Returns:
+            bool: True on success.
         """
 
         query = """
@@ -341,10 +554,16 @@ class DatabaseManager:
         return result
 
     
-    def update_intraday_checkpoint(self, email_id, timestamp):
+    def update_intraday_checkpoint(self, email_id: int, timestamp: datetime) -> Union[List[Tuple[Any, ...]], bool, None]:
         """
-        Get the last date for which intraday data was collected.
-        Returns a date object or None.
+        Update the intraday metrics checkpoint for a given device.
+
+        Args:
+            email_id (int): Email/device identifier.
+            timestamp (datetime): Timestamp of the newest intraday data collected.
+
+        Returns:
+            bool: True on success.
         """
 
         query = """
@@ -359,10 +578,16 @@ class DatabaseManager:
         return result
 
 
-    def update_sleep_checkpoint(self, device_id, date):
+    def update_sleep_checkpoint(self, device_id: int, date_value: date) -> Union[List[Tuple[Any, ...]], bool, None]:
         """
-        Get the last date for which sleep was collected.
-        Returns a date object or None.
+        Update the checkpoint for sleep data collection.
+
+        Args:
+            device_id (int): The device identifier.
+            date (datetime.date): The new sleep checkpoint date.
+
+        Returns:
+            bool: True on success.
         """
 
         query = """
@@ -377,8 +602,24 @@ class DatabaseManager:
         return result
 
 
-    def get_sleep_logs(self, email_id, start_date=None, end_date=None):
-        """Gets the sleep records associated to an email address."""
+    def get_sleep_logs(
+        self,
+        email_id: int,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> Optional[List[Tuple[Any, ...]]]:
+
+        """
+        Fetch sleep log entries for a device across an optional date range.
+
+        Args:
+            email_id (int): Device/email identifier.
+            start_date (datetime | None): Only include logs after this time.
+            end_date (datetime | None): Only include logs before this time.
+
+        Returns:
+            list: Sleep log tuples ordered by start time descending.
+        """
         query = """
             SELECT * FROM sleep_logs
             WHERE email_id = %s
@@ -395,11 +636,31 @@ class DatabaseManager:
 
         query += " ORDER BY start_time DESC"
 
-        return self.execute_query(query, params)
+        return self.execute_query(query, tuple(params))
 
 
-    def get_user_alerts(self, email_id, start_time=None, end_time=None, acknowledged=None):
-        """Gets the alerts associated to an email address."""
+    def get_user_alerts(
+        self,
+        email_id: int,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        acknowledged: Optional[bool] = None,
+    ) -> Optional[List[Tuple[Any, ...]]]:
+        """
+        Retrieve alert events for a device.
+
+        Alerts may indicate threshold violations or other conditions.
+
+        Args:
+            email_id (int): Device/email identifier.
+            start_time (datetime | None): Only include alerts after this.
+            end_time (datetime | None): Only include alerts before this.
+            acknowledged (bool | None): Only include acknowledged (True),
+                                        unacknowledged (False), or all (None).
+
+        Returns:
+            list: Alerts ordered by most recent first.
+        """
         query = """
             SELECT * FROM alerts
             WHERE email_id = %s
@@ -421,19 +682,30 @@ class DatabaseManager:
         return self.execute_query(query, params)
 
 
-    def insert_alert(self, email_id, alert_type, priority, triggering_value, threshold, timestamp=None, details=None):
+    def insert_alert(
+        self,
+        email_id: int,
+        alert_type: str,
+        priority: str,
+        triggering_value: float,
+        threshold: Union[str, float],
+        timestamp: Optional[datetime] = None,
+        details: Optional[str] = None
+    ) -> Optional[int]:
         """
-        Inserts a new alert into the database.
+        Create a new alert record.
 
         Args:
-        email_id (int): Email ID
-            alert_type (str): Type of alert
-            priority (str): Alert priority (high, medium, low)
-            triggering_value (float): Value that triggered the alert
-            threshold (str): Alert threshold (can be a range like "30-200")
-            timestamp (datetime, optional): Timestamp of the alert
-           *details (str, optional): Additional details about the alert
+            email_id (int): Device/email identifier.
+            alert_type (str): A descriptive alert category.
+            priority (str): One of 'high', 'medium', or 'low'.
+            triggering_value (float): The value that triggered the alert condition.
+            threshold (str | float | tuple): The threshold definition.
+            timestamp (datetime | None): When the alert occurred.
+            details (str | None): Additional context.
 
+        Returns:
+            int | None: The new alert’s ID on success.
         """
         try:
             if timestamp is None:
@@ -455,8 +727,16 @@ class DatabaseManager:
             return None
 
 
-    def get_alert_by_id(self, alert_id):
-        """Get a specific alert by its ID"""
+    def get_alert_by_id(self, alert_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a specific alert and associated user details.
+
+        Args:
+            alert_id (int): The alert’s primary key.
+
+        Returns:
+            dict | None: Alert fields + user name/email if found.
+        """
         if not self.connect():
             return None
 
@@ -478,16 +758,34 @@ class DatabaseManager:
             print(f"Error al obtener alerta por ID: {str(e)}")
             return None
 
-    def store_pending_auth(self, device_id, state, code_verifier):
-        """Store pending authorization with expiration"""
+    def store_pending_auth(self, device_id: int, state: str, code_verifier: str) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Save a new authorization attempt awaiting completion.
+
+        Args:
+            device_id (int): The device requesting OAuth/consent.
+            state (str): A unique state value for callback correlation.
+            code_verifier (str): Challenge for PKCE flow.
+
+        Returns:
+            bool: True on success.
+        """
         query = """
             INSERT INTO pending_authorizations (device_id, state, code_verifier, expires_at)
             VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes')
         """
         return self.execute_query(query, (device_id, state, code_verifier))
 
-    def get_pending_auth(self, state):
-        """Retrieve pending authorization if not expired"""
+    def get_pending_auth(self, state: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch an unexpired pending authorization by state.
+
+        Args:
+            state (str): The PKCE callback state.
+
+        Returns:
+            dict | None: Contains 'code_verifier' and 'device_id'.
+        """
         query = """
             SELECT code_verifier, device_id
             FROM pending_authorizations
@@ -498,8 +796,16 @@ class DatabaseManager:
             return {'code_verifier': result[0][0], 'device_id': result[0][1]}
         return None
 
-    def check_pending_auth(self, device_id):
-        """Check if there is a pending authorization for the mail of an inserted device"""
+    def check_pending_auth(self, device_id: int) -> bool:
+        """
+        Check existence of an unexpired pending authorization for a device.
+
+        Args:
+            device_id (int): Device with pending authorization.
+
+        Returns:
+            bool: True if a pending auth exists.
+        """
         query = """
             SELECT *
             FROM pending_authorizations
@@ -510,13 +816,29 @@ class DatabaseManager:
             return True
         return False
 
-    def delete_pending_auth(self, state):
-        """Delete used pending authorization"""
+    def delete_pending_auth(self, state: str) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Remove a pending authorization once used or expired.
+
+        Args:
+            state (str): The pending auth state value.
+
+        Returns:
+            bool: True on success.
+        """
         query = "DELETE FROM pending_authorizations WHERE state = %s"
         return self.execute_query(query, (state,))
 
-    def get_device_by_email_address(self, email_address):
-        """Retrieves device id by its name"""
+    def get_device_by_email_address(self, email_address: str) -> Optional[int]:
+        """
+        Find the latest device record associated with an email.
+
+        Args:
+            email_address (str): The address identifier.
+
+        Returns:
+            int | None: The device’s ID if found.
+        """
         query = """
             SELECT id FROM devices
             WHERE email_address = %s
@@ -526,8 +848,16 @@ class DatabaseManager:
         result = self.execute_query(query, (email_address,))
         return result[0][0] if result else None
 
-    def get_device_tokens(self, device_id):
-        """Retrieve and decrypt tokens for a device"""
+    def get_device_tokens(self, device_id: int) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Fetch and decrypt stored access/refresh tokens.
+
+        Args:
+            device_id (int): The device identifier.
+
+        Returns:
+            tuple[str | None, str | None]: (access_token, refresh_token)
+        """
         query = """
             SELECT access_token, refresh_token
             FROM devices
@@ -545,8 +875,18 @@ class DatabaseManager:
         return None, None
 
 
-    def update_device_tokens(self, device_id, access_token, refresh_token):
-        """Updates the access and refresh tokens of a device"""
+    def update_device_tokens(self, device_id: int, access_token: str, refresh_token: str) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Encrypt and store new OAuth tokens for a device.
+
+        Args:
+            device_id (int): The device to update.
+            access_token (str): New access token.
+            refresh_token (str): New refresh token.
+
+        Returns:
+            bool: True on success.
+        """
 
         # Encrypt the tokens before storing them
         encrypted_access_token = encrypt_token(access_token)
@@ -561,8 +901,17 @@ class DatabaseManager:
         return result
 
 
-    def update_device_type(self, device_id, device_type):
-        """Updates the device_type of a device"""
+    def update_device_type(self, device_id: int, device_type: str) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Assign or update the device_type (source platform) of a device.
+
+        Args:
+            device_id (int): The device identifier.
+            device_type (str): A descriptive type identifier.
+
+        Returns:
+            bool: True on success.
+        """
 
         query = """
             UPDATE devices
@@ -573,8 +922,17 @@ class DatabaseManager:
         return result
 
 
-    def check_intraday_timestamp(self, device_id, timestamp):
-        """Checks if intraday timestamp is already present"""
+    def check_intraday_timestamp(self, device_id: int, timestamp: datetime) -> bool:
+        """
+        Determine if a given timestamp already exists for intraday data.
+
+        Args:
+            device_id (int): The device to check.
+            timestamp (datetime): The specific timestamp.
+
+        Returns:
+            bool: True if exists.
+        """
         query = """
             SELECT * FROM intraday_metrics
             WHERE device_id = %s
@@ -584,8 +942,28 @@ class DatabaseManager:
         return bool(result)
 
 
-    def insert_intraday_metric(self, device_id, timestamp, data_type='heart_rate', value=None):
-        """Inserts intraday data into the database"""
+    def insert_intraday_metric(
+        self,
+        device_id: int,
+        timestamp: datetime,
+        data_type: str = "heart_rate",
+        value: Optional[float] = None,
+    ) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Save or update a metric value at a particular timestamp.
+
+        If a row exists, updates just the given column; otherwise
+        inserts a new record with other fields NULL.
+
+        Args:
+            device_id (int): Device identifier.
+            timestamp (datetime): Exact capture time.
+            data_type (str): Which intraday column (e.g., 'steps').
+            value (float): The measured value.
+
+        Returns:
+            bool: True on success.
+        """
         if self.check_intraday_timestamp(device_id, timestamp):
             # Update existing record
             query = f"""
@@ -618,7 +996,16 @@ class DatabaseManager:
             return result
 
 
-    def insert_sleep_session(self, device_id):
+    def insert_sleep_session(self, device_id: int) -> Optional[int]:
+        """
+        Create a new sleep session grouping for inserting logs.
+
+        Args:
+            device_id (int): Which device the sleep belongs to.
+
+        Returns:
+            int | None: The new sleep session ID.
+        """
         query = """
             INSERT INTO sleep_sessions (device_id) 
             VALUES (%s)
@@ -631,8 +1018,17 @@ class DatabaseManager:
         return result[0][0]
 
 
-    def insert_sleep_log(self, sleep_session_id, data):
-        """Inserts a sleep record into the database"""
+    def insert_sleep_log(self, sleep_session_id: int, data: Dict[str, Any]) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Persist a detailed sleep segment.
+
+        Args:
+            sleep_session_id (int): The parent sleep session.
+            data (dict): Sleep fields from an external API.
+
+        Returns:
+            bool: True on success.
+        """
 
         query = """
             INSERT INTO sleep_logs (
@@ -660,8 +1056,17 @@ class DatabaseManager:
         return result
 
 
-    def insert_sleep_level(self, sleep_session_id, data):
-        """Inserts a sleep levelrecord into the database"""
+    def insert_sleep_level(self, sleep_session_id: int, data: Dict[str, Any]) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Insert a detailed sleep level entry (e.g., REM, deep, awake).
+
+        Args:
+            sleep_session_id (int): Parent session.
+            data (dict): Level info.
+
+        Returns:
+            bool: True on success.
+        """
         query = """
             INSERT INTO sleep_levels (
                 sleep_session_id, time, level, seconds
@@ -681,8 +1086,17 @@ class DatabaseManager:
         return result
 
     
-    def insert_sleep_short_level(self, sleep_session_id, short):
-        """Inserts a sleep short level record into the database"""
+    def insert_sleep_short_level(self, sleep_session_id: int, short: Dict[str, Any]) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Persist a “short level” segment within a sleep session.
+
+        Args:
+            sleep_session_id (int): Parent session.
+            short (dict): Entry data.
+
+        Returns:
+            bool: True on success.
+        """
         query = """
             INSERT INTO sleep_short_levels (
                 sleep_session_id, time, seconds
@@ -701,8 +1115,16 @@ class DatabaseManager:
         return result
 
 
-    def get_device_history(self, device_id):
-        """Retrieves the complete history of a device"""
+    def get_device_history(self, device_id: int) -> List[Tuple[Any, ...]]:
+        """
+        Return full history of daily summaries for a device.
+
+        Args:
+            device_id (int): The device identifier.
+
+        Returns:
+            list: All daily summary rows ordered by date.
+        """
         query = """
             SELECT * FROM daily_summaries
             WHERE device_id = %s
