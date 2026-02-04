@@ -10,9 +10,7 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
 #  Environment-based redirect URL
-
 REDIRECT_URI = "http://localhost:5000"
-
 
 AUTH_URL = "https://www.fitbit.com/oauth2/authorize"
 TOKEN_URL = "https://api.fitbit.com/oauth2/token"
@@ -23,12 +21,11 @@ DB_CONFIG = {
     'password': os.getenv("DB_PASSWORD"),
     'port': os.getenv("DB_PORT"),
     'database': os.getenv("DB_NAME"),
-    "sslmode": "require"
+    'sslmode': "require"
 }
 
-
 # Email configuration
-EMAIL_SENDER = 'chingchungchang@gmail.com'
-EMAIL_PASSWORD = 'thybghhghhhhf'
-SMTP_SERVER = 'smtp.gmail.com'
+EMAIL_SENDER = "chingchungchang@gmail.com"
+EMAIL_PASSWORD = "thybghhghhhhf"
+SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
