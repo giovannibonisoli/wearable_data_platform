@@ -307,19 +307,3 @@ if __name__ == "__main__":
         logger.info("\n=== STOPPED BY USER (Ctrl+C) ===")
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
-    
-    # db = DatabaseManager()
-    # if db.connect():
-
-    #     current_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
-    #     email_addresses = db.get_all_emails()
-
-    #     while True:
-        
-    #         for email_address in email_addresses:
-    #             last_synch_date = db.get_last_synch(email_address['id'])
-    #             access_token, refresh_token = db.get_email_tokens(email_address['id'])
-    #             date_str = current_date.strftime('%Y-%m-%d')
-    #             success, hit_rate_limit = get_intraday_data(access_token, email_address, date_str, last_synch_date)
-
-    #         current_date = current_date + timedelta(days=1)
