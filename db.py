@@ -338,7 +338,7 @@ class DatabaseManager:
 
     def get_daily_summaries(
         self,
-        email_id: int,
+        device_id: int,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> List[Tuple[Any, ...]]:
@@ -604,7 +604,7 @@ class DatabaseManager:
 
     def get_sleep_logs(
         self,
-        email_id: int,
+        device_id: int,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> Optional[List[Tuple[Any, ...]]]:
@@ -613,7 +613,7 @@ class DatabaseManager:
         Fetch sleep log entries for a device across an optional date range.
 
         Args:
-            email_id (int): Device/email identifier.
+            device_id (int): Device/email identifier.
             start_date (datetime | None): Only include logs after this time.
             end_date (datetime | None): Only include logs before this time.
 
@@ -622,9 +622,9 @@ class DatabaseManager:
         """
         query = """
             SELECT * FROM sleep_logs
-            WHERE email_id = %s
+            WHERE device_id = %s
         """
-        params = [email_id]
+        params = [device_id]
 
         if start_date:
             query += " AND start_time >= %s"
@@ -641,7 +641,7 @@ class DatabaseManager:
 
     def get_user_alerts(
         self,
-        email_id: int,
+        device_id: int,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         acknowledged: Optional[bool] = None,
@@ -652,7 +652,7 @@ class DatabaseManager:
         Alerts may indicate threshold violations or other conditions.
 
         Args:
-            email_id (int): Device/email identifier.
+            device_id (int): Device identifier.
             start_time (datetime | None): Only include alerts after this.
             end_time (datetime | None): Only include alerts before this.
             acknowledged (bool | None): Only include acknowledged (True),
@@ -663,9 +663,9 @@ class DatabaseManager:
         """
         query = """
             SELECT * FROM alerts
-            WHERE email_id = %s
+            WHERE device_id = %s
         """
-        params = [email_id]
+        params = [device_id]
 
         if start_time:
             query += " AND alert_time >= %s"
@@ -684,7 +684,7 @@ class DatabaseManager:
 
     def insert_alert(
         self,
-        email_id: int,
+        device_id: int,
         alert_type: str,
         priority: str,
         triggering_value: float,
@@ -696,7 +696,7 @@ class DatabaseManager:
         Create a new alert record.
 
         Args:
-            email_id (int): Device/email identifier.
+            device_id (int): Device identifier.
             alert_type (str): A descriptive alert category.
             priority (str): One of 'high', 'medium', or 'low'.
             triggering_value (float): The value that triggered the alert condition.
@@ -716,11 +716,11 @@ class DatabaseManager:
 
             query = """
                 INSERT INTO alerts (
-                    email_id, alert_type, priority, triggering_value, threshold_value, alert_time, details
+                    device_id, alert_type, priority, triggering_value, threshold_value, alert_time, details
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
-            result = self.execute_query(query, (email_id, alert_type, priority, triggering_value, threshold, timestamp, details))
+            result = self.execute_query(query, (device_id, alert_type, priority, triggering_value, threshold, timestamp, details))
             return result[0][0] if result else None
         except Exception as e:
             print(f"Error executing query: {e}")
@@ -1348,17 +1348,18 @@ def init_db():
 
         # Create email_addresses table
         db.execute_query("""
-            CREATE TABLE IF NOT EXISTS email_addresses (
+            CREATE TABLE IF NOT EXISTS devices (
                 id SERIAL PRIMARY KEY,
-                address_name VARCHAR(255) NOT NULL,
-                device_type VARCHAR(50),
-                status status_type NOT NULL DEFAULT 'inserted',
                 admin_user_id INTEGER REFERENCES admin_users(id),
-                access_token TEXT,
-                refresh_token TEXT,
+                email_address VARCHAR(255) NOT NULL,
+                authorization status_type NOT NULL DEFAULT 'inserted',
+                device_type VARCHAR(50),
                 daily_summaries_checkpoint DATE,
+                sleep_checkpoint DATE,
                 intraday_checkpoint TIMESTAMPTZ,
                 last_synch TIMESTAMPTZ,
+                access_token TEXT,
+                refresh_token TEXT,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -1366,7 +1367,7 @@ def init_db():
         db.execute_query("""
             CREATE TABLE pending_authorizations (
                     id SERIAL PRIMARY KEY,
-                    email_id INTEGER REFERENCES email_addresses(id),
+                    device_id INTEGER REFERENCES email_addresses(id),
                     state VARCHAR(500) UNIQUE NOT NULL,
                     code_verifier VARCHAR(128) NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
@@ -1400,7 +1401,7 @@ def init_db():
                 oxygen_saturation FLOAT,
                 respiratory_rate FLOAT,
                 temperature FLOAT,
-                UNIQUE(email_id, date)
+                UNIQUE(device_id, date)
             );
         """)
 
@@ -1421,7 +1422,9 @@ def init_db():
                 heart_rate FLOAT,
                 steps FLOAT,
                 calories FLOAT,
-                distance FLOAT
+                distance FLOAT,
+                floors INTEGER,
+                elevation INTEGER
             );
         """)
 
