@@ -2,7 +2,11 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 from rich import _console
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
+
+## MIGRATION
+from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository
 from db import DatabaseManager
+
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
 from emails import send_email
@@ -119,29 +123,29 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        db = DatabaseManager()
-        if db.connect():
-            try:
-                user_data = db.verify_admin_user(username, password)
-                if user_data:
-                    user = User(
-                        user_data['id']
-                    )
-                    login_user(user)
+        # MIGRATION: Use Database facade for backward compatibility
+        # OR use repositories directly (recommended)
+        with Database() as database:
+            # Option 1: Using facade (backward compatible)
+            # user_data = db.verify_admin_user(username, password)
+            
+            # Option 2: Using repositories directly (recommended - uncomment below)
+            admin_repo = AdminUserRepository(database.db)
+            user_data = admin_repo.verify_credentials(username, password)
+
+            if user_data:
+                user = User(user_data['id'])
+                login_user(user)
                     
-                    # Store user info in session for easy access
-                    session['admin_user_id'] = user_data['id']
-                    session['username'] = user_data['username']
+                # Store user info in session for easy access
+                session['admin_user_id'] = user_data['id']
+                session['username'] = user_data['username']
                     
-                    name = user_data["full_name"] or username
-                    flash_translated('flash.welcome_user', 'success', name=name)
-                    return redirect(url_for('home'))
-                else:
-                    flash_translated('flash.incorrect_credentials', 'danger')
-            finally:
-                db.close()
-        else:
-            flash_translated('flash.database_connection_error', 'danger')
+                name = user_data["full_name"] or username
+                flash_translated('flash.welcome_user', 'success', name=name)
+                return redirect(url_for('home'))
+            else:
+                flash_translated('flash.incorrect_credentials', 'danger')
     
     return render_template('login.html')
 
@@ -163,10 +167,10 @@ def require_login():
     public_endpoints = ['login', 'callback', 'static']
 
     if not current_user.is_authenticated and request.endpoint not in public_endpoints:
-        print(f"❌ Bloccato! Redirezione a login")  # ← Debug
+        print(f"❌ Bloked! Recirect to login")  # ← Debug
         return redirect(url_for('login'))
 
-    print(f"✅ Accesso consentito")
+    print(f"✅ Access allowed")
 
 # Route: Root URL redirect
 @app.route('/')
@@ -258,13 +262,12 @@ def home():
             if request.method == 'POST':
                 email_address = request.form['emailAddress']
                 # Add email address linked to current user
-                email_id = db.add_device(
+                device_id = db.add_device(
                     current_user.id, 
                     email_address
                 )
 
-                # print("EMAIL ID:", email_id)
-                if email_id:
+                if device_id:
                     flash_translated('flash.email_added_success', 'success', address=email_address)
                 else:
                     flash_translated('flash.email_add_error', 'danger')
@@ -645,13 +648,13 @@ def callback():
 @login_required
 def deactivate_email():
     """ Deactivate authorized mail"""
-    email_id = request.form.get('DeactivateId')
+    device_id = request.form.get('DeactivateId')
 
     db = DatabaseManager()
     if db.connect():
-        db.change_email_status(email_id, 'non_active')
+        db.change_email_status(device_id, 'non_active')
 
-        app.logger.error(f"Email {email_id} deactivated.")
+        app.logger.error(f"Device {device_id} deactivated.")
 
     return redirect(url_for('home'))
 
@@ -970,7 +973,7 @@ def get_daily_summary():
 
             # Get the most recent summary
             summaries = db.get_daily_summaries(
-                email_id=user_id,
+                device_id=user_id,
                 start_date=datetime.now() - timedelta(days=1),
                 end_date=datetime.now()
             )
