@@ -2,9 +2,9 @@
 FITBIT DAILY SUMMARY COLLECTOR
 
 Runs continuously in background.
-For each email: fetch daily summary from checkpoint date up to yesterday.
-Uses one checkpoint per email for summaries only.
-Only sleeps when ALL emails are rate-limited.
+For each device: fetch daily summary from checkpoint date up to yesterday.
+Uses one checkpoint per device for summaries only.
+Only sleeps when ALL devices are rate-limited.
 """
 
 import os
@@ -91,7 +91,7 @@ def fetch_daily_summary(access_token, device_id, email_address, date_obj, db):
 
         if not (data['steps'] == 0 and data['heart_rate'] == 0 and data['distance'] == 0 and data['sedentary_minutes'] == 1440):
         
-            db.insert_daily_summary(device_id=device_id, date=date_str, **data)
+            db.insert_daily_summary(device_id=device_id, date_value=date_str, **data)
             logger.info(f"Daily summary collected for device {device_id} with email address {email_address} on {date_str}")
 
         db.update_daily_summaries_checkpoint(device_id, date_str)
@@ -109,19 +109,19 @@ def fetch_daily_summary(access_token, device_id, email_address, date_obj, db):
         return False, False
 
 
-def process_email_summary(device, db):
+def process_device_summary(device, db):
     """
-    Process daily summaries for one email.
+    Process daily summaries for one device.
     Returns: ('success'|'rate_limited'|'error')
     """
     device_id = device['id']
     email_address = device['email_address']
 
-    logger.info(f"Processing daily summary for device {device_id}")
+    logger.info(f"Processing daily summary for device {device_id} with email {email_address}")
 
     access_token, refresh_token = db.get_device_tokens(device_id)
     if not access_token or not refresh_token:
-        logger.warning(f"No tokens for {email_address}")
+        logger.warning(f"No tokens for device {device_id} with email {email_address}")
         return 'error'
 
     last_date = db.get_daily_summary_checkpoint(device_id)
@@ -135,7 +135,7 @@ def process_email_summary(device, db):
     end_date = (last_sync.date() - timedelta(days=1))
 
     if start_date >= end_date:
-        logger.info(f"{email_address} is up to date for summaries")
+        logger.info(f"Device {device_id} with {email_address} is up to date for summaries")
         return 'success'
     
     current_date = start_date
@@ -204,7 +204,7 @@ def main_loop():
             }
             
             for device in devices:
-                result = process_email_summary(device, db)
+                result = process_device_summary(device, db)
                 results[result] += 1
                 
             db.close()

@@ -73,7 +73,7 @@ def fetch_sleep_logs(access_token, device_id, date_obj, db):
                         db.insert_sleep_short_level(sleep_session_id, short)
 
         if len(data['sleep']) == 0:
-            logger.info(f"No sleep logs found for device {device_id} with email address {email_address} in date {date_obj}")
+            logger.info(f"No sleep logs found for device {device_id} in date {date_obj}")
 
         db.update_sleep_checkpoint(device_id, date_obj)
 

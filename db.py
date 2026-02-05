@@ -547,19 +547,19 @@ class DatabaseManager:
                 SET daily_summaries_checkpoint = %s
                 WHERE id = %s;
         """
-        result = self.execute_query(query, (date, device_id))
+        result = self.execute_query(query, (date_value, device_id))
                 
         if result:
-            print(f"Daily summaries chechpoint {date} for devices_id {device_id} successfully updated.")
+            print(f"Daily summaries chechpoint {date_value} for device_id {device_id} successfully updated.")
         return result
 
     
-    def update_intraday_checkpoint(self, email_id: int, timestamp: datetime) -> Union[List[Tuple[Any, ...]], bool, None]:
+    def update_intraday_checkpoint(self, device_id: int, timestamp: datetime) -> Union[List[Tuple[Any, ...]], bool, None]:
         """
         Update the intraday metrics checkpoint for a given device.
 
         Args:
-            email_id (int): Email/device identifier.
+            device_id (int): Device identifier.
             timestamp (datetime): Timestamp of the newest intraday data collected.
 
         Returns:
@@ -567,14 +567,14 @@ class DatabaseManager:
         """
 
         query = """
-                UPDATE email_addresses
+                UPDATE devices
                 SET intraday_checkpoint = %s
                 WHERE id = %s;
         """
-        result = self.execute_query(query, (timestamp, email_id))
+        result = self.execute_query(query, (timestamp, device_id))
                 
         if result:
-            print(f"Intraday checkpoint {timestamp} for email_id {email_id} successfully updated.")
+            print(f"Intraday checkpoint {timestamp} for device_id {device_id} successfully updated.")
         return result
 
 
@@ -595,10 +595,10 @@ class DatabaseManager:
                 SET sleep_checkpoint = %s
                 WHERE id = %s;
         """
-        result = self.execute_query(query, (date, device_id))
+        result = self.execute_query(query, (date_value, device_id))
                 
         if result:
-            print(f"Sleep checkpoint {date} for device {device_id} with email address {email_address} successfully updated.")
+            print(f"Sleep checkpoint {date_value} for device {device_id} successfully updated.")
         return result
 
 
@@ -982,15 +982,18 @@ class DatabaseManager:
                 "heart_rate": None,
                 "steps": None,
                 "calories": None,
-                "distance": None
+                "distance": None,
+                "floors": None,
+                "elevation": None
             }
             values[data_type] = value
 
             query = """
-                INSERT INTO intraday_metrics (device_id, time, heart_rate, steps, calories, distance)
-                VALUES (%s, %s, %s, %s, %s, %s);
+                INSERT INTO intraday_metrics (device_id, time, heart_rate, steps, calories, distance, floors, elevation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
             """
-            result = self.execute_query(query, (device_id, timestamp, values["heart_rate"], values["steps"], values["calories"], values["distance"]))
+            result = self.execute_query(query, (device_id, timestamp, values["heart_rate"], values["steps"], values["calories"], 
+                                                    values["distance"], values["floors"], values["elevation"]))
             if result:
                 print(f"Intraday {data_type} data for device {device_id} successfully saved in intraday_metrics.")
             return result
@@ -1134,8 +1137,58 @@ class DatabaseManager:
         return result if result else []
 
 
-    def insert_daily_summary(self, device_id, date, **data):
-        """Inserts or updates a daily summary in the daily_summaries table"""
+    def insert_daily_summary(
+        self,
+        device_id: int,
+        date_value: Union[date, str],
+        **data: Any
+    ) -> Union[List[Tuple[Any, ...]], bool, None]:
+        """
+        Insert or update a daily summary record for a given device and date.
+
+        This method writes a daily summary into the `daily_summaries` table
+        using a standard INSERT statement and an `ON CONFLICT` clause. If
+        a row already exists for the same `(device_id, date)` pair, the
+        existing row is updated with the newest values from `data`.
+
+        The summary may include metrics such as steps, heart rate,
+        calories, distance, sleep, and other daily aggregate fields. Any
+        fields not present in `data` will be stored as NULL if not already
+        defined.
+
+        Args:
+            device_id (int): The primary key of the device for which the
+                summary applies.
+            date (datetime.date | str): The calendar date of the summary. If
+                provided as a string it must be in a format PostgreSQL can parse
+                (e.g., 'YYYY-MM-DD').
+            **data: Additional keyword arguments containing daily metric values.
+                These should match one or more of the following keys:
+                - steps
+                - heart_rate
+                - sleep_minutes
+                - calories
+                - distance
+                - floors
+                - elevation
+                - active_minutes
+                - sedentary_minutes
+                - nutrition_calories
+                - water
+                - weight
+                - bmi
+                - fat
+                - oxygen_saturation
+                - respiratory_rate
+                - temperature
+
+        Returns:
+            list[tuple] | bool | None:
+            - A list of tuples if the query returns results.
+            - True if the insert/update was successful but returns no rows.
+            - None on error or failure.
+        """
+
         query = """
             INSERT INTO daily_summaries (
                 device_id, date, steps, heart_rate, sleep_minutes,
@@ -1145,7 +1198,7 @@ class DatabaseManager:
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
-            ON CONFLICT (email_id, date) DO UPDATE SET
+            ON CONFLICT (device_id, date) DO UPDATE SET
                 steps = EXCLUDED.steps,
                 heart_rate = EXCLUDED.heart_rate,
                 sleep_minutes = EXCLUDED.sleep_minutes,
@@ -1165,7 +1218,7 @@ class DatabaseManager:
                 temperature = EXCLUDED.temperature;
         """
         result = self.execute_query(query, (
-            email_id, date,
+            device_id, date_value,
             data.get("steps"),
             data.get("heart_rate"),
             data.get("sleep_minutes"),
@@ -1188,7 +1241,21 @@ class DatabaseManager:
 
 
     def get_all_devices(self):
-        """Retrieves a list of unique devices from the database"""
+        """
+        Retrieve all authorized devices from the database.
+
+        This queries the `devices` table and returns a list of device
+        records where the device is marked as authorized. Each device
+        is represented as a dictionary with an ID and its primary email
+        address.
+
+        Returns:
+            list[dict]: A list of dictionaries, each containing:
+                - 'id' (int): The unique identifier of the device.
+                - 'email_address' (str): The email used by the device.
+            Returns an empty list if there are no authorized devices
+            or if the query fails.
+        """
 
         query = "SELECT id, email_address, authorization_status FROM devices;"
         result = self.execute_query(query)
@@ -1199,7 +1266,25 @@ class DatabaseManager:
 
 
     def get_intraday_data_timestamps_by_range(self, device_id, start_date, end_date):
+        """
+        Retrieve all recorded intraday timestamps for a device within a range.
 
+        This method pulls only the `time` column from the `intraday_metrics`
+        hypertable for the specified `device_id`, filtered to only include
+        records strictly between `start_date` and `end_date`. Time ordering
+        makes it easy to determine when intraday data points were collected.
+
+        Args:
+            device_id (int): The device for which to collect timestamps.
+            start_date (datetime | str): The earliest timestamp (exclusive).
+            end_date (datetime | str): The latest timestamp (exclusive).
+
+        Returns:
+            list[tuple]: A list of single-element tuples, each containing
+                         a datetime object corresponding to an intraday
+                         metric event time. Returns an empty list if
+                         no records fall in the range or the query fails.
+        """
         query = "SELECT time FROM intraday_metrics WHERE device_id = %s AND time > %s AND time < %s ORDER BY TIME;"
         result = self.execute_query(query, (device_id, start_date, end_date))
         return result if result else []
@@ -1837,7 +1922,7 @@ if __name__ == "__main__":
 
         try:
 
-            reset_device_status()
+            # reset_device_status()
 
             from auth import refresh_tokens
             for device_id in [1, 2]:

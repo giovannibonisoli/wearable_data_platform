@@ -72,7 +72,7 @@ def request_with_rate_limit(url, access_token, max_retries=3):
     return None, True  # Exceeded retries
 
 
-def get_intraday_data(access_token, email_address, date_str, last_synch_date):
+def get_intraday_data(access_token, device, date_str, last_synch_date):
     """Collect intraday data for a specific date. Returns (success, hit_rate_limit)"""
     db = DatabaseManager()
     if not db.connect():
@@ -80,7 +80,7 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
         return False, False
     
     try:
-        logger.info(f"Collecting intraday data for {email_address['address_name']} on {date_str}")
+        logger.info(f"Collecting intraday data for {device['email_address']} on {date_str}")
         total_points = 0
         detail_level = "1min"
         hit_rate_limit = False
@@ -100,7 +100,7 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
             data, rate_limited = request_with_rate_limit(url, access_token)
             
             if rate_limited:
-                logger.warning(f"Rate limit hit for {email_address['address_name']} on {data_type}")
+                logger.warning(f"Rate limit hit for {device['email_address']} on {data_type}")
                 return False, True
             
             if data and key in data:
@@ -133,30 +133,30 @@ def get_intraday_data(access_token, email_address, date_str, last_synch_date):
             if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
 
             # if db.check_intraday_timestamp(email_address['id'], timestamp):
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='steps', value=values['steps'])
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='distance', value=values['distance'])
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='calories', value=values['calories'])
+                db.insert_intraday_metric(device['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
+                db.insert_intraday_metric(device['id'], timestamp, data_type='steps', value=values['steps'])
+                db.insert_intraday_metric(device['id'], timestamp, data_type='distance', value=values['distance'])
+                db.insert_intraday_metric(device['id'], timestamp, data_type='calories', value=values['calories'])
 
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='floors', value=values['floors'])
-                db.insert_intraday_metric(email_address['id'], timestamp, data_type='elevation', value=values['elevation'])
+                db.insert_intraday_metric(device['id'], timestamp, data_type='floors', value=values['floors'])
+                db.insert_intraday_metric(device['id'], timestamp, data_type='elevation', value=values['elevation'])
             else:
                 print(f"Empty point or checkpoint reached for timestamp {timestamp}")
 
-            db.update_intraday_checkpoint(email_address['id'], timestamp)
+            db.update_intraday_checkpoint(device['id'], timestamp)
 
 
         # Update checkpoint in database
         if total_points > 0:
-            logger.info(f"✓ Collected {total_points} points for {email_address['address_name']} on {date_str}")
+            logger.info(f"✓ Collected {total_points} points for {device['email_address']} on {date_str}")
             return True, False
         else:
-            logger.warning(f"No data collected for {email_address['address_name']} on {date_str}")
+            logger.warning(f"No data collected for {device['email_address']} on {date_str}")
             return False, False
             
     except requests.exceptions.HTTPError as e:
         if bool(hasattr(e, 'response') and e.response.status_code == 401):
-            logger.error(f"Authentication error (401) for {email_address['address_name']}")
+            logger.error(f"Authentication error (401) for {device['email_address']}")
             raise
         logger.error(f"HTTP error: {e}")
         return False, False
