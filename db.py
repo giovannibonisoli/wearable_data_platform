@@ -1186,16 +1186,6 @@ class DatabaseManager:
         ))
         return result
 
-    # def get_all_emails(self):
-    #     """Retrieves a list of unique email addresses from the database"""
-
-    #     query = "SELECT id, address_name, status FROM email_addresses;"
-    #     result = self.execute_query(query)
-    #     return [{
-    #                 'id': row[0], 
-    #                 'address_name': row[1]
-    #             } for row in result if row[2] == 'authorized'] if result else []
-
 
     def get_all_devices(self):
         """Retrieves a list of unique devices from the database"""
