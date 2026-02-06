@@ -125,12 +125,13 @@ def login():
 
         # MIGRATION: Use Database facade for backward compatibility
         # OR use repositories directly (recommended)
-        with Database() as database:
+        
+        with ConnectionManager() as conn:
             # Option 1: Using facade (backward compatible)
             # user_data = db.verify_admin_user(username, password)
             
             # Option 2: Using repositories directly (recommended - uncomment below)
-            admin_repo = AdminUserRepository(database.db)
+            admin_repo = AdminUserRepository(conn)
             user_data = admin_repo.verify_credentials(username, password)
 
             if user_data:
@@ -193,26 +194,27 @@ def index():
 @app.route('/livelyageing/admin_user_profile')
 @login_required
 def admin_user_profile():
-    """
-    Render the profile page with recent activity.
-    """
-
-    db = DatabaseManager()
-    if db.connect():
-        try:
-            admin_user = {}
-            admin_user['id'] = int(current_user.id)
-
-            admin_user.update(db.get_admin_user_by_id(admin_user['id']))
-            admin_user['num_devices'] = len(db.get_admin_user_devices(admin_user['id']))
-
+    try:
+        with ConnectionManager() as conn:
+            admin_repo = AdminUserRepository(conn)
+            device_repo = DeviceRepository(conn)
+            
+            admin_user_id = int(current_user.id)
+            admin_user = admin_repo.get_by_id(admin_user_id)
+            devices = device_repo.get_by_admin_user(admin_user_id)
+            
+            admin_user = {
+                'id': admin_user_id,
+                'username': admin_user.username,
+                'full_name': admin_user.full_name,
+                'created_at': admin_user.created_at,
+                'last_login': admin_user.last_login,
+                'num_devices': len(devices)
+            }
+            
             return render_template('admin_user_profile.html', admin_user=admin_user)
-
-        except Exception as e:
-            app.logger.error(f"Error while retrieving profile data: {e}")
-            return jsonify({'error': str(e)}), 500
-    else:
-        app.logger.error(f"Error while connecting to database: {e}")
+    except Exception as e:
+        app.logger.error(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -224,32 +226,29 @@ def change_password():
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
 
-
     if len(new_password) >= 8:
         admin_user_id = int(current_user.id)
+   
+        with ConnectionManager() as conn:
+            admin_repo = AdminUserRepository(conn)
+            user = admin_repo.get_by_id(admin_user_id)
 
-        db = DatabaseManager()
-
-        if db.connect():
-
-            username = db.get_admin_user_by_id(admin_user_id)['username']
-
-            if db.verify_admin_user(username, current_password):
+            if user:
                 if new_password == confirm_password:
-                    db.update_admin_user_password(admin_user_id, new_password)
-                    flash_translated('flash.password_changed_success', 'success')
+
+                    result = admin_repo.update_password(admin_user_id, new_password)
+                    
+                    if result:
+                        flash_translated('flash.password_changed_successfully', 'success')
+                    else:
+                        flash_translated('flash.password_change_failed', 'danger')
                 else:
-                    flash_translated('flash.password_confirm_mismatch', 'danger')
+                    flash_translated('flash.passwords_do_not_match', 'danger')
             else:
-                flash_translated('flash.current_password_wrong', 'danger')
-            
-
-        else:
-            flash_translated('flash.database_connection_error', 'danger')
-    
+                flash_translated('flash.current_password_incorrect', 'danger')
     else:
-        flash_translated('flash.password_min_length', 'warning')
-
+        flash_translated('flash.password_too_short', 'danger')
+    
     return redirect(url_for('admin_user_profile'))
 
 

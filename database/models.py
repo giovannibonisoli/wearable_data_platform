@@ -9,7 +9,6 @@ class AdminUser:
     id: int
     username: str
     full_name: str
-    email: Optional[str] = None
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     is_active: bool = True
@@ -17,7 +16,7 @@ class AdminUser:
 
 @dataclass
 class Device:
-    """Represents a device/email address connected to the system."""
+    """Represents a device address connected to the system."""
     id: int
     email_address: str
     authorization_status: str

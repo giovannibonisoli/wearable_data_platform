@@ -69,7 +69,7 @@ class AdminUserRepository:
             AdminUser object or None if not found.
         """
         query = """
-            SELECT id, username, full_name, email, created_at, last_login, is_active
+            SELECT id, username, full_name, created_at, last_login, is_active
             FROM admin_users
             WHERE id = %s
         """
@@ -81,10 +81,9 @@ class AdminUserRepository:
                 id=row[0],
                 username=row[1],
                 full_name=row[2],
-                email=row[3],
-                created_at=row[4],
-                last_login=row[5],
-                is_active=row[6]
+                created_at=row[3],
+                last_login=row[4],
+                is_active=row[5]
             )
         return None
 
