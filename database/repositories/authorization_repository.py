@@ -79,11 +79,11 @@ class AuthorizationRepository:
             bool: True if a pending auth exists and hasn't expired.
         """
         query = """
-            SELECT 1
+            SELECT *
             FROM pending_authorizations
             WHERE device_id = %s AND expires_at > NOW()
-            LIMIT 1
         """
+
         result = self.db.execute_query(query, (device_id,))
         return bool(result)
 

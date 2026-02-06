@@ -50,14 +50,20 @@ class DeviceRepository:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO devices (email_address, authorization_status, access_token, refresh_token, admin_user_id)
-            VALUES (%s, 'inserted', %s, %s, %s)
+            INSERT INTO devices (admin_user_id, email_address, authorization_status, device_type, 
+                                    daily_summaries_checkpoint, intraday_checkpoint, sleep_checkpoint, 
+                                    last_synch, access_token, refresh_token)
+            VALUES (%s, %s,'inserted', NULL, NULL, NULL, NULL, NULL, %s, %s)
             RETURNING id
         """
+
+        print("INPUTS:", (admin_user_id, email_address, encrypted_access_token, encrypted_refresh_token))
+
         result = self.db.execute_query(
             query, 
-            (email_address, encrypted_access_token, encrypted_refresh_token, admin_user_id)
+            (admin_user_id, email_address, encrypted_access_token, encrypted_refresh_token)
         )
+
         return result[0][0] if result else None
 
     def get_by_id(self, device_id: int) -> Optional[Device]:

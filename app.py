@@ -4,7 +4,7 @@ from rich import _console
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
 
 ## MIGRATION
-from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository
+from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository, AuthorizationRepository
 from db import DatabaseManager
 
 from config import CLIENT_ID, REDIRECT_URI
@@ -127,10 +127,6 @@ def login():
         # OR use repositories directly (recommended)
         
         with ConnectionManager() as conn:
-            # Option 1: Using facade (backward compatible)
-            # user_data = db.verify_admin_user(username, password)
-            
-            # Option 2: Using repositories directly (recommended - uncomment below)
             admin_repo = AdminUserRepository(conn)
             user_data = admin_repo.verify_credentials(username, password)
 
@@ -252,69 +248,156 @@ def change_password():
     return redirect(url_for('admin_user_profile'))
 
 
-@app.route('/livelyageing/home', methods=['GET', 'POST'])
+# @app.route('/livelyageing/home', methods=['GET', 'POST'])
+# @login_required
+# def home():
+#     try:
+#         admin_user_id = int(current_user.id)
+        
+#         with ConnectionManager() as conn:
+#             device_repo = DeviceRepository(conn)
+            
+#             if request.method == 'POST':
+#                 email_address = request.form['emailAddress']
+#                 # Add email address linked to current user
+#                 device_id = db.add_device(
+#                     current_user.id, 
+#                     email_address
+#                 )
+
+#                 if device_id:
+#                     flash_translated('flash.email_added_success', 'success', address=email_address)
+#                 else:
+#                     flash_translated('flash.email_add_error', 'danger')
+#                 return redirect(url_for('home'))
+#             else:
+#                 # Get only the devices owned by current user
+
+#                 devices = device_repo.get_by_admin_user(admin_user_id)
+                    
+#                 devices = []
+#                 for device in result:
+#                     auth_status = device[2]
+                        
+#                     if auth_status == 'inserted':
+#                         if db.check_pending_auth(device[0]):
+#                             auth_status = 'pending_auth_request'
+
+#                     # Get data reception status
+#                     data_reception_status = 'no_data'
+#                     data_reception_details = {}
+#                     device_usage_details = {}
+    
+#                     if auth_status == 'authorized':
+#                         data_reception_status, data_reception_details = get_device_sync_data(device[0])
+#                         device_usage_details = get_last_device_usage_statistics(device[0], timedelta(days=7))
+                        
+#                     devices.append({
+#                             "id": device[0],
+#                             "email_address": device[1],
+#                             "auth_status": auth_status,
+#                             "device_type": device[3] if device[3] else "",
+#                             "data_reception_status": data_reception_status,
+#                             "data_reception_details": data_reception_details,
+#                             "device_usage_details": device_usage_details
+#                     })
+                    
+#                 return render_template(
+#                     'home.html', 
+#                     devices=devices
+#                 )
+
+#     except Exception as e:
+#         app.logger.error(f"Error retrieving devices: {e}")
+#         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/livelyageing/home')
 @login_required
 def home():
-    db = DatabaseManager()
-    if db.connect():
-        try:
-            if request.method == 'POST':
-                email_address = request.form['emailAddress']
-                # Add email address linked to current user
-                device_id = db.add_device(
-                    current_user.id, 
-                    email_address
-                )
+    """
+    Display all devices for the logged-in admin.
+    """
+    try:
+        admin_user_id = int(current_user.id)
+        
+        with ConnectionManager() as conn:
+            device_repo = DeviceRepository(conn)
+            devices = device_repo.get_by_admin_user(admin_user_id)
+            
 
-                if device_id:
-                    flash_translated('flash.email_added_success', 'success', address=email_address)
-                else:
-                    flash_translated('flash.email_add_error', 'danger')
-                return redirect(url_for('home'))
-            else:
-                # Get only the devices owned by current user
-                result = db.get_admin_user_devices(current_user.id)
-                
-                devices = []
-                for device in result:
-                    auth_status = device[2]
-                    
-                    if auth_status == 'inserted':
-                        if db.check_pending_auth(device[0]):
-                            auth_status = 'pending_auth_request'
+            devices_data = []
+            for device in devices:
+                auth_status = device.authorization_status
 
-                    # Get data reception status
-                    data_reception_status = 'no_data'
-                    data_reception_details = {}
-                    device_usage_details = {}
- 
-                    if auth_status == 'authorized':
-                        data_reception_status, data_reception_details = get_device_sync_data(device[0])
-                        device_usage_details = get_last_device_usage_statistics(device[0], timedelta(days=7))
-                    
-                    devices.append({
-                        "id": device[0],
-                        "email_address": device[1],
+                # Get data reception status
+                data_reception_status = 'no_data'
+                data_reception_details = {}
+                device_usage_details = {}
+
+                if auth_status == 'inserted':
+                    auth_repo = AuthorizationRepository(conn)
+
+                    if auth_repo.check_exists(device.id):
+                        auth_status = 'pending_auth_request'
+
+                elif auth_status == 'authorized':
+                    data_reception_status, data_reception_details = get_device_sync_data(device.id)
+                    device_usage_details = get_last_device_usage_statistics(device.id, timedelta(days=7))
+                        
+                devices_data.append({
+                        "id": device.id,
+                        "email_address": device.email_address,
                         "auth_status": auth_status,
-                        "device_type": device[3] if device[3] else "",
+                        "device_type": device.device_type if device.device_type else "",
                         "data_reception_status": data_reception_status,
                         "data_reception_details": data_reception_details,
                         "device_usage_details": device_usage_details
                     })
+            
+            return render_template('home.html', devices=devices_data)
+            
+    except Exception as e:
+        app.logger.error(f"Error retrieving devices: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/livelyageing/add_device', methods=['POST'])
+@login_required
+def add_device():
+    """
+    Add a new device for the logged-in admin.
+    """
+    try:
+        email_address = request.form['emailAddress']
+        admin_user_id = int(current_user.id)
+        
+        with ConnectionManager() as conn:
+            device_repo = DeviceRepository(conn)
+            
+            # Check if device already exists
+            existing = device_repo.get_by_email(email_address)
+            if existing:
+                flash_translated('flash.device_already_exists', 'warning')
+                return redirect(url_for('home'))
+            
+            # Create new device
+            device_id = device_repo.create(
+                admin_user_id=admin_user_id,
+                email_address=email_address
+            )
+            
+            if device_id:
+                flash_translated('flash.device_added_successfully', 'success')
+            else:
+                flash_translated('flash.device_add_failed', 'danger')
                 
-                return render_template(
-                    'home.html', 
-                    devices=devices
-                )
-        except Exception as e:
-            app.logger.error(f"Error fetching devices: {e}")
-            flash_translated('flash.device_load_error', 'danger')
-            return redirect(url_for('home'))
-        finally:
-            db.close()
-    else:
-        flash_translated('flash.database_connection_error', 'danger')
-        return redirect(url_for('home'))
+    except Exception as e:
+        app.logger.error(f"Error adding device: {e}")
+        flash_translated('flash.error_occurred', 'danger')
+    
+    return redirect(url_for('home'))
 
 
 @app.route('/livelyageing/update_devices_info')
