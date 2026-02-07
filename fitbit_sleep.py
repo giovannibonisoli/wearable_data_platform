@@ -203,10 +203,3 @@ if __name__ == "__main__":
         logger.info("\n=== STOPPED BY USER (Ctrl+C) ===")
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
-
-    # db = DatabaseManager()
-    # if db.connect():
-    #     query = "UPDATE email_addresses SET sleep_checkpoint = NULL;"
-    #     result = db.execute_query(query, [])
-
-    # db.close()

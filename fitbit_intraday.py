@@ -25,7 +25,7 @@ import json
 import time
 import logging
 
-from db import DatabaseManager
+from database import Database, ConnectionManager, DeviceRepository, MetricsRepository
 from auth import refresh_tokens, get_device_info
 
 # Logs configuration
@@ -72,15 +72,11 @@ def request_with_rate_limit(url, access_token, max_retries=3):
     return None, True  # Exceeded retries
 
 
-def get_intraday_data(access_token, device, date_str, last_synch_date):
+def get_intraday_data(access_token, device, date_str, last_synch_date, device_repo, metrics_repo):
     """Collect intraday data for a specific date. Returns (success, hit_rate_limit)"""
-    db = DatabaseManager()
-    if not db.connect():
-        logger.error("Failed to connect to database")
-        return False, False
     
     try:
-        logger.info(f"Collecting intraday data for {device['email_address']} on {date_str}")
+        logger.info(f"Collecting intraday data for {device.email_address} on {date_str}")
         total_points = 0
         detail_level = "1min"
         hit_rate_limit = False
@@ -100,7 +96,7 @@ def get_intraday_data(access_token, device, date_str, last_synch_date):
             data, rate_limited = request_with_rate_limit(url, access_token)
             
             if rate_limited:
-                logger.warning(f"Rate limit hit for {device['email_address']} on {data_type}")
+                logger.warning(f"Rate limit hit for {device.email_address} on {data_type}")
                 return False, True
             
             if data and key in data:
@@ -133,166 +129,150 @@ def get_intraday_data(access_token, device, date_str, last_synch_date):
             if not ('heart_rate' not in values and values['steps'] == 0 and values['distance'] == 0):
 
             # if db.check_intraday_timestamp(email_address['id'], timestamp):
-                db.insert_intraday_metric(device['id'], timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
-                db.insert_intraday_metric(device['id'], timestamp, data_type='steps', value=values['steps'])
-                db.insert_intraday_metric(device['id'], timestamp, data_type='distance', value=values['distance'])
-                db.insert_intraday_metric(device['id'], timestamp, data_type='calories', value=values['calories'])
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='heart_rate', value=values.get('heart_rate', None))
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='steps', value=values['steps'])
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='distance', value=values['distance'])
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='calories', value=values['calories'])
 
-                db.insert_intraday_metric(device['id'], timestamp, data_type='floors', value=values['floors'])
-                db.insert_intraday_metric(device['id'], timestamp, data_type='elevation', value=values['elevation'])
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='floors', value=values['floors'])
+                metrics_repo.insert_intraday_metric(device.id, timestamp, data_type='elevation', value=values['elevation'])
             else:
                 print(f"Empty point or checkpoint reached for timestamp {timestamp}")
 
-            db.update_intraday_checkpoint(device['id'], timestamp)
+            device_repo.update_intraday_checkpoint(device.id, timestamp)
 
 
         # Update checkpoint in database
         if total_points > 0:
-            logger.info(f"✓ Collected {total_points} points for {device['email_address']} on {date_str}")
+            logger.info(f"✓ Collected {total_points} points for {device.email_address} on {date_str}")
             return True, False
         else:
-            logger.warning(f"No data collected for {device['email_address']} on {date_str}")
+            logger.warning(f"No data collected for {device.email_address} on {date_str}")
             return False, False
             
     except requests.exceptions.HTTPError as e:
         if bool(hasattr(e, 'response') and e.response.status_code == 401):
-            logger.error(f"Authentication error (401) for {device['email_address']}")
+            logger.error(f"Authentication error (401) for {device.email_address}")
             raise
         logger.error(f"HTTP error: {e}")
         return False, False
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         return False, False
-    finally:
-        db.close()
 
 
 def process_all_devices_continuous():
     """Main continuous loop that processes all devices until current date"""
-    db = DatabaseManager()
-    if not db.connect():
-        logger.error("Failed to connect to database")
-        return
-    
-    devices = db.get_all_devices()
-    db.close()
-    
-    if len(devices) == 0:
-        logger.error("No devices found")
-        return
 
-    start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
+
+    with ConnectionManager() as conn:
+        device_repo = DeviceRepository(conn)
+        metrics_repo = MetricsRepository(conn)
     
-    logger.info(f"Starting continuous processing from {start_date} to current date")
-
+        devices = device_repo.get_all_authorized()
     
-    while True:
-        today = datetime.now().date()
-        all_devices_rate_limited = True
-        any_device_processed = False
-        
-        for device in devices:
-            db = DatabaseManager()
-            if not db.connect():
-                continue
-                
-            # Get checkpoint from database
-            intraday_checkpoint = db.get_intraday_checkpoint(device['id'])
-  
-            if intraday_checkpoint:
-                current_date = intraday_checkpoint + timedelta(minutes=1)
-                print("GOT CHECKPOINT:", current_date)
-            else:
-                current_date = start_date
-                print("NEW START DATE:", current_date)
-                db.update_intraday_checkpoint(device['id'], start_date)
+        if len(devices) == 0:
+            logger.error("No devices found")
+            return
 
-            access_token, refresh_token = db.get_device_tokens(device['id'])
-            db.close()
+        start_date = datetime.strptime(BACKFILL_START_DATE, "%Y-%m-%d").date()
+        logger.info(f"Starting continuous processing from {start_date} to current date")
 
-            if not access_token or not refresh_token:
-                logger.warning(f"No valid tokens for {device['email_address']}")
-                continue
+        while True:
+            today = datetime.now().date()
+            all_devices_rate_limited = True
+            any_device_processed = False
             
-            try:
-                db = DatabaseManager()
-                if not db.connect():
+            for device in devices: 
+                # Get checkpoint from database
+                intraday_checkpoint = device.intraday_checkpoint
+    
+                if intraday_checkpoint:
+                    current_date = intraday_checkpoint + timedelta(minutes=1)
+                    print("GOT CHECKPOINT:", current_date)
+                else:
+                    current_date = start_date
+                    print("NEW START DATE:", current_date)
+                    device_repo.update_intraday_checkpoint(device.id, start_date)
+
+                access_token, refresh_token = device_repo.get_tokens(device.id)
+
+                if not access_token or not refresh_token:
+                    logger.warning(f"No valid tokens for {device.email_address}")
                     continue
-
-                last_synch_date = db.get_last_synch(device['id'])
-
-                if current_date >= last_synch_date:
                 
-                    device_data = get_device_info(access_token)
-                    new_last_synch_date = device_data['lastSyncTime']
-                    new_last_synch_date = new_last_synch_date.replace(tzinfo=current_date.tzinfo)
+                try:
 
-                    logger.info(f"Checking last synch date for email {device['email_address']}")
+                    last_synch_date = device.last_synch
+
+                    if current_date >= last_synch_date:
                     
-                    if new_last_synch_date == last_synch_date:
-                        logger.info(f"Device {device['id']} with email {device['email_address']} is up to date (last: {new_last_synch_date})")
+                        device_data = get_device_info(access_token)
+                        new_last_synch_date = device_data['lastSyncTime']
+                        new_last_synch_date = new_last_synch_date.replace(tzinfo=current_date.tzinfo)
+
+                        logger.info(f"Checking last synch date for device {device.id} with email {device.email_address}")
+                        
+                        if new_last_synch_date == last_synch_date:
+                            logger.info(f"Device {device.id} with email {device.email_address} is up to date (last: {new_last_synch_date})")
+                        else:
+                            logger.info(f"Updating last synch date for {device.email_address} to: {new_last_synch_date}")
+                            device_repo.update_last_synch(device.id, new_last_synch_date.strftime('%Y-%m-%d %H:%M:%S'))
+                            last_synch_date = new_last_synch_date
+
+                    # Check if email is up to date
+                    if current_date >= last_synch_date:
+                        continue
+
+                    # Process this email's next day
+                    date_str = current_date.strftime('%Y-%m-%d')
+                
+                    success, hit_rate_limit = get_intraday_data(access_token, device, date_str, last_synch_date, device_repo, metrics_repo)
+                    
+                    if hit_rate_limit:
+                        logger.warning(f"Rate limit hit for {device.email_address}, skipping to next user")
+                        continue  # Skip to next email
                     else:
-                        logger.info(f"Updating last synch date for {device['email_address']} to:{new_last_synch_date}")
-                        db.update_last_synch(device['id'], new_last_synch_date.strftime('%Y-%m-%d %H:%M:%S'))
-                        last_synch_date = new_last_synch_date
+                        all_devices_rate_limited = False
+                        any_device_processed = True
+                    
+                    time.sleep(1)  # Small delay between requests
+                    
+                except requests.exceptions.HTTPError as e:
+                    if hasattr(e, 'response') and e.response.status_code == 401:
+                        logger.warning(f"Token expired for {device.email_address}, attempting refresh...")
+                        new_access_token, new_refresh_token = refresh_tokens(refresh_token)
+                        if new_access_token and new_refresh_token:
 
-                db.close()
-
-                # Check if email is up to date
-                if current_date >= last_synch_date:
-                    continue
-
-                # Process this email's next day
-                date_str = current_date.strftime('%Y-%m-%d')
+                            device_repo.update_tokens(device.id, new_access_token, new_refresh_token)
+                            # Retry with new token
+                            try:
+                                success, hit_rate_limit = get_intraday_data(new_access_token, device, date_str, last_synch_date, device_repo, metrics_repo)
+                                if not hit_rate_limit:
+                                    all_devices_rate_limited = False
+                                    any_device_processed = True
+                            except Exception as e2:
+                                logger.error(f"Error after token refresh: {e2}")
+                        else:
+                            logger.error(f"Could not refresh token for {device.email_address}")
+                    else:
+                        all_devices_rate_limited = False
+                except Exception as e:
+                    logger.error(f"Unexpected error processing {device.email_address}: {e}", exc_info=True)
+                    all_devices_rate_limited = False
             
-                success, hit_rate_limit = get_intraday_data(access_token, device, date_str, last_synch_date)
-                
-                if hit_rate_limit:
-                    logger.warning(f"Rate limit hit for {device['email_address']}, skipping to next user")
-                    continue  # Skip to next email
-                else:
-                    all_devices_rate_limited = False
-                    any_device_processed = True
-                
-                time.sleep(1)  # Small delay between requests
-                
-            except requests.exceptions.HTTPError as e:
-                if hasattr(e, 'response') and e.response.status_code == 401:
-                    logger.warning(f"Token expired for {device['email_address']}, attempting refresh...")
-                    new_access_token, new_refresh_token = refresh_tokens(refresh_token)
-                    if new_access_token and new_refresh_token:
-                        db = DatabaseManager()
-                        if db.connect():
-                            db.update_device_tokens(device['id'], new_access_token, new_refresh_token)
-                            db.close()
-                        # Retry with new token
-                        try:
-                            success, hit_rate_limit = get_intraday_data(new_access_token, device, date_str, last_synch_date)
-                            if not hit_rate_limit:
-                                all_devices_rate_limited = False
-                                any_device_processed = True
-                        except Exception as e2:
-                            logger.error(f"Error after token refresh: {e2}")
-                    else:
-                        logger.error(f"Could not refresh token for {device['email_address']}")
-                else:
-                    all_devices_rate_limited = False
-            except Exception as e:
-                logger.error(f"Unexpected error processing {device['email_address']}: {e}", exc_info=True)
-                all_devices_rate_limited = False
-        
-        # Check if all devices hit rate limit
-        if all_devices_rate_limited and any_device_processed:
-            logger.info(f"All devices hit rate limit. Sleeping for {SLEEP_ON_RATE_LIMIT/60} minutes...")
-            time.sleep(SLEEP_ON_RATE_LIMIT)
+            # Check if all devices hit rate limit
+            if all_devices_rate_limited and any_device_processed:
+                logger.info(f"All devices hit rate limit. Sleeping for {SLEEP_ON_RATE_LIMIT/60} minutes...")
+                time.sleep(SLEEP_ON_RATE_LIMIT)
 
-        elif not any_device_processed:
-            # All devices are up to date, check again in 10 minutes
-            logger.info("All devices up to date. Sleeping for 10 minutes before checking again...")
-            time.sleep(SLEEP_ON_RATE_LIMIT)
-        else:
-            # Continue processing
-            time.sleep(2)
+            elif not any_device_processed:
+                # All devices are up to date, check again in 10 minutes
+                logger.info("All devices up to date. Sleeping for 10 minutes before checking again...")
+                time.sleep(SLEEP_ON_RATE_LIMIT)
+            else:
+                # Continue processing
+                time.sleep(2)
 
 
 if __name__ == "__main__":

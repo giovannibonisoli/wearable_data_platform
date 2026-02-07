@@ -2,7 +2,6 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 from rich import _console
 
-
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
