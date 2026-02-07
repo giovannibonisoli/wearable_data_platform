@@ -408,42 +408,34 @@ def update_devices_info():
     This retrieves device type and last sync time automatically.
     """
 
-    db = DatabaseManager()
-    if db.connect():
-    
-        devices = db.get_all_devices()
+    with ConnectionManager() as conn:
+        device_repo = DeviceRepository(conn)
+        devices = device_repo.get_all_authorized()
 
         errors = []
         for device in devices:
 
-            device_id = device['id']
-            access_token, _ = db.get_device_tokens(device_id)
-
             try:
+                access_token, _ = device_repo.get_tokens(device.id)
                 device_data = get_device_info(access_token)
 
-                device_result = db.update_device_type(device_id, device_data['deviceVersion'])
-                last_sync_result = db.update_last_synch(device_id, device_data['lastSyncTime'])
+                device_result = device_repo.update_device_type(device.id, device_data['deviceVersion'])
+                last_sync_result = device_repo.update_last_synch(device.id, device_data['lastSyncTime'])
 
                 if not device_result or not last_sync_result:
-                    app.logger.error(f"Error while updating info for device linked to {device['email_address']}")
-                    errors.append(device['email_address'])
+                    app.logger.error(f"Error while updating info for device {device.id} linked to {device.email_address}")
+                    errors.append(device.email_address)
                 else:
-                    app.logger.info(f"Device Info successfully updated for device linked to {device['email_address']}")
+                    app.logger.info(f"Device Info successfully updated for device {device.id} linked to {device.email_address}")
 
             except Exception as e:
-                app.logger.error(f"Error retrieving device info for {device['email_address']}: {e}")
-                errors.append(device['email_address'])
+                app.logger.error(f"Error retrieving device info or device {device.id} linked to {device.email_address}: {e}")
+                errors.append(device.email_address)
 
         if len(errors) > 0:
             flash_translated('flash.devices_info_update_error', 'danger', devices=', '.join(errors))
         else:
             flash_translated('flash.devices_info_update_success', 'success')
-            
-        db.close()
-
-    else:
-        flash_translated('flash.database_connection_error', 'danger')
 
     return redirect(url_for('home'))
 
@@ -620,13 +612,10 @@ def send_auth_email():
 
     if send_email(email_address, email_subject, email_html, email_text):
         # Store code_verifier in database or cache with state as key
-        db = DatabaseManager()
-        if db.connect():
-            try:
-                # Save the code verifier temporarly (it expires in 10 minutes)
-                db.store_pending_auth(device_id, state, code_verifier)
-            finally:
-                db.close()
+        
+        with ConnectionManager() as conn:
+            auth_repo = AuthorizationRepository(conn)
+            auth_repo.store_pending_auth(device_id, state, code_verifier)
         return render_template('auth_email_sent_confirmation.html', email_address=email_address)
     else:
         flash_translated('flash.device_send_error', 'danger')
@@ -641,89 +630,76 @@ def callback():
     """
     app.logger.info("Callback route accessed")
 
+
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if not code or not state:
+        app.logger.error("Missing code or state parameter")
+        flash_translated('flash.missing_auth_info', 'danger')
+        return redirect(url_for('home'))
+
+    # Decode state to get email
     try:
-        code = request.args.get('code')
-        state = request.args.get('state')
+        state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
+        email_address = state_data.get('email_address')
+    except Exception as e:
+        app.logger.error(f"Invalid state parameter: {e}")
+        flash_translated('flash.invalid_auth_link', 'danger')
+        return redirect(url_for('home'))
 
-        if not code or not state:
-            app.logger.error("Missing code or state parameter")
-            flash_translated('flash.missing_auth_info', 'danger')
-            return redirect(url_for('home'))
+    if not email_address:
+        app.logger.error("No email found in state")
+        flash_translated('flash.invalid_auth_link', 'danger')
+        return redirect(url_for('home'))
 
-        # Decode state to get email
+    with ConnectionManager() as conn:
         try:
-            state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
-            email_address = state_data.get('email_address')
-        except Exception as e:
-            app.logger.error(f"Invalid state parameter: {e}")
-            flash_translated('flash.invalid_auth_link', 'danger')
-            return redirect(url_for('home'))
+            auth_repo = AuthorizationRepository(conn)
+            # Retrieve code_verifier from database
+            pending_auth = auth_repo.get_by_state(state)
 
-        if not email_address:
-            app.logger.error("No email found in state")
-            flash_translated('flash.invalid_auth_link', 'danger')
-            return redirect(url_for('home'))
+            if not pending_auth:
+                app.logger.error("No pending authorization found or expired")
+                flash_translated('flash.auth_link_expired', 'danger')
+                return redirect(url_for('home'))
 
-        db = DatabaseManager()
-        if db.connect():
-            try:
-                # Retrieve code_verifier from database
-                pending_auth = db.get_pending_auth(state)
+            code_verifier = pending_auth['code_verifier']
 
-                print("PENDING AUTH:", pending_auth)
-                if not pending_auth:
-                    app.logger.error("No pending authorization found or expired")
-                    flash_translated('flash.auth_link_expired', 'danger')
-                    return redirect(url_for('home'))
+            # Get tokens from Fitbit
+            access_token, refresh_token = get_tokens(code, code_verifier)
+            if not access_token or not refresh_token:
+                raise Exception("Could not retrieve Fitbit tokens.")
 
-                code_verifier = pending_auth['code_verifier']
+            device_data = get_device_info(access_token)
 
-                # Get tokens from Fitbit
-                access_token, refresh_token = get_tokens(code, code_verifier)
-                if not access_token or not refresh_token:
-                    raise Exception("Could not retrieve Fitbit tokens.")
+            device_repo = DeviceRepository(conn)
 
-                device_data = get_device_info(access_token)
-                device_id = db.get_device_by_email_address(email_address)
-                db.update_device_type(device_id, device_data['deviceVersion'])
-                db.update_last_synch(device_id, device_data['lastSyncTime'])
+            device = device_repo.get_by_email(email_address)
 
-                db.update_device_tokens(device_id, access_token, refresh_token)
-                app.logger.info(f"Tokens updated for the device {device_id}.")
+            device_repo.update_tokens(device.id, access_token, refresh_token)
+            app.logger.info(f"Tokens updated for the device {device.id}.")
 
-                db.change_device_status(device_id, 'authorized')
-                app.logger.info(f"Authorization status updated for the device {device_id}.")
+            device_repo.update_status(device.id, 'authorized')
+            app.logger.info(f"Authorization status updated for the device {device.id}.")
 
-                db.delete_pending_auth(state)
-                app.logger.info(f"Deleted prending request.")
+            auth_repo.delete_by_state(state)
+            app.logger.info(f"Deleted prending request.")
 
-                return render_template('auth_confirmation.html',
+            device_repo.update_device_type(device.id, device_data['deviceVersion'])
+            device_repo.update_last_synch(device.id, device_data['lastSyncTime'])
+
+            return render_template('auth_confirmation.html',
                                      email_address=email_address,
                                      success=True,
                                      link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
-            except Exception as e:
-                app.logger.error(f"Error during token exchange: {e}")
-                return render_template('auth_confirmation.html',
-                                     email_address=email_address,
-                                     success=False,
-                                     error=str(e),
-                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
-            finally:
-                db.close()
-        else:
-            app.logger.error("Could not connect to the database.")
+        except Exception as e:
+            app.logger.error(f"Unexpected error: {e}")
             return render_template('auth_confirmation.html',
-                                 success=False,
-                                 error="Database connection failed",
-                                 link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
-
-    except Exception as e:
-        app.logger.error(f"Unexpected error: {e}")
-        return render_template('auth_confirmation.html',
-                             success=False,
-                             error=str(e),
-                             link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
+                                    success=False,
+                                    error=str(e),
+                                    link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 
 @app.route('/livelyageing/deactivate_email', methods=['POST'])
@@ -732,11 +708,11 @@ def deactivate_email():
     """ Deactivate authorized mail"""
     device_id = request.form.get('DeactivateId')
 
-    db = DatabaseManager()
-    if db.connect():
-        db.change_email_status(device_id, 'non_active')
+    with ConnectionManager() as conn:
+        device_repo = DeviceRepository(conn)
+        device_repo.update_status(device_id, 'non_active')
 
-        app.logger.error(f"Device {device_id} deactivated.")
+        app.logger.logger(f"Device {device_id} deactivated.")
 
     return redirect(url_for('home'))
 

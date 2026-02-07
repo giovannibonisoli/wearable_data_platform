@@ -1859,7 +1859,7 @@ def reset_device_status():
     
     try:
         print(f"Resetting status")
-        query = "UPDATE devices SET access_token = NULL, refresh_token = NULL, device_type = NULL, authorization_status='inserted';"
+        query = "UPDATE devices SET access_token = NULL, refresh_token = NULL, device_type = NULL, authorization_status='inserted' where id=1;"
         result = db.execute_query(query, [])
 
         return result
@@ -1925,16 +1925,16 @@ if __name__ == "__main__":
 
         try:
 
-            # reset_device_status()
+            reset_device_status()
 
-            from auth import refresh_tokens
-            for device_id in [1, 2]:
+            # from auth import refresh_tokens
+            # for device_id in [1, 2]:
 
-                access_token, refresh_token = db.get_device_tokens(device_id)
+            #     access_token, refresh_token = db.get_device_tokens(device_id)
 
-                new_access_token, new_refresh_token = refresh_tokens(refresh_token)
+            #     new_access_token, new_refresh_token = refresh_tokens(refresh_token)
 
-                db.update_device_tokens(device_id, new_access_token, new_refresh_token)
+            #     db.update_device_tokens(device_id, new_access_token, new_refresh_token)
 
             # print("Dati aggiornati!")
 

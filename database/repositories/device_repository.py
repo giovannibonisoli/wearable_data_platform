@@ -57,8 +57,6 @@ class DeviceRepository:
             RETURNING id
         """
 
-        print("INPUTS:", (admin_user_id, email_address, encrypted_access_token, encrypted_refresh_token))
-
         result = self.db.execute_query(
             query, 
             (admin_user_id, email_address, encrypted_access_token, encrypted_refresh_token)
@@ -184,13 +182,26 @@ class DeviceRepository:
             List of dicts with id and email_address for authorized devices.
         """
         query = """
-            SELECT id, email_address, authorization_status 
+            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+                   created_at, last_synch, daily_summaries_checkpoint, 
+                   intraday_checkpoint, sleep_checkpoint
             FROM devices
         """
         result = self.db.execute_query(query)
         
         return [
-            {'id': row[0], 'email_address': row[1]}
+            Device(
+                    id=row[0],
+                    email_address=row[1],
+                    authorization_status=row[2],
+                    admin_user_id=row[3],
+                    device_type=row[4],
+                    created_at=row[5],
+                    last_synch=row[6],
+                    daily_summaries_checkpoint=row[7],
+                    intraday_checkpoint=row[8],
+                    sleep_checkpoint=row[9]
+                )
             for row in result if row[2] == 'authorized'
         ] if result else []
 
