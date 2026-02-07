@@ -1,15 +1,6 @@
 from logging.handlers import RotatingFileHandler
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 from rich import _console
-from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
-
-## MIGRATION
-from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository, AuthorizationRepository
-from db import DatabaseManager
-
-from config import CLIENT_ID, REDIRECT_URI
-from translations import TRANSLATIONS
-from emails import send_email
 
 
 from flask_login import current_user, login_user, logout_user, login_required
@@ -18,6 +9,11 @@ from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
 
 from device_statistics import get_device_sync_data, get_last_device_usage_statistics
+from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
+from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository, AuthorizationRepository
+from config import CLIENT_ID, REDIRECT_URI
+from translations import TRANSLATIONS
+from emails import send_email
 
 import os
 import logging
@@ -122,9 +118,6 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        # MIGRATION: Use Database facade for backward compatibility
-        # OR use repositories directly (recommended)
         
         with ConnectionManager() as conn:
             admin_repo = AdminUserRepository(conn)
@@ -708,36 +701,36 @@ def change_language():
 
     return redirect(f"{path}?{new_query}")
 
-@app.route('/livelyageing/refresh_data', methods=['POST'])
-@login_required
-def refresh_data():
-    """
-    Refresh Fitbit data for all users.
-    """
-    try:
-        # Get all unique emails from the database
-        db = DatabaseManager()
-        if not db.connect():
-            return jsonify({'error': 'Database connection error'}), 500
+# @app.route('/livelyageing/refresh_data', methods=['POST'])
+# @login_required
+# def refresh_data():
+#     """
+#     Refresh Fitbit data for all users.
+#     """
+#     try:
+#         # Get all unique emails from the database
+#         db = DatabaseManager()
+#         if not db.connect():
+#             return jsonify({'error': 'Database connection error'}), 500
 
-        try:
-            emails = db.execute_query("SELECT DISTINCT email FROM users")
-        finally:
-            db.close()
+#         try:
+#             emails = db.execute_query("SELECT DISTINCT email FROM users")
+#         finally:
+#             db.close()
 
-        # Process each email to fetch new data
-        from fitbit import process_emails
-        # from fitbit_intraday import process_emails as process_intraday_emails
+#         # Process each email to fetch new data
+#         from fitbit import process_emails
+#         # from fitbit_intraday import process_emails as process_intraday_emails
 
-        # Process daily data
-        process_emails(emails)
-        # Process intraday data
-        # process_intraday_emails(emails)
+#         # Process daily data
+#         process_emails(emails)
+#         # Process intraday data
+#         # process_intraday_emails(emails)
 
-        return jsonify({'success': True})
-    except Exception as e:
-        app.logger.error(f"Error refreshing data: {e}")
-        return jsonify({'error': str(e)}), 500
+#         return jsonify({'success': True})
+#     except Exception as e:
+#         app.logger.error(f"Error refreshing data: {e}")
+#         return jsonify({'error': str(e)}), 500
 
 
 
@@ -748,29 +741,31 @@ def device_details(device_id):
     # metrics = get_device_metrics(device_id)
 
 
-    try:
-        # Get all unique emails from the database
-        db = DatabaseManager()
-        if db.connect():
-            last_synch = db.get_last_synch(device_id)
-            last_synch = format_datetime(last_synch, 'DD MMMM YYYY - HH:MM')
+    # try:
+    #     # Get all unique emails from the database
+    #     db = DatabaseManager()
+    #     if db.connect():
+    #         last_synch = db.get_last_synch(device_id)
+    #         last_synch = format_datetime(last_synch, 'DD MMMM YYYY - HH:MM')
 
-            daily_summaries_checkpoint = db.get_daily_summary_checkpoint(device_id)
-            daily_summaries_checkpoint = format_date(daily_summaries_checkpoint, 'DD MMMM YYYY')
+    #         daily_summaries_checkpoint = db.get_daily_summary_checkpoint(device_id)
+    #         daily_summaries_checkpoint = format_date(daily_summaries_checkpoint, 'DD MMMM YYYY')
 
-            intraday_checkpoint = db.get_intraday_checkpoint(device_id)
-            intraday_checkpoint = format_datetime(intraday_checkpoint, 'DD MMMM YYYY - HH:MM')
+    #         intraday_checkpoint = db.get_intraday_checkpoint(device_id)
+    #         intraday_checkpoint = format_datetime(intraday_checkpoint, 'DD MMMM YYYY - HH:MM')
 
-            device = {
-                        "last_sync": last_synch,
-                        "last_daily_summary": daily_summaries_checkpoint,
-                        "last_intraday": intraday_checkpoint,
+            
+
+    # except Exception as e:
+    #     app.logger.error(f"Error refreshing data: {e}")
+    #     return jsonify({'error': str(e)}), 500
+
+    device = {
+                        "last_sync": "",
+                        "last_daily_summary": "",
+                        "last_intraday": "",
                     
             }
-
-    except Exception as e:
-        app.logger.error(f"Error refreshing data: {e}")
-        return jsonify({'error': str(e)}), 500
 
     metrics = {
         "steps": {
@@ -819,444 +814,444 @@ def device_details(device_id):
     )
 
 
-@app.route('/livelyageing/api/daily_summary')
-@login_required
-def get_daily_summary():
-    """
-    Gets the most recent daily summary of the current user.
-    """
-    try:
-        db = DatabaseManager()
-        if not db.connect():
-            return jsonify({'error': 'Database connection failed'}), 500
+# @app.route('/livelyageing/api/daily_summary')
+# @login_required
+# def get_daily_summary():
+#     """
+#     Gets the most recent daily summary of the current user.
+#     """
+#     try:
+#         db = DatabaseManager()
+#         if not db.connect():
+#             return jsonify({'error': 'Database connection failed'}), 500
         
-        try:
-            user_id = db.get_user_id_by_email(current_user.email)
-            if not user_id:
-                return jsonify({'error': 'User not found'}), 404
+#         try:
+#             user_id = db.get_user_id_by_email(current_user.email)
+#             if not user_id:
+#                 return jsonify({'error': 'User not found'}), 404
 
-            # Get the most recent summary
-            summaries = db.get_daily_summaries(
-                device_id=user_id,
-                start_date=datetime.now() - timedelta(days=1),
-                end_date=datetime.now()
-            )
-        finally:
-            db.close()
+#             # Get the most recent summary
+#             summaries = db.get_daily_summaries(
+#                 device_id=user_id,
+#                 start_date=datetime.now() - timedelta(days=1),
+#                 end_date=datetime.now()
+#             )
+#         finally:
+#             db.close()
 
-        if not summaries:
-            return jsonify({'error': 'No data available.'}), 404
+#         if not summaries:
+#             return jsonify({'error': 'No data available.'}), 404
 
-        latest_summary = summaries[-1]
+#         latest_summary = summaries[-1]
 
-        return jsonify({
-            'steps': latest_summary[3],
-            'heart_rate': latest_summary[4],
-            'sleep_minutes': latest_summary[5],
-            'calories': latest_summary[6],
-            'distance': latest_summary[7],
-            'floors': latest_summary[8],
-            'elevation': latest_summary[9],
-            'active_minutes': latest_summary[10],
-            'sedentary_minutes': latest_summary[11],
-            'nutrition_calories': latest_summary[12],
-            'water': latest_summary[13],
-            'weight': latest_summary[14],
-            'bmi': latest_summary[15],
-            'fat': latest_summary[16],
-            'oxygen_saturation': latest_summary[17],
-            'respiratory_rate': latest_summary[18],
-            'temperature': latest_summary[19]
-        })
+#         return jsonify({
+#             'steps': latest_summary[3],
+#             'heart_rate': latest_summary[4],
+#             'sleep_minutes': latest_summary[5],
+#             'calories': latest_summary[6],
+#             'distance': latest_summary[7],
+#             'floors': latest_summary[8],
+#             'elevation': latest_summary[9],
+#             'active_minutes': latest_summary[10],
+#             'sedentary_minutes': latest_summary[11],
+#             'nutrition_calories': latest_summary[12],
+#             'water': latest_summary[13],
+#             'weight': latest_summary[14],
+#             'bmi': latest_summary[15],
+#             'fat': latest_summary[16],
+#             'oxygen_saturation': latest_summary[17],
+#             'respiratory_rate': latest_summary[18],
+#             'temperature': latest_summary[19]
+#         })
 
-    except Exception as e:
-        app.logger.error(f"Error getting the daily summary.: {str(e)}")
-        return jsonify({'error': 'Internal server error.'}), 500
-
-
-@app.route('/livelyageing/api/user/<int:user_id>/daily_summary')
-@login_required
-def api_user_daily_summary(user_id):
-    """
-    Returns the daily summary for a user and a date (today by default)
-    """
-    date_str = request.args.get('date')
-    if date_str:
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except Exception:
-            return jsonify({'error': 'Invalid date format'}), 400
-    else:
-        date = datetime.now().date()
-    db = DatabaseManager()
-    if not db.connect():
-        return jsonify({'error': 'DB error'}), 500
-    try:
-        summary = db.execute_query(
-            """
-            SELECT
-                date,
-                steps,
-                heart_rate,
-                sleep_minutes,
-                calories,
-                distance,
-                floors,
-                elevation,
-                active_minutes,
-                sedentary_minutes,
-                nutrition_calories,
-                water,
-                weight,
-                bmi,
-                fat,
-                oxygen_saturation,
-                respiratory_rate,
-                temperature
-            FROM daily_summaries
-            WHERE user_id = %s AND date = %s
-            """, (user_id, date)
-        )
-        if not summary:
-            return jsonify({'error': 'No hay datos para ese día'}), 404
-
-        # Mapear los campos a nombres legibles
-        columns = [desc[0] for desc in db.cursor.description]
-        summary_dict = dict(zip(columns, summary[0]))
-
-        # Calcular valores adicionales
-        if summary_dict.get('sleep_minutes'):
-            summary_dict['sleep_hours'] = round(summary_dict['sleep_minutes'] / 60, 1)
-        if summary_dict.get('sedentary_minutes'):
-            summary_dict['sedentary_hours'] = round(summary_dict['sedentary_minutes'] / 60, 1)
-        return jsonify({'summary': summary_dict})
-    finally:
-        db.close()
-
-@app.route('/livelyageing/api/user/<int:user_id>/intraday')
-@login_required
-def api_user_intraday(user_id):
-    """
-    Returns intraday data for the users together with date and metric type.
-    """
-    date_str = request.args.get('date')
-    metric_type = request.args.get('type')
-    if not metric_type:
-        return jsonify({'error': 'The metric type is missing.'}), 400
-    if date_str:
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except Exception:
-            return jsonify({'error': 'Invalid date format'}), 400
-    else:
-        date = datetime.now().date()
-
-    db = DatabaseManager()
-    if not db.connect():
-        return jsonify({'error': 'DB error'}), 500
-    try:
-        start_time = datetime.combine(date, datetime.min.time())
-        end_time = datetime.combine(date, datetime.max.time())
-        data = db.execute_query(
-            f"""
-            SELECT time, {metric_type}
-            FROM intraday_metrics
-            WHERE user_id = %s
-            AND time BETWEEN %s AND %s
-            ORDER BY time
-            """, (user_id, start_time, end_time)
-        )
-
-        # for row in data:
-        #     print(row)
-        #     print(len(row))
+#     except Exception as e:
+#         app.logger.error(f"Error getting the daily summary.: {str(e)}")
+#         return jsonify({'error': 'Internal server error.'}), 500
 
 
-        return jsonify({
-            'intraday': [
-                {
-                    'time': row[0].strftime('%H:%M'),
-                    'value': float(row[1] if row[1] is not None else 0)
-                } for row in data
-            ]
-        })
-    finally:
-        db.close()
+# @app.route('/livelyageing/api/user/<int:user_id>/daily_summary')
+# @login_required
+# def api_user_daily_summary(user_id):
+#     """
+#     Returns the daily summary for a user and a date (today by default)
+#     """
+#     date_str = request.args.get('date')
+#     if date_str:
+#         try:
+#             date = datetime.strptime(date_str, "%Y-%m-%d").date()
+#         except Exception:
+#             return jsonify({'error': 'Invalid date format'}), 400
+#     else:
+#         date = datetime.now().date()
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return jsonify({'error': 'DB error'}), 500
+#     try:
+#         summary = db.execute_query(
+#             """
+#             SELECT
+#                 date,
+#                 steps,
+#                 heart_rate,
+#                 sleep_minutes,
+#                 calories,
+#                 distance,
+#                 floors,
+#                 elevation,
+#                 active_minutes,
+#                 sedentary_minutes,
+#                 nutrition_calories,
+#                 water,
+#                 weight,
+#                 bmi,
+#                 fat,
+#                 oxygen_saturation,
+#                 respiratory_rate,
+#                 temperature
+#             FROM daily_summaries
+#             WHERE user_id = %s AND date = %s
+#             """, (user_id, date)
+#         )
+#         if not summary:
+#             return jsonify({'error': 'No hay datos para ese día'}), 404
 
-@app.route('/livelyageing/api/user/<int:user_id>/weekly_summary')
-@login_required
-def api_user_weekly_summary(user_id):
-    """
-    Returns the daily summaries from the last 7 days for the user.
-    """
-    db = DatabaseManager()
-    if not db.connect():
-        return jsonify({'error': 'DB error'}), 500
-    try:
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=6)
-        data = db.execute_query(
-            """
-            SELECT
-                date,
-                steps,
-                heart_rate,
-                sleep_minutes,
-                calories,
-                sedentary_minutes,
-                active_minutes,
-                distance,
-                floors,
-                elevation,
-                nutrition_calories,
-                water,
-                weight,
-                bmi,
-                fat,
-                oxygen_saturation,
-                respiratory_rate,
-                temperature
-            FROM daily_summaries
-            WHERE user_id = %s
-            AND date BETWEEN %s AND %s
-            ORDER BY date DESC
-            """, (user_id, start_date, end_date)
-        )
-        return jsonify({
-            'weekly': [
-                {
-                    'date': row[0].strftime('%d/%m'),
-                    'steps': row[1],
-                    'heart_rate': row[2],
-                    'sleep_hours': round(row[3] / 60, 1) if row[3] else None,
-                    'calories': row[4],
-                    'sedentary_hours': round(row[5] / 60, 1) if row[5] else None,
-                    'active_minutes': row[6],
-                    'distance': row[7],
-                    'floors': row[8],
-                    'elevation': row[9],
-                    'nutrition_calories': row[10],
-                    'water': row[11],
-                    'weight': row[12],
-                    'bmi': row[13],
-                    'fat': row[14],
-                    'oxygen_saturation': row[15],
-                    'respiratory_rate': row[16],
-                    'temperature': row[17]
-                } for row in data
-            ]
-        })
-    finally:
-        db.close()
+#         # Mapear los campos a nombres legibles
+#         columns = [desc[0] for desc in db.cursor.description]
+#         summary_dict = dict(zip(columns, summary[0]))
 
-@app.route('/livelyageing/api/user/<int:user_id>/alerts')
-@login_required
-def api_user_alerts(user_id):
-    """
-    Return the alerts from the last 7 days for the user
-    """
-    db = DatabaseManager()
-    if not db.connect():
-        return jsonify({'error': 'DB error'}), 500
-    try:
-        since = datetime.now() - timedelta(days=7)
-        data = db.execute_query(
-            """
-            SELECT
-                alert_time,
-                alert_type,
-                priority,
-                triggering_value,
-                threshold_value,
-                details,
-                acknowledged
-            FROM alerts
-            WHERE user_id = %s
-            AND alert_time >= %s
-            ORDER BY alert_time DESC
-            """, (user_id, since)
-        )
+#         # Calcular valores adicionales
+#         if summary_dict.get('sleep_minutes'):
+#             summary_dict['sleep_hours'] = round(summary_dict['sleep_minutes'] / 60, 1)
+#         if summary_dict.get('sedentary_minutes'):
+#             summary_dict['sedentary_hours'] = round(summary_dict['sedentary_minutes'] / 60, 1)
+#         return jsonify({'summary': summary_dict})
+#     finally:
+#         db.close()
 
-        return jsonify({
-            'alerts': [
-                {
-                    'alert_time': row[0].strftime('%d/%m %H:%M'),
-                    'type': row[1],
-                    'priority': row[2],
-                    'triggering_value': row[3],
-                    'threshold_value': row[4],
-                    'details': row[5],
-                    'acknowledged': row[6]
-                } for row in data
-            ]
-        })
-    finally:
-        db.close()
+# @app.route('/livelyageing/api/user/<int:user_id>/intraday')
+# @login_required
+# def api_user_intraday(user_id):
+#     """
+#     Returns intraday data for the users together with date and metric type.
+#     """
+#     date_str = request.args.get('date')
+#     metric_type = request.args.get('type')
+#     if not metric_type:
+#         return jsonify({'error': 'The metric type is missing.'}), 400
+#     if date_str:
+#         try:
+#             date = datetime.strptime(date_str, "%Y-%m-%d").date()
+#         except Exception:
+#             return jsonify({'error': 'Invalid date format'}), 400
+#     else:
+#         date = datetime.now().date()
 
-@app.route('/livelyageing/dashboard/alerts/export')
-@login_required
-def export_alerts():
-    import csv
-    from io import StringIO
-    db = DatabaseManager()
-    if not db.connect():
-        return "Database connection error", 500
-    try:
-        # Get filters the same way as in alerts_dashboard
-        date_from = request.args.get('date_from')
-        date_to = request.args.get('date_to')
-        priority = request.args.get('priority')
-        acknowledged = request.args.get('acknowledged')
-        user_query = request.args.get('user_query')
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return jsonify({'error': 'DB error'}), 500
+#     try:
+#         start_time = datetime.combine(date, datetime.min.time())
+#         end_time = datetime.combine(date, datetime.max.time())
+#         data = db.execute_query(
+#             f"""
+#             SELECT time, {metric_type}
+#             FROM intraday_metrics
+#             WHERE user_id = %s
+#             AND time BETWEEN %s AND %s
+#             ORDER BY time
+#             """, (user_id, start_time, end_time)
+#         )
 
-        # Build the base query.
-        query = """
-            SELECT
-                a.alert_time,
-                u.name AS user_name,
-                u.email AS user_email,
-                a.alert_type,
-                a.priority,
-                a.triggering_value,
-                a.threshold_value,
-                a.details,
-                a.acknowledged
-            FROM alerts a
-            JOIN users u ON a.user_id = u.id
-            WHERE 1=1
-        """
-        params = []
-        if date_from:
-            query += " AND a.alert_time >= %s"
-            params.append(f"{date_from} 00:00:00")
-        if date_to:
-            query += " AND a.alert_time <= %s"
-            params.append(f"{date_to} 23:59:59")
-        if priority:
-            query += " AND a.priority = %s"
-            params.append(priority)
-        if acknowledged is not None and acknowledged != '':
-            query += " AND a.acknowledged = %s"
-            params.append(acknowledged == 'true')
-        if user_query:
-            query += " AND (LOWER(u.name) LIKE LOWER(%s) OR LOWER(u.email) LIKE LOWER(%s))"
-            search_term = f"%{user_query}%"
-            params.extend([search_term, search_term])
-        query += " ORDER BY a.alert_time DESC"
-        alerts = db.execute_query(query, params)
+#         # for row in data:
+#         #     print(row)
+#         #     print(len(row))
 
-        # Create a CSV with UTF-8 BOM for Excel compatibility.
-        si = StringIO()
-        cw = csv.writer(si)
-        cw.writerow(["Date", "User", "Email", "alertType", "Priority", "Trigger Value", "Threshold", "Details", "Acknowledged"])
-        for a in alerts:
-            cw.writerow([
-                a[0].strftime('%Y-%m-%d %H:%M'),
-                a[1], a[2], a[3], a[4], a[5], a[6], a[7], "Sí" if a[8] else "No"
-            ])
-        output = '\ufeff' + si.getvalue()  # Add BOM UTF-8
-        si.close()
-        date = datetime.now().strftime('%Y%m%d')
-        return Response(
-            output,
-            mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=alertas_{date}.csv"}
-        )
-    finally:
-        db.close()
 
-@app.route('/livelyageing/user/<int:user_id>/export_alerts')
-@login_required
-def export_user_alerts(user_id):
-    import csv
-    from io import StringIO
-    db = DatabaseManager()
-    if not db.connect():
-        return "Database connection error", 500
-    try:
-        since = datetime.now() - timedelta(days=7)
-        query = """
-            SELECT
-                a.alert_time,
-                u.name AS user_name,
-                u.email AS user_email,
-                a.alert_type,
-                a.priority,
-                a.triggering_value,
-                a.threshold_value,
-                a.details,
-                a.acknowledged
-            FROM alerts a
-            JOIN users u ON a.user_id = u.id
-            WHERE a.user_id = %s AND a.alert_time >= %s
-            ORDER BY a.alert_time DESC
-        """
-        alerts = db.execute_query(query, (user_id, since))
-        si = StringIO()
-        cw = csv.writer(si)
-        cw.writerow(["Date/Hour", "User", "Email", "Alert type", "Priority", "Trigger value", "Threshold", "Details", "Acknowledged"])
-        for a in alerts:
-            cw.writerow([
-                a[0].strftime('%Y-%m-%d %H:%M'),
-                a[1], a[2], a[3], a[4], a[5], a[6], a[7], "Sí" if a[8] else "No"
-            ])
-        output = '\ufeff' + si.getvalue()
-        si.close()
-        date = datetime.now().strftime('%Y%m%d')
-        return Response(
-            output,
-            mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=alerts_user_{user_id}_{date}.csv"}
-        )
-    finally:
-        db.close()
+#         return jsonify({
+#             'intraday': [
+#                 {
+#                     'time': row[0].strftime('%H:%M'),
+#                     'value': float(row[1] if row[1] is not None else 0)
+#                 } for row in data
+#             ]
+#         })
+#     finally:
+#         db.close()
 
-@app.route('/livelyageing/user/<int:user_id>/export_intraday')
-@login_required
-def export_user_intraday(user_id):
-    import csv
-    from io import StringIO
-    db = DatabaseManager()
-    if not db.connect():
-        return "Database connection error", 500
-    try:
-        # Obtain selected dates and metrics
-        dates = request.args.getlist('dates')
-        metrics = request.args.getlist('metrics')
-        if not dates or not metrics:
-            return "You must select at least one date and one metric.", 400
+# @app.route('/livelyageing/api/user/<int:user_id>/weekly_summary')
+# @login_required
+# def api_user_weekly_summary(user_id):
+#     """
+#     Returns the daily summaries from the last 7 days for the user.
+#     """
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return jsonify({'error': 'DB error'}), 500
+#     try:
+#         end_date = datetime.now().date()
+#         start_date = end_date - timedelta(days=6)
+#         data = db.execute_query(
+#             """
+#             SELECT
+#                 date,
+#                 steps,
+#                 heart_rate,
+#                 sleep_minutes,
+#                 calories,
+#                 sedentary_minutes,
+#                 active_minutes,
+#                 distance,
+#                 floors,
+#                 elevation,
+#                 nutrition_calories,
+#                 water,
+#                 weight,
+#                 bmi,
+#                 fat,
+#                 oxygen_saturation,
+#                 respiratory_rate,
+#                 temperature
+#             FROM daily_summaries
+#             WHERE user_id = %s
+#             AND date BETWEEN %s AND %s
+#             ORDER BY date DESC
+#             """, (user_id, start_date, end_date)
+#         )
+#         return jsonify({
+#             'weekly': [
+#                 {
+#                     'date': row[0].strftime('%d/%m'),
+#                     'steps': row[1],
+#                     'heart_rate': row[2],
+#                     'sleep_hours': round(row[3] / 60, 1) if row[3] else None,
+#                     'calories': row[4],
+#                     'sedentary_hours': round(row[5] / 60, 1) if row[5] else None,
+#                     'active_minutes': row[6],
+#                     'distance': row[7],
+#                     'floors': row[8],
+#                     'elevation': row[9],
+#                     'nutrition_calories': row[10],
+#                     'water': row[11],
+#                     'weight': row[12],
+#                     'bmi': row[13],
+#                     'fat': row[14],
+#                     'oxygen_saturation': row[15],
+#                     'respiratory_rate': row[16],
+#                     'temperature': row[17]
+#                 } for row in data
+#             ]
+#         })
+#     finally:
+#         db.close()
 
-        # Set query
-        rows = []
-        for date_str in dates:
-            for metric in metrics:
-                start_time = datetime.strptime(date_str, "%Y-%m-%d")
-                end_time = start_time + timedelta(days=1)
-                query = """
-                    SELECT time, type, value
-                    FROM intraday_metrics
-                    WHERE user_id = %s AND type = %s AND time >= %s AND time < %s
-                    ORDER BY time
-                """
-                data = db.execute_query(query, (user_id, metric, start_time, end_time))
-                for row in data:
-                    rows.append((row[0].date().strftime('%Y-%m-%d'), row[0].strftime('%H:%M'), row[1], row[2]))
-        # Crear CSV
-        si = StringIO()
-        cw = csv.writer(si)
-        cw.writerow(["Date", "Hour", "Metric", "Value"])
-        for r in rows:
-            cw.writerow(r)
-        output = '\ufeff' + si.getvalue()
-        si.close()
-        date = datetime.now().strftime('%Y%m%d')
-        return Response(
-            output,
-            mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename=intraday_user_{user_id}_{date}.csv"}
-        )
-    finally:
-        db.close()
+# @app.route('/livelyageing/api/user/<int:user_id>/alerts')
+# @login_required
+# def api_user_alerts(user_id):
+#     """
+#     Return the alerts from the last 7 days for the user
+#     """
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return jsonify({'error': 'DB error'}), 500
+#     try:
+#         since = datetime.now() - timedelta(days=7)
+#         data = db.execute_query(
+#             """
+#             SELECT
+#                 alert_time,
+#                 alert_type,
+#                 priority,
+#                 triggering_value,
+#                 threshold_value,
+#                 details,
+#                 acknowledged
+#             FROM alerts
+#             WHERE user_id = %s
+#             AND alert_time >= %s
+#             ORDER BY alert_time DESC
+#             """, (user_id, since)
+#         )
+
+#         return jsonify({
+#             'alerts': [
+#                 {
+#                     'alert_time': row[0].strftime('%d/%m %H:%M'),
+#                     'type': row[1],
+#                     'priority': row[2],
+#                     'triggering_value': row[3],
+#                     'threshold_value': row[4],
+#                     'details': row[5],
+#                     'acknowledged': row[6]
+#                 } for row in data
+#             ]
+#         })
+#     finally:
+#         db.close()
+
+# @app.route('/livelyageing/dashboard/alerts/export')
+# @login_required
+# def export_alerts():
+#     import csv
+#     from io import StringIO
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return "Database connection error", 500
+#     try:
+#         # Get filters the same way as in alerts_dashboard
+#         date_from = request.args.get('date_from')
+#         date_to = request.args.get('date_to')
+#         priority = request.args.get('priority')
+#         acknowledged = request.args.get('acknowledged')
+#         user_query = request.args.get('user_query')
+
+#         # Build the base query.
+#         query = """
+#             SELECT
+#                 a.alert_time,
+#                 u.name AS user_name,
+#                 u.email AS user_email,
+#                 a.alert_type,
+#                 a.priority,
+#                 a.triggering_value,
+#                 a.threshold_value,
+#                 a.details,
+#                 a.acknowledged
+#             FROM alerts a
+#             JOIN users u ON a.user_id = u.id
+#             WHERE 1=1
+#         """
+#         params = []
+#         if date_from:
+#             query += " AND a.alert_time >= %s"
+#             params.append(f"{date_from} 00:00:00")
+#         if date_to:
+#             query += " AND a.alert_time <= %s"
+#             params.append(f"{date_to} 23:59:59")
+#         if priority:
+#             query += " AND a.priority = %s"
+#             params.append(priority)
+#         if acknowledged is not None and acknowledged != '':
+#             query += " AND a.acknowledged = %s"
+#             params.append(acknowledged == 'true')
+#         if user_query:
+#             query += " AND (LOWER(u.name) LIKE LOWER(%s) OR LOWER(u.email) LIKE LOWER(%s))"
+#             search_term = f"%{user_query}%"
+#             params.extend([search_term, search_term])
+#         query += " ORDER BY a.alert_time DESC"
+#         alerts = db.execute_query(query, params)
+
+#         # Create a CSV with UTF-8 BOM for Excel compatibility.
+#         si = StringIO()
+#         cw = csv.writer(si)
+#         cw.writerow(["Date", "User", "Email", "alertType", "Priority", "Trigger Value", "Threshold", "Details", "Acknowledged"])
+#         for a in alerts:
+#             cw.writerow([
+#                 a[0].strftime('%Y-%m-%d %H:%M'),
+#                 a[1], a[2], a[3], a[4], a[5], a[6], a[7], "Sí" if a[8] else "No"
+#             ])
+#         output = '\ufeff' + si.getvalue()  # Add BOM UTF-8
+#         si.close()
+#         date = datetime.now().strftime('%Y%m%d')
+#         return Response(
+#             output,
+#             mimetype="text/csv; charset=utf-8",
+#             headers={"Content-Disposition": f"attachment;filename=alertas_{date}.csv"}
+#         )
+#     finally:
+#         db.close()
+
+# @app.route('/livelyageing/user/<int:user_id>/export_alerts')
+# @login_required
+# def export_user_alerts(user_id):
+#     import csv
+#     from io import StringIO
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return "Database connection error", 500
+#     try:
+#         since = datetime.now() - timedelta(days=7)
+#         query = """
+#             SELECT
+#                 a.alert_time,
+#                 u.name AS user_name,
+#                 u.email AS user_email,
+#                 a.alert_type,
+#                 a.priority,
+#                 a.triggering_value,
+#                 a.threshold_value,
+#                 a.details,
+#                 a.acknowledged
+#             FROM alerts a
+#             JOIN users u ON a.user_id = u.id
+#             WHERE a.user_id = %s AND a.alert_time >= %s
+#             ORDER BY a.alert_time DESC
+#         """
+#         alerts = db.execute_query(query, (user_id, since))
+#         si = StringIO()
+#         cw = csv.writer(si)
+#         cw.writerow(["Date/Hour", "User", "Email", "Alert type", "Priority", "Trigger value", "Threshold", "Details", "Acknowledged"])
+#         for a in alerts:
+#             cw.writerow([
+#                 a[0].strftime('%Y-%m-%d %H:%M'),
+#                 a[1], a[2], a[3], a[4], a[5], a[6], a[7], "Sí" if a[8] else "No"
+#             ])
+#         output = '\ufeff' + si.getvalue()
+#         si.close()
+#         date = datetime.now().strftime('%Y%m%d')
+#         return Response(
+#             output,
+#             mimetype="text/csv; charset=utf-8",
+#             headers={"Content-Disposition": f"attachment;filename=alerts_user_{user_id}_{date}.csv"}
+#         )
+#     finally:
+#         db.close()
+
+# @app.route('/livelyageing/user/<int:user_id>/export_intraday')
+# @login_required
+# def export_user_intraday(user_id):
+#     import csv
+#     from io import StringIO
+#     db = DatabaseManager()
+#     if not db.connect():
+#         return "Database connection error", 500
+#     try:
+#         # Obtain selected dates and metrics
+#         dates = request.args.getlist('dates')
+#         metrics = request.args.getlist('metrics')
+#         if not dates or not metrics:
+#             return "You must select at least one date and one metric.", 400
+
+#         # Set query
+#         rows = []
+#         for date_str in dates:
+#             for metric in metrics:
+#                 start_time = datetime.strptime(date_str, "%Y-%m-%d")
+#                 end_time = start_time + timedelta(days=1)
+#                 query = """
+#                     SELECT time, type, value
+#                     FROM intraday_metrics
+#                     WHERE user_id = %s AND type = %s AND time >= %s AND time < %s
+#                     ORDER BY time
+#                 """
+#                 data = db.execute_query(query, (user_id, metric, start_time, end_time))
+#                 for row in data:
+#                     rows.append((row[0].date().strftime('%Y-%m-%d'), row[0].strftime('%H:%M'), row[1], row[2]))
+#         # Crear CSV
+#         si = StringIO()
+#         cw = csv.writer(si)
+#         cw.writerow(["Date", "Hour", "Metric", "Value"])
+#         for r in rows:
+#             cw.writerow(r)
+#         output = '\ufeff' + si.getvalue()
+#         si.close()
+#         date = datetime.now().strftime('%Y%m%d')
+#         return Response(
+#             output,
+#             mimetype="text/csv; charset=utf-8",
+#             headers={"Content-Disposition": f"attachment;filename=intraday_user_{user_id}_{date}.csv"}
+#         )
+#     finally:
+#         db.close()
 
 
 # Run the Flask app

@@ -1,4 +1,5 @@
-from db import DatabaseManager
+# from db import DatabaseManager
+from database import Database, ConnectionManager, DeviceRepository, MetricsRepository
 from datetime import datetime, timedelta
 from collections import defaultdict
 
@@ -24,8 +25,6 @@ def print_usage_report(timestamps, max_gap_minutes=5):
     print("=" * 50)
 
 
-
-# DEVICE USAGE STATISTICS
 def calculate_usage_statistics(timestamps, max_gap_minutes=5):
     """
     Calculate usage statistics from wearable device timestamps.
@@ -53,7 +52,7 @@ def calculate_usage_statistics(timestamps, max_gap_minutes=5):
     
     # Dictionary to store total seconds per day
     daily_usage = defaultdict(float)
-    
+
     for i in range(1, len(timestamps)):
         prev_time = timestamps[i-1]
         curr_time = timestamps[i]
@@ -102,11 +101,12 @@ def calculate_usage_statistics(timestamps, max_gap_minutes=5):
 
 def get_last_device_usage_statistics(device_id, temporal_range):
     
-    db = DatabaseManager()
-    if db.connect():
+    with ConnectionManager() as conn:
+        device_repo = DeviceRepository(conn)
+        metrics_repo = MetricsRepository(conn)
+        
         try:
-
-            last_sync = db.get_last_synch(device_id)
+            last_sync = device_repo.get_last_synch(device_id)
 
             end_date = datetime.now()
             start_date = (end_date - temporal_range)
@@ -114,11 +114,10 @@ def get_last_device_usage_statistics(device_id, temporal_range):
             start_date = start_date.replace(tzinfo=last_sync.tzinfo)
             
             if last_sync > start_date:
-                timestamps = db.get_intraday_data_timestamps_by_range(device_id, start_date, end_date)
+                timestamps = metrics_repo.get_intraday_timestamps_by_range(device_id, start_date, end_date)
 
                 if len(timestamps) > 0:
-
-                    timestamps = [timestamp[0] for timestamp in timestamps]
+                    # timestamps = [timestamp[0] for timestamp in timestamps]
                     usage_time_data = calculate_usage_statistics(timestamps)
 
                     return usage_time_data
@@ -132,19 +131,19 @@ def get_last_device_usage_statistics(device_id, temporal_range):
             error_msg = f"Error while computing device usage statistics: {e}"
         
             raise Exception(error_msg)
-    else:
-        raise Exception("Error connecting to the db")
 
 
 def get_device_sync_data(device_id):
     data_reception_details = {}
     data_reception_status = 'no_data'
 
-    db = DatabaseManager()
-    if db.connect():
+    with ConnectionManager() as conn:
+        device_repo = DeviceRepository(conn)
+        metrics_repo = MetricsRepository(conn)
+
         try:
 
-            last_sync = db.get_last_synch(device_id)
+            last_sync = device_repo.get_last_synch(device_id)
             now = datetime.now()
 
             last_sync = last_sync.replace(tzinfo=now.tzinfo)
@@ -152,7 +151,7 @@ def get_device_sync_data(device_id):
             data_reception_details['sync_hours'] = (now - last_sync).seconds // 3600
             data_reception_details['sync_minutes'] = (now - last_sync).seconds // 60
 
-            intraday_checkpoint = db.get_intraday_checkpoint(device_id)
+            intraday_checkpoint = device_repo.get_intraday_checkpoint(device_id)
 
             if intraday_checkpoint:
                 intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_sync.tzinfo)
@@ -176,8 +175,6 @@ def get_device_sync_data(device_id):
             error_msg = f"Error while computing data reception details: {e}"
         
             raise Exception(error_msg)
-    else:
-        raise Exception("Error connecting to the db")
     
 
 def compute_device_usage_statistics(device_id):
@@ -194,12 +191,12 @@ def compute_device_usage_statistics(device_id):
 
     # Fare questi calcoli coprendo varie intervalli di tempo (ore, giorni, settimane e mesi)
 
-    
 
 
 if __name__ == "__main__":
     try:
-        get_last_device_usage_statistics(2, timedelta(days=300))
+        print(get_last_device_usage_statistics(2, timedelta(days=300)))
+        print(get_device_sync_data(2))
 
     except Exception as e:
         print(e)
