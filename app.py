@@ -526,7 +526,7 @@ def deactivate_email():
         device_repo = DeviceRepository(conn)
         device_repo.update_status(device_id, 'non_active')
 
-        app.logger.logger(f"Device {device_id} deactivated.")
+        app.logger.info(f"Device {device_id} deactivated.")
 
     return redirect(url_for('home'))
 
