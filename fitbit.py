@@ -14,7 +14,7 @@ import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-from db import DatabaseManager
+from database import Database, ConnectionManager, DeviceRepository, MetricsRepository
 from auth import refresh_tokens
 
 logging.basicConfig(
@@ -44,7 +44,7 @@ def fetch_endpoint(url, headers, optional=False):
         resp.raise_for_status()
         return None, False
 
-def fetch_daily_summary(access_token, device_id, email_address, date_obj, db):
+def fetch_daily_summary(access_token, device_id, email_address, date_obj, metrics_repo):
     """Fetch and store daily summary. Returns (success, rate_limited)."""
     date_str = date_obj.strftime("%Y-%m-%d")
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -91,10 +91,9 @@ def fetch_daily_summary(access_token, device_id, email_address, date_obj, db):
 
         if not (data['steps'] == 0 and data['heart_rate'] == 0 and data['distance'] == 0 and data['sedentary_minutes'] == 1440):
         
-            db.insert_daily_summary(device_id=device_id, date_value=date_str, **data)
+            metrics_repo.insert_daily_summary(device_id=device_id, date_value=date_str, **data)
             logger.info(f"Daily summary collected for device {device_id} with email address {email_address} on {date_str}")
 
-        db.update_daily_summaries_checkpoint(device_id, date_str)
         return True, False
         
     except requests.exceptions.HTTPError as e:
@@ -109,30 +108,28 @@ def fetch_daily_summary(access_token, device_id, email_address, date_obj, db):
         return False, False
 
 
-def process_device_summary(device, db):
+def process_device_summary(device, device_repo, metrics_repo):
     """
     Process daily summaries for one device.
     Returns: ('success'|'rate_limited'|'error')
     """
-    device_id = device['id']
-    email_address = device['email_address']
+    device_id = device.id
+    email_address = device.email_address
 
-    logger.info(f"Processing daily summary for device {device_id} with email {email_address}")
+    logger.info(f"Processing daily summary for device {device.id} with email {email_address}")
 
-    access_token, refresh_token = db.get_device_tokens(device_id)
+    access_token, refresh_token = device_repo.get_tokens(device_id)
     if not access_token or not refresh_token:
         logger.warning(f"No tokens for device {device_id} with email {email_address}")
         return 'error'
 
-    last_date = db.get_daily_summary_checkpoint(device_id)
-    
+    last_date = device.daily_summaries_checkpoint
     if last_date:
         start_date = last_date + timedelta(days=1)
     else:
         start_date = datetime(2025,1,21).date()
 
-    last_sync = db.get_last_synch(device_id)
-    end_date = (last_sync.date() - timedelta(days=1))
+    end_date = (device.last_synch.date() - timedelta(days=1))
 
     if start_date >= end_date:
         logger.info(f"Device {device_id} with {email_address} is up to date for summaries")
@@ -142,7 +139,8 @@ def process_device_summary(device, db):
     
     while current_date <= end_date:
         try:
-            success, rate_limited = fetch_daily_summary(access_token, device_id, email_address, current_date, db)
+            success, rate_limited = fetch_daily_summary(access_token, device_id, email_address, 
+                                                            current_date, metrics_repo)
             
             if rate_limited:
                 logger.info(f"Rate limit reached for device {device_id} on {current_date}. Skipping to next email.")
@@ -153,6 +151,8 @@ def process_device_summary(device, db):
                 logger.warning(f"Failed to fetch summary for device {device_id} on {current_date}, continuing...")
                 current_date += timedelta(days=1)
                 continue
+
+            device_repo.update_daily_summaries_checkpoint(device_id, current_date)
                 
             current_date += timedelta(days=1)
             time.sleep(1)  # minimal sleep to buffer
@@ -162,7 +162,7 @@ def process_device_summary(device, db):
                 logger.warning(f"Token expired for {email_address}, refreshing …")
                 new_access, new_refresh = refresh_tokens(refresh_token)
                 if new_access and new_refresh:
-                    db.update_device_tokens(device_id, new_access, new_refresh)
+                    device_repo.update_tokens(device_id, new_access, new_refresh)
                     access_token = new_access
                     refresh_token = new_refresh
                     logger.info(f"Token refreshed for device {device_id} with email address {email_address}")
@@ -183,52 +183,45 @@ def process_device_summary(device, db):
 def main_loop():
     logger.info("=== DAILY SUMMARY COLLECTOR STARTED ===")
     while True:
-        try:
-            db = DatabaseManager()
-            if not db.connect():
-                logger.error("DB connection failed")
-                time.sleep(60)
-                continue
+        with ConnectionManager() as conn:
+            device_repo = DeviceRepository(conn)
+            metrics_repo = MetricsRepository(conn)
 
-            devices = db.get_all_devices()
-            if not devices:
-                logger.warning("No devices found")
-                db.close()
-                time.sleep(60)
-                continue
+            try:
+                devices = device_repo.get_all_authorized()
+                if not devices:
+                    logger.warning("No devices found")
+                    time.sleep(60)
+                    continue
 
-            results = {
-                'success': 0,
-                'rate_limited': 0,
-                'error': 0
-            }
-            
-            for device in devices:
-                result = process_device_summary(device, db)
-                results[result] += 1
+                results = {
+                    'success': 0,
+                    'rate_limited': 0,
+                    'error': 0
+                }
                 
-            db.close()
+                for device in devices:
+                    result = process_device_summary(device, device_repo, metrics_repo)
+                    results[result] += 1
 
-            # Log summary
-            logger.info(f"Cycle complete: {results['success']} successful, "
-                       f"{results['rate_limited']} rate-limited, {results['error']} errors")
+                # Log summary
+                logger.info(f"Cycle complete: {results['success']} successful, "
+                        f"{results['rate_limited']} rate-limited, {results['error']} errors")
 
-            # Only sleep if ALL emails are rate-limited
-            if results['rate_limited'] == len(device) and results['rate_limited'] > 0:
-                sleep_interval = 10
-                logger.info(f"ALL devices are rate-limited. Sleeping {sleep_interval} minutes before retry.")
-                time.sleep(sleep_interval*60)
-            else:
-                # At least one email processed successfully or had errors
-                logger.info("At least one email processed. Sleeping 30 minutes before next cycle.")
-                time.sleep(1800)
+                # Only sleep if ALL emails are rate-limited
+                if results['rate_limited'] == len(devices) and results['rate_limited'] > 0:
+                    sleep_interval = 10
+                    logger.info(f"ALL devices are rate-limited. Sleeping {sleep_interval} minutes before retry.")
+                    time.sleep(sleep_interval*60)
+                else:
+                    # At least one email processed successfully or had errors
+                    logger.info("At least one email processed. Sleeping 30 minutes before next cycle.")
+                    time.sleep(1800)
                 
-        except KeyboardInterrupt:
-            logger.info("=== STOPPED BY USER ===")
-            break
-        except Exception as e:
-            logger.error(f"Unexpected error in main loop: {e}", exc_info=True)
-            time.sleep(60)
+            except KeyboardInterrupt:
+                logger.info("=== STOPPED BY USER ===")
+                break
+
 
 if __name__ == "__main__":
     main_loop()

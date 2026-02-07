@@ -1,4 +1,3 @@
-# from db import DatabaseManager
 from database import Database, ConnectionManager, DeviceRepository, MetricsRepository
 from datetime import datetime, timedelta
 from collections import defaultdict
