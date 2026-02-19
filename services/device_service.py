@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
 from database import ConnectionManager, DeviceRepository, AuthorizationRepository, Device 
+from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
 
 class DeviceService:
     """
@@ -44,7 +45,7 @@ class DeviceService:
         return devices_data
 
 
-    def add_new_device(self, admin_user_id: int, email_address: str) -> int:
+    def add_new_device(self, admin_user_id: int, email_address: str) -> str:
         
         existing = self.device_repo.get_by_email(email_address)
 
@@ -62,8 +63,25 @@ class DeviceService:
         else:
             return "error"
 
-
-
-
     
-        
+    def update_devices_info_by_admin_user(self, admin_user_id: int) -> List[str]:
+
+        devices = self.device_repo.get_all_authorized_by_admin_user(admin_user_id)
+
+        errors = []
+        for device in devices:
+            try:
+                access_token, _ = self.device_repo.get_tokens(device.id)
+            
+                device_data = get_device_info(access_token)
+
+                device_result = self.device_repo.update_device_type(device.id, device_data['deviceVersion'])      
+                last_sync_result = self.device_repo.update_last_synch(device.id, device_data['lastSyncTime'])
+            
+                if not device_result or not last_sync_result:
+                    errors.append(device.email_address)
+                
+            except Exception as e:
+                errors.append(device.email_address)
+
+        return errors

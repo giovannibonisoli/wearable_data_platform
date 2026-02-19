@@ -174,7 +174,7 @@ class DeviceRepository:
             ]
         return []
 
-    def get_all_authorized(self) -> List[Dict[str, Any]]:
+    def get_all_authorized_by_admin_user(self, admin_user_id: int) -> List[Device]:
         """
         Retrieve all authorized devices.
 
@@ -186,8 +186,10 @@ class DeviceRepository:
                    created_at, last_synch, daily_summaries_checkpoint, 
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
+            WHERE admin_user_id = %s
+            ORDER BY created_at DESC
         """
-        result = self.db.execute_query(query)
+        result = self.db.execute_query(query, (admin_user_id,))
         
         return [
             Device(

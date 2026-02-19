@@ -253,7 +253,6 @@ def home():
         device_service = DeviceService(conn)
         device_stats_service = DeviceStatisticsService(conn)
 
-        
         try:
             admin_user_id = int(current_user.id)
             devices_data = device_service.get_devices_info_by_admin_user(admin_user_id)
@@ -329,33 +328,18 @@ def update_devices_info():
     This retrieves device type and last sync time automatically.
     """
 
+    admin_user_id = int(current_user.id)
+
     with ConnectionManager() as conn:
-        device_repo = DeviceRepository(conn)
-        devices = device_repo.get_all_authorized()
+        device_service = DeviceService(conn)
 
-        errors = []
-        for device in devices:
-
-            try:
-                access_token, _ = device_repo.get_tokens(device.id)
-                device_data = get_device_info(access_token)
-
-                device_result = device_repo.update_device_type(device.id, device_data['deviceVersion'])
-                last_sync_result = device_repo.update_last_synch(device.id, device_data['lastSyncTime'])
-
-                if not device_result or not last_sync_result:
-                    app.logger.error(f"Error while updating info for device {device.id} linked to {device.email_address}")
-                    errors.append(device.email_address)
-                else:
-                    app.logger.info(f"Device Info successfully updated for device {device.id} linked to {device.email_address}")
-
-            except Exception as e:
-                app.logger.error(f"Error retrieving device info or device {device.id} linked to {device.email_address}: {e}")
-                errors.append(device.email_address)
+        errors = device_service.update_devices_info_by_admin_user(admin_user_id)
 
         if len(errors) > 0:
+            app.logger.error(f"Error while updating info for devices linked to {', '.join(errors)}")
             flash_translated('flash.devices_info_update_error', 'danger', devices=', '.join(errors))
         else:
+            app.logger.error(f"Info regarding all the devices have been successfully updated")
             flash_translated('flash.devices_info_update_success', 'success')
 
     return redirect(url_for('home'))
