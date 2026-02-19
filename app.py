@@ -10,6 +10,7 @@ from flask_babel import Babel, get_locale, format_date, format_datetime, gettext
 from device_statistics import get_device_sync_data, get_last_device_usage_statistics
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
 from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository, AuthorizationRepository
+from services import DeviceService, DeviceStatisticsService
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
 from emails import send_email
@@ -245,49 +246,48 @@ def change_password():
 def home():
     """
     Display all devices for the logged-in admin.
+    
     """
-    try:
-        admin_user_id = int(current_user.id)
+
+    with ConnectionManager() as conn:
+        device_service = DeviceService(conn)
+        device_stats_service = DeviceStatisticsService(conn)
+
         
-        with ConnectionManager() as conn:
-            device_repo = DeviceRepository(conn)
-            devices = device_repo.get_by_admin_user(admin_user_id)
+        try:
+            admin_user_id = int(current_user.id)
+            devices_data = device_service.get_devices_info_by_admin_user(admin_user_id)
             
+            final_devices_data = []
+            for device_data in devices_data:
+                auth_status = device_data["auth_status"]
 
-            devices_data = []
-            for device in devices:
-                auth_status = device.authorization_status
-
-                # Get data reception status
                 data_reception_status = 'no_data'
                 data_reception_details = {}
                 device_usage_details = {}
 
-                if auth_status == 'inserted':
-                    auth_repo = AuthorizationRepository(conn)
-
-                    if auth_repo.check_exists(device.id):
-                        auth_status = 'pending_auth_request'
-
-                elif auth_status == 'authorized':
-                    data_reception_status, data_reception_details = get_device_sync_data(device.id)
-                    device_usage_details = get_last_device_usage_statistics(device.id, timedelta(days=7))
-                        
-                devices_data.append({
-                        "id": device.id,
-                        "email_address": device.email_address,
-                        "auth_status": auth_status,
-                        "device_type": device.device_type if device.device_type else "",
+                if device_data["auth_status"] == 'inserted' and device_data["is_pending_auth"]:
+                    device_data["auth_status"] = "pending_auth_request"
+                    
+                elif device_data["auth_status"] == 'authorized':
+                    data_reception_status, data_reception_details = device_stats_service.get_device_sync_data(device_data["id"])
+                    device_usage_details = device_stats_service.get_last_device_usage_statistics(device_data["id"], timedelta(days=7))
+                
+                final_devices_data.append({
+                        "id": device_data["id"],
+                        "email_address": device_data["email_address"],
+                        "auth_status": device_data["auth_status"],
+                        "device_type": device_data["device_type"],
                         "data_reception_status": data_reception_status,
                         "data_reception_details": data_reception_details,
                         "device_usage_details": device_usage_details
                     })
-            
-            return render_template('home.html', devices=devices_data)
-            
-    except Exception as e:
-        app.logger.error(f"Error retrieving devices: {e}")
-        return jsonify({'error': str(e)}), 500
+                
+            return render_template('home.html', devices=final_devices_data)
+                
+        except Exception as e:
+            app.logger.error(f"Error retrieving devices: {e}")
+            return jsonify({'error': str(e)}), 500
 
 
 
@@ -736,28 +736,10 @@ def change_language():
 @app.route("/livelyageing/device_details/<int:device_id>")
 @login_required
 def device_details(device_id):
-    # device = get_device(device_id)  # ← tuo metodo
-    # metrics = get_device_metrics(device_id)
-
-
-    # try:
-    #     # Get all unique emails from the database
-    #     db = DatabaseManager()
-    #     if db.connect():
-    #         last_synch = db.get_last_synch(device_id)
-    #         last_synch = format_datetime(last_synch, 'DD MMMM YYYY - HH:MM')
-
-    #         daily_summaries_checkpoint = db.get_daily_summary_checkpoint(device_id)
-    #         daily_summaries_checkpoint = format_date(daily_summaries_checkpoint, 'DD MMMM YYYY')
-
-    #         intraday_checkpoint = db.get_intraday_checkpoint(device_id)
-    #         intraday_checkpoint = format_datetime(intraday_checkpoint, 'DD MMMM YYYY - HH:MM')
-
-            
-
-    # except Exception as e:
-    #     app.logger.error(f"Error refreshing data: {e}")
-    #     return jsonify({'error': str(e)}), 500
+    device = get_device(device_id)  # ← tuo metodo
+    metrics = get_device_metrics(device_id)
+        # Get all unique emails from the database
+        
 
     device = {
                         "last_sync": "",
