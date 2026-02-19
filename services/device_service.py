@@ -44,5 +44,26 @@ class DeviceService:
         return devices_data
 
 
+    def add_new_device(self, admin_user_id: int, email_address: str) -> int:
+        
+        existing = self.device_repo.get_by_email(email_address)
+
+        if existing:
+            return "already_exists"
+            
+        # Create new device
+        device_id = self.device_repo.create(
+            admin_user_id=admin_user_id,
+            email_address=email_address
+        )
+            
+        if device_id:
+            return "added"
+        else:
+            return "error"
+
+
+
+
     
         

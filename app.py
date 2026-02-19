@@ -298,25 +298,18 @@ def add_device():
     Add a new device for the logged-in admin.
     """
     try:
+        
         email_address = request.form['emailAddress']
         admin_user_id = int(current_user.id)
         
         with ConnectionManager() as conn:
-            device_repo = DeviceRepository(conn)
+            device_service = DeviceService(conn)
             
-            # Check if device already exists
-            existing = device_repo.get_by_email(email_address)
-            if existing:
+            result = device_service.add_new_device(admin_user_id, email_address)
+
+            if result == "already_exists":
                 flash_translated('flash.device_already_exists', 'warning')
-                return redirect(url_for('home'))
-            
-            # Create new device
-            device_id = device_repo.create(
-                admin_user_id=admin_user_id,
-                email_address=email_address
-            )
-            
-            if device_id:
+            elif result == "added":
                 flash_translated('flash.device_added_successfully', 'success')
             else:
                 flash_translated('flash.device_add_failed', 'danger')
