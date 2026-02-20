@@ -152,3 +152,42 @@ class DeviceService:
                 return email_address, "error_storing_pending_auth"
         else:
             return email_address, "email_sending_error"
+
+
+    def handle_authorization_grant(self, code: str, state: str) -> str:
+
+        try:
+            state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
+            email_address = state_data.get('email_address')
+        except Exception as e:
+            return "missing_auth_info"
+
+        if not email_address:
+            return "email_not_found"
+        
+        # Retrieve code_verifier from database
+        pending_auth = self.auth_repo.get_by_state(state)
+
+        if not pending_auth:
+            return "invalid_auth_link"
+
+        code_verifier = pending_auth['code_verifier']
+
+        # Get tokens from Fitbit
+        access_token, refresh_token = get_tokens(code, code_verifier)
+        if not access_token or not refresh_token:
+            return "error_retrieve_tokens"
+            
+        device = self.device_repo.get_by_email(email_address)
+
+        results = [
+                    self.device_repo.update_tokens(device.id, access_token, refresh_token),
+                    self.device_repo.update_status(device.id, 'authorized'),
+                    self.auth_repo.delete_by_state(state)
+        ]
+
+        if all(results):
+            return "success"
+        else:
+            return "error_state_update"
+        

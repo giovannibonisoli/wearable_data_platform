@@ -151,7 +151,7 @@ def logout():
 
 @app.before_request
 def require_login():
-    print(f"🔍 Endpoint richiesto: {request.endpoint}")  # ← Debug
+    print(f"🔍 Requested endpoint: {request.endpoint}")  # ← Debug
     print(f"🔐 Utente autenticato: {current_user.is_authenticated}")  # ← Debug
 
     public_endpoints = ['login', 'callback', 'static']
@@ -387,60 +387,41 @@ def callback():
         flash_translated('flash.missing_auth_info', 'danger')
         return redirect(url_for('home'))
 
-    # Decode state to get email
-    try:
-        state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
-        email_address = state_data.get('email_address')
-    except Exception as e:
-        app.logger.error(f"Invalid state parameter: {e}")
-        flash_translated('flash.invalid_auth_link', 'danger')
-        return redirect(url_for('home'))
-
-    if not email_address:
-        app.logger.error("No email found in state")
-        flash_translated('flash.invalid_auth_link', 'danger')
-        return redirect(url_for('home'))
-
     with ConnectionManager() as conn:
         try:
-            auth_repo = AuthorizationRepository(conn)
-            # Retrieve code_verifier from database
-            pending_auth = auth_repo.get_by_state(state)
+            device_service = DeviceService(conn)
+            message = device_service.handle_authorization_grant(code, state)
 
-            if not pending_auth:
+            if message == "missing_auth_info":
+                app.logger.error("No code or state found")
+                flash_translated('flash.missing_auth_info', 'danger')
+                return redirect(url_for('home'))
+            
+            elif message == "email_not_found":
+                app.logger.error("No email found")
+                flash_translated('flash.email_not_found', 'danger')
+                return redirect(url_for('home'))
+
+            elif message == "invalid_auth_link":
                 app.logger.error("No pending authorization found or expired")
                 flash_translated('flash.auth_link_expired', 'danger')
                 return redirect(url_for('home'))
 
-            code_verifier = pending_auth['code_verifier']
+            elif message == "error_retrieve_tokens":
+                app.logger.error("Error while retrieving tokens")
+                flash_translated('flash.auth_link_expired', 'danger')
+                return redirect(url_for('home'))
 
-            # Get tokens from Fitbit
-            access_token, refresh_token = get_tokens(code, code_verifier)
-            if not access_token or not refresh_token:
-                raise Exception("Could not retrieve Fitbit tokens.")
+            elif message == "error_state_update":
+                app.logger.error("Error while updating state")
+                flash_translated('flash.auth_link_expired', 'danger')
+                return redirect(url_for('home'))
 
-            device_data = get_device_info(access_token)
-
-            device_repo = DeviceRepository(conn)
-
-            device = device_repo.get_by_email(email_address)
-
-            device_repo.update_tokens(device.id, access_token, refresh_token)
-            app.logger.info(f"Tokens updated for the device {device.id}.")
-
-            device_repo.update_status(device.id, 'authorized')
-            app.logger.info(f"Authorization status updated for the device {device.id}.")
-
-            auth_repo.delete_by_state(state)
-            app.logger.info(f"Deleted prending request.")
-
-            device_repo.update_device_type(device.id, device_data['deviceVersion'])
-            device_repo.update_last_synch(device.id, device_data['lastSyncTime'])
-
-            return render_template('auth_confirmation.html',
-                                     email_address=email_address,
-                                     success=True,
-                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
+            else:
+                app.logger.error("Authorization obtained!")
+                return render_template('auth_confirmation.html',
+                                        success=result,
+                                        link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
         except Exception as e:
             app.logger.error(f"Unexpected error: {e}")
