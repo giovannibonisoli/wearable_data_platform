@@ -191,3 +191,7 @@ class DeviceService:
         else:
             return "error_state_update"
         
+
+    def deactivate_device(self, device_id: int) -> None:
+
+        self.device_repo.update_status(device_id, 'non_active')

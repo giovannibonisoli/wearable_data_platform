@@ -431,16 +431,15 @@ def callback():
                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 
-@app.route('/livelyageing/deactivate_email', methods=['POST'])
+@app.route('/livelyageing/deactivate_device', methods=['POST'])
 @login_required
-def deactivate_email():
-    """ Deactivate authorized mail"""
+def deactivate_device():
+    """ Deactivate authorized device"""
     device_id = request.form.get('DeactivateId')
 
     with ConnectionManager() as conn:
-        device_repo = DeviceRepository(conn)
-        device_repo.update_status(device_id, 'non_active')
-
+        device_service = DeviceService(conn)
+        device_service.deactivate_device(device_id)
         app.logger.info(f"Device {device_id} deactivated.")
 
     return redirect(url_for('home'))

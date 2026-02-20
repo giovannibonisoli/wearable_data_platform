@@ -248,12 +248,6 @@
                                         </button>
                                     </form>
                                     {% elif device.auth_status == 'authorized' %}
-                                    {#<form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="DeactivateId" value="{{ device.id }}">
-                                        <button type="submit" class="btn btn-danger btn-sm action-btn">
-                                            <i class="far fa-times-circle me-2"></i>{{ _('Disable Device') }}
-                                        </button>
-                                    </form>#}
                        
                                     <a href="{{ url_for('device_details', device_id=device.id) }}"
                                         class="btn btn-info btn-sm action-btn"
@@ -340,7 +334,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem;">
                     <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
                 </button>
-                <form action="{{ url_for('deactivate_email') }}" method="POST" class="d-inline">
+                <form action="{{ url_for('deactivate_device') }}" method="POST" class="d-inline">
                     <input type="hidden" name="DeactivateId" value="{{ device.id }}">
                     <button type="submit" class="btn btn-danger" style="border-radius: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
                         <i class="fas fa-check me-2"></i>{{ _('confirm') }}
