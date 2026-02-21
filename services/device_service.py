@@ -3,9 +3,10 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
-from database import ConnectionManager, DeviceRepository, AuthorizationRepository, Device 
+from database import ConnectionManager, DeviceRepository, AuthorizationRepository, Device
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
 from emails import send_email
+from services.result_enums import AddDeviceResult, SendAuthEmailResult, AuthGrantResult
 
 import base64
 import json
@@ -49,23 +50,22 @@ class DeviceService:
         return devices_data
 
 
-    def add_new_device(self, admin_user_id: int, email_address: str) -> str:
-        
+    def add_new_device(self, admin_user_id: int, email_address: str) -> AddDeviceResult:
         existing = self.device_repo.get_by_email(email_address)
 
         if existing:
-            return "already_exists"
-            
+            return AddDeviceResult.ALREADY_EXISTS
+
         # Create new device
         device_id = self.device_repo.create(
             admin_user_id=admin_user_id,
             email_address=email_address
         )
-            
+
         if device_id:
-            return "added"
+            return AddDeviceResult.ADDED
         else:
-            return "error"
+            return AddDeviceResult.ERROR
 
     
     def update_devices_info_by_admin_user(self, admin_user_id: int) -> List[str]:
@@ -91,8 +91,7 @@ class DeviceService:
         return errors
 
 
-    def send_authorization_email(self, device_id: int) -> str:
-
+    def send_authorization_email(self, device_id: int) -> tuple[str, SendAuthEmailResult]:
         device = self.device_repo.get_by_id(device_id)
         email_address = device.email_address
 
@@ -144,52 +143,49 @@ class DeviceService:
             """
 
         if send_email(email_address, email_subject, email_html, email_text):
-
             if self.auth_repo.store_pending_auth(device_id, state, code_verifier):
-
-                return email_address, "success"
+                return email_address, SendAuthEmailResult.SUCCESS
             else:
-                return email_address, "error_storing_pending_auth"
+                return email_address, SendAuthEmailResult.ERROR_STORING_PENDING_AUTH
         else:
-            return email_address, "email_sending_error"
+            return email_address, SendAuthEmailResult.EMAIL_SENDING_ERROR
 
 
-    def handle_authorization_grant(self, code: str, state: str) -> str:
-
+    def handle_authorization_grant(self, code: str, state: str) -> AuthGrantResult:
         try:
             state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
             email_address = state_data.get('email_address')
-        except Exception as e:
-            return "missing_auth_info"
+        except Exception:
+            return AuthGrantResult.MISSING_AUTH_INFO
 
         if not email_address:
-            return "email_not_found"
-        
+            return AuthGrantResult.EMAIL_NOT_FOUND
+
         # Retrieve code_verifier from database
         pending_auth = self.auth_repo.get_by_state(state)
 
         if not pending_auth:
-            return "invalid_auth_link"
+            return AuthGrantResult.INVALID_AUTH_LINK
 
         code_verifier = pending_auth['code_verifier']
 
         # Get tokens from Fitbit
         access_token, refresh_token = get_tokens(code, code_verifier)
         if not access_token or not refresh_token:
-            return "error_retrieve_tokens"
-            
+            return AuthGrantResult.ERROR_RETRIEVE_TOKENS
+
         device = self.device_repo.get_by_email(email_address)
 
         results = [
-                    self.device_repo.update_tokens(device.id, access_token, refresh_token),
-                    self.device_repo.update_status(device.id, 'authorized'),
-                    self.auth_repo.delete_by_state(state)
+            self.device_repo.update_tokens(device.id, access_token, refresh_token),
+            self.device_repo.update_status(device.id, 'authorized'),
+            self.auth_repo.delete_by_state(state)
         ]
 
         if all(results):
-            return "success"
+            return AuthGrantResult.SUCCESS
         else:
-            return "error_state_update"
+            return AuthGrantResult.ERROR_STATE_UPDATE
         
 
     def deactivate_device(self, device_id: int) -> None:

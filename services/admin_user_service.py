@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
 from database import ConnectionManager, AdminUserRepository, DeviceRepository, AdminUser
+from services.result_enums import ChangePasswordResult
 
 
 class AdminUserService:
@@ -45,15 +46,11 @@ class AdminUserService:
         return admin_user
 
 
-    def check_and_change_password(self, admin_user_id: int, current_password: str, new_password: str) -> str:
-        
+    def check_and_change_password(self, admin_user_id: int, current_password: str, new_password: str) -> ChangePasswordResult:
         if self.admin_repo.verify_password(admin_user_id, current_password):
             if self.admin_repo.update_password(admin_user_id, new_password):
-                return "success"
+                return ChangePasswordResult.SUCCESS
             else:
-                return "error"
+                return ChangePasswordResult.ERROR
         else:
-            "no_current_password"   
-
-       
-
+            return ChangePasswordResult.NO_CURRENT_PASSWORD

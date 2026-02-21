@@ -7,14 +7,17 @@ from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
 
-from device_statistics import get_device_sync_data, get_last_device_usage_statistics
-from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
-
 from database import ConnectionManager
 from services import DeviceService, DeviceStatisticsService, AdminUserService
+from services.result_enums import (
+    ChangePasswordResult,
+    AddDeviceResult,
+    SendAuthEmailResult,
+    AuthGrantResult,
+)
+
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
-from emails import send_email
 
 import os
 import logging
@@ -207,18 +210,14 @@ def change_password():
     if new_password == confirm_password:
         admin_user_id = int(current_user.id)
 
-        print("MATCH")
-
         if len(new_password) >= 8:
-            print("LEN CORRECT")
-   
             with ConnectionManager() as conn:
                 admin_service = AdminUserService(conn)
                 result = admin_service.check_and_change_password(admin_user_id, current_password, new_password)
 
-                if result == "success":
+                if result == ChangePasswordResult.SUCCESS:
                     flash_translated('flash.password_changed_successfully', 'success')
-                elif result == "no_current_password":
+                elif result == ChangePasswordResult.NO_CURRENT_PASSWORD:
                     flash_translated('flash.current_password_not_correct', 'danger')
                 else:
                     flash_translated('flash.password_change_failed', 'danger')
@@ -295,9 +294,9 @@ def add_device():
             
             result = device_service.add_new_device(admin_user_id, email_address)
 
-            if result == "already_exists":
+            if result == AddDeviceResult.ALREADY_EXISTS:
                 flash_translated('flash.device_already_exists', 'warning')
-            elif result == "added":
+            elif result == AddDeviceResult.ADDED:
                 flash_translated('flash.device_added_successfully', 'success')
             else:
                 flash_translated('flash.device_add_failed', 'danger')
@@ -345,15 +344,15 @@ def send_auth_request():
 
         email_address, result = device_service.send_authorization_email(device_id)
 
-        if result == "success":
+        if result == SendAuthEmailResult.SUCCESS:
             app.logger.info(f"Authorization request successfully sent to {email_address} linked to device {device_id}")
             return render_template('auth_email_sent_confirmation.html', email_address=email_address)
-           
-        elif result == "email_sending_error":
-            app.logger.info(f"Error sending authorization request to {email_address} linked to device {device_id}")
+
+        elif result == SendAuthEmailResult.EMAIL_SENDING_ERROR:
+            app.logger.error(f"Error sending authorization request to {email_address} linked to device {device_id}")
             flash_translated('flash.device_send_error', 'danger')
         else:
-            app.logger.info(f"Error storing authorization request in db for {email_address} linked to device {device_id}")
+            app.logger.error(f"Error storing authorization request in db for {email_address} linked to device {device_id}")
             flash_translated('flash.pending_auth_storing_failed', 'danger')
 
     return redirect(url_for('home'))
@@ -381,36 +380,36 @@ def callback():
             device_service = DeviceService(conn)
             message = device_service.handle_authorization_grant(code, state)
 
-            if message == "missing_auth_info":
+            if message == AuthGrantResult.MISSING_AUTH_INFO:
                 app.logger.error("No code or state found")
                 flash_translated('flash.missing_auth_info', 'danger')
                 return redirect(url_for('home'))
-            
-            elif message == "email_not_found":
+
+            elif message == AuthGrantResult.EMAIL_NOT_FOUND:
                 app.logger.error("No email found")
                 flash_translated('flash.email_not_found', 'danger')
                 return redirect(url_for('home'))
 
-            elif message == "invalid_auth_link":
+            elif message == AuthGrantResult.INVALID_AUTH_LINK:
                 app.logger.error("No pending authorization found or expired")
                 flash_translated('flash.auth_link_expired', 'danger')
                 return redirect(url_for('home'))
 
-            elif message == "error_retrieve_tokens":
+            elif message == AuthGrantResult.ERROR_RETRIEVE_TOKENS:
                 app.logger.error("Error while retrieving tokens")
                 flash_translated('flash.auth_link_expired', 'danger')
                 return redirect(url_for('home'))
 
-            elif message == "error_state_update":
+            elif message == AuthGrantResult.ERROR_STATE_UPDATE:
                 app.logger.error("Error while updating state")
                 flash_translated('flash.auth_link_expired', 'danger')
                 return redirect(url_for('home'))
 
             else:
-                app.logger.error("Authorization obtained!")
+                app.logger.info("Authorization obtained!")
                 return render_template('auth_confirmation.html',
-                                        success=result,
-                                        link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
+                                       success=True,
+                                       link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
         except Exception as e:
             app.logger.error(f"Unexpected error: {e}")
