@@ -4,8 +4,8 @@ from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
 from database import ConnectionManager, DeviceRepository, AuthorizationRepository, Device
-from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
-from emails import send_email
+from services.integrations.fitbit import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
+from services.integrations.emails import send_email
 from services.result_enums import AddDeviceResult, SendAuthEmailResult, AuthGrantResult
 
 import base64
