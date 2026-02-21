@@ -5,7 +5,7 @@ from rich import _console
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
-from flask_babel import Babel, get_locale, format_date, format_datetime, gettext as babel_gettext
+from flask_babel import Babel, get_locale, format_date, format_datetime, gettext
 
 from database import ConnectionManager
 from services import DeviceService, DeviceStatisticsService, AdminUserService
@@ -17,7 +17,6 @@ from services.result_enums import (
 )
 
 from config import CLIENT_ID, REDIRECT_URI
-from translations import TRANSLATIONS
 
 import os
 import logging
@@ -49,8 +48,9 @@ FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mod
 
 # Language settings
 LANGUAGES = {
+    'en': 'English',
     'it': 'Italiano',
-    'en': 'English'
+    'es': 'Español'
 }
 
 DEFAULT_LANGUAGE = 'it'
@@ -135,10 +135,10 @@ def login():
                 session['username'] = user_data['username']
                     
                 name = user_data["full_name"] or username
-                flash_translated('flash.welcome_user', 'success', name=name)
+                flash(gettext('Welcome, %(name)s!', name=name), 'success')
                 return redirect(url_for('home'))
             else:
-                flash_translated('flash.incorrect_credentials', 'danger')
+                flash(gettext('Incorrect username or password.'), 'danger')
     
     return render_template('login.html')
 
@@ -215,15 +215,15 @@ def change_password():
                 result = admin_service.check_and_change_password(admin_user_id, current_password, new_password)
 
                 if result == ChangePasswordResult.SUCCESS:
-                    flash_translated('flash.password_changed_successfully', 'success')
+                    flash(gettext('Password changed successfully.'), 'success')
                 elif result == ChangePasswordResult.NO_CURRENT_PASSWORD:
-                    flash_translated('flash.current_password_not_correct', 'danger')
+                    flash(gettext('The current password is wrong.'), 'danger')
                 else:
-                    flash_translated('flash.password_change_failed', 'danger')
+                    flash(gettext('Password change failed.'), 'danger')
         else:
-            flash_translated('flash.password_too_short', 'danger')
+            flash(gettext('The new password must be at least 8 characters.'), 'danger')
     else:
-        flash_translated('flash.passwords_do_not_match', 'danger')
+        flash(gettext('Passwords do not match.'), 'danger')
     
     return redirect(url_for('admin_user_profile'))
 
@@ -294,15 +294,15 @@ def add_device():
             result = device_service.add_new_device(admin_user_id, email_address)
 
             if result == AddDeviceResult.ALREADY_EXISTS:
-                flash_translated('flash.device_already_exists', 'warning')
+                flash(gettext('This device is already registered.'), 'warning')
             elif result == AddDeviceResult.ADDED:
-                flash_translated('flash.device_added_successfully', 'success')
+                flash(gettext('Device added successfully.'), 'success')
             else:
-                flash_translated('flash.device_add_failed', 'danger')
+                flash(gettext('Error adding device.'), 'danger')
                 
     except Exception as e:
         app.logger.error(f"Error adding device: {e}")
-        flash_translated('flash.error_occurred', 'danger')
+        flash(gettext('An error occurred.'), 'danger')
     
     return redirect(url_for('home'))
 
@@ -324,10 +324,10 @@ def update_devices_info():
 
         if len(errors) > 0:
             app.logger.error(f"Error while updating info for devices linked to {', '.join(errors)}")
-            flash_translated('flash.devices_info_update_error', 'danger', devices=', '.join(errors))
+            flash(gettext('Error updating device info for: %(devices)s', devices=', '.join(errors)), 'danger')
         else:
             app.logger.error(f"Info regarding all the devices have been successfully updated")
-            flash_translated('flash.devices_info_update_success', 'success')
+            flash(gettext('Device information updated successfully for all devices.'), 'success')
 
     return redirect(url_for('home'))
 
@@ -349,10 +349,10 @@ def send_auth_request():
 
         elif result == SendAuthEmailResult.EMAIL_SENDING_ERROR:
             app.logger.error(f"Error sending authorization request to {email_address} linked to device {device_id}")
-            flash_translated('flash.device_send_error', 'danger')
+            flash(gettext('Error sending device. Please try again.'), 'danger')
         else:
             app.logger.error(f"Error storing authorization request in db for {email_address} linked to device {device_id}")
-            flash_translated('flash.pending_auth_storing_failed', 'danger')
+            flash(gettext('Error storing authorization request.'), 'danger')
 
     return redirect(url_for('home'))
 
@@ -371,7 +371,7 @@ def callback():
 
     if not code or not state:
         app.logger.error("Missing code or state parameter")
-        flash_translated('flash.missing_auth_info', 'danger')
+        flash(gettext('Error: Missing authorization information.'), 'danger')
         return redirect(url_for('home'))
 
     with ConnectionManager() as conn:
@@ -381,27 +381,27 @@ def callback():
 
             if message == AuthGrantResult.MISSING_AUTH_INFO:
                 app.logger.error("No code or state found")
-                flash_translated('flash.missing_auth_info', 'danger')
+                flash(gettext('Error: Missing authorization information.'), 'danger')
                 return redirect(url_for('home'))
 
             elif message == AuthGrantResult.EMAIL_NOT_FOUND:
                 app.logger.error("No email found")
-                flash_translated('flash.email_not_found', 'danger')
+                flash(gettext('Email not found.'), 'danger')
                 return redirect(url_for('home'))
 
             elif message == AuthGrantResult.INVALID_AUTH_LINK:
                 app.logger.error("No pending authorization found or expired")
-                flash_translated('flash.auth_link_expired', 'danger')
+                flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
                 return redirect(url_for('home'))
 
             elif message == AuthGrantResult.ERROR_RETRIEVE_TOKENS:
                 app.logger.error("Error while retrieving tokens")
-                flash_translated('flash.auth_link_expired', 'danger')
+                flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
                 return redirect(url_for('home'))
 
             elif message == AuthGrantResult.ERROR_STATE_UPDATE:
                 app.logger.error("Error while updating state")
-                flash_translated('flash.auth_link_expired', 'danger')
+                flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
                 return redirect(url_for('home'))
 
             else:
@@ -444,133 +444,15 @@ def format_number(value):
         return value
 
 
-def get_text(key):
-    """Get the translation for a key in the current language."""
-    lang = str(get_locale())
-    # Split the key by dots to access nested dictionaries
-    keys = key.split('.')
-    value = TRANSLATIONS.get(lang, {}).get(keys[0], {})
-    for k in keys[1:]:
-        value = value.get(k, '')
-    return value if value else key
-
-def translate_text(key):
-    """Custom translation function that uses TRANSLATIONS dictionary."""
-    lang = str(get_locale())
-    
-    if lang not in TRANSLATIONS:
-        return key
-    
-    translations = TRANSLATIONS[lang]
-    
-    # Helper function to recursively search in a dictionary
-    def search_in_dict(d, search_key, case_insensitive=False):
-        """Search for a key in a nested dictionary."""
-        if isinstance(d, dict):
-            for k, v in d.items():
-                if isinstance(v, dict):
-                    result = search_in_dict(v, search_key, case_insensitive)
-                    if result is not None:
-                        return result
-                elif isinstance(v, str):
-                    compare_key = k.lower() if case_insensitive else k
-                    compare_search = search_key.lower() if case_insensitive else search_key
-                    if compare_key == compare_search:
-                        return v
-        return None
-    
-    # Strategy 1: Try with dots first (for nested keys like 'flash.welcome_user' or 'common.welcome')
-    if '.' in key:
-        parts = key.split('.')
-        value = translations
-        for part in parts:
-            if isinstance(value, dict):
-                value = value.get(part) or value.get(part.lower())
-            else:
-                value = None
-                break
-        if isinstance(value, str):
-            return value
-    
-    # Strategy 2: Try exact key match in all sections (case-sensitive)
-    result = search_in_dict(translations, key, case_insensitive=False)
-    if result:
-        return result
-    
-    # Strategy 3: Try case-insensitive match
-    result = search_in_dict(translations, key, case_insensitive=True)
-    if result:
-        return result
-    
-    # Strategy 4: Try with spaces replaced by underscores
-    key_underscore = key.replace(' ', '_').lower()
-    result = search_in_dict(translations, key_underscore, case_insensitive=True)
-    if result:
-        return result
-    
-    # Strategy 5: Try lowercase version
-    key_lower = key.lower()
-    result = search_in_dict(translations, key_lower, case_insensitive=True)
-    if result:
-        return result
-    
-    # Fallback: try Flask-Babel's translation
-    try:
-        from flask_babel import gettext as babel_gettext
-        translated = babel_gettext(key)
-        if translated != key:
-            return translated
-    except:
-        pass
-    
-    # Last resort: return the key itself
-    return key
-
-def flash_translated(message_key, category='info', **kwargs):
-    """Flash a translated message. Supports format strings with kwargs."""
-    translated = translate_text(message_key)
-    # Replace placeholders if kwargs are provided
-    if kwargs:
-        try:
-            translated = translated.format(**kwargs)
-        except (KeyError, ValueError):
-            # If formatting fails, return the translated message as-is
-            pass
-    flash(translated, category)
-
 @app.context_processor
 def utility_processor():
-    """Make translation function and static URL function available in templates."""
+    """Make static URL function available in templates. Flask-Babel provides _ and gettext automatically."""
     def static_url(filename):
         """Generate full URL for static files."""
-        # Use the complete path including /livelyageing prefix
         return url_for('static', filename=filename)
     
-    # Override _() to use our custom translation function
-    # This wrapper handles both Flask-Babel's gettext and our custom translation
-    class CustomGettextWrapper:
-        """Wrapper class that handles Flask-Babel gettext calls with parameters"""
-        def __call__(self, message, **kwargs):
-            """Handle gettext calls with keyword arguments"""
-            translated = translate_text(message)
-            if kwargs:
-                try:
-                    # Use % formatting for Flask-Babel syntax %(variable)s
-                    translated = translated % kwargs
-                except (KeyError, ValueError, TypeError):
-                    # If % formatting fails, try .format() for {variable} syntax
-                    try:
-                        translated = translated.format(**kwargs)
-                    except (KeyError, ValueError):
-                        # If both fail, return translated message as-is
-                        pass
-            return translated
-    
-    custom_gettext = CustomGettextWrapper()
-    
     return {
-        'get_text': get_text,
-        '_': custom_gettext,  # Override Flask-Babel's _() with our custom function
+        '_': gettext,
         'current_language': get_locale,
         'static_url': static_url
     }

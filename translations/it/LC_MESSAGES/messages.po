@@ -1,4 +1,4 @@
-# ES translations for Lively Ageing.
+# IT translations for Lively Ageing.
 # Copyright (C) 2025 Lively Ageing
 # This file is distributed under the same license as the PROJECT project.
 msgid ""
@@ -8,8 +8,8 @@ msgstr ""
 "POT-Creation-Date: 2026-02-21 16:35+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: es\n"
-"Language-Team: es <LL@li.org>\n"
+"Language: it\n"
+"Language-Team: it <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -19,156 +19,156 @@ msgstr ""
 #: app.py:138
 #, python-format
 msgid "Welcome, %(name)s!"
-msgstr "¡Bienvenido, %(name)s!"
+msgstr "Benvenuto, %(name)s!"
 
 #: app.py:141
 msgid "Incorrect username or password."
-msgstr "Nombre de usuario o contraseña incorrectos."
+msgstr "Nome utente o password errati."
 
 #: app.py:218
 msgid "Password changed successfully."
-msgstr "Contraseña cambiada correctamente."
+msgstr "Password modificata con successo."
 
 #: app.py:220
 msgid "The current password is wrong."
-msgstr "La contraseña actual es incorrecta."
+msgstr "La password attuale non è corretta."
 
 #: app.py:222
 msgid "Password change failed."
-msgstr "El cambio de contraseña ha fallado."
+msgstr "Modifica della password non riuscita."
 
 #: app.py:224
 msgid "The new password must be at least 8 characters."
-msgstr "La nueva contraseña debe tener al menos 8 caracteres."
+msgstr "La nuova password deve contenere almeno 8 caratteri."
 
 #: app.py:226
 msgid "Passwords do not match."
-msgstr "Las contraseñas no coinciden."
+msgstr "Le password non corrispondono."
 
 #: app.py:297
 msgid "This device is already registered."
-msgstr "Este dispositivo ya está registrado."
+msgstr "Questo dispositivo è già registrato."
 
 #: app.py:299
 msgid "Device added successfully."
-msgstr "Dispositivo añadido correctamente."
+msgstr "Dispositivo aggiunto con successo."
 
 #: app.py:301
 msgid "Error adding device."
-msgstr "Error al añadir el dispositivo."
+msgstr "Errore durante l'aggiunta del dispositivo."
 
 #: app.py:305
 msgid "An error occurred."
-msgstr "Se ha producido un error."
+msgstr "Si è verificato un errore."
 
 #: app.py:327
 #, python-format
 msgid "Error updating device info for: %(devices)s"
-msgstr "Error al actualizar la información del dispositivo para: %(devices)s"
+msgstr "Errore nell'aggiornamento delle informazioni per: %(devices)s"
 
 #: app.py:330
 msgid "Device information updated successfully for all devices."
-msgstr "Información del dispositivo actualizada correctamente para todos los dispositivos."
+msgstr "Informazioni dispositivo aggiornate con successo per tutti i dispositivi."
 
 #: app.py:352
 msgid "Error sending device. Please try again."
-msgstr "Error al enviar el dispositivo. Por favor, inténtelo de nuevo."
+msgstr "Errore nell'invio del dispositivo. Riprova."
 
 #: app.py:355
 msgid "Error storing authorization request."
-msgstr "Error al almacenar la solicitud de autorización."
+msgstr "Errore nel salvataggio della richiesta di autorizzazione."
 
 #: app.py:374 app.py:384
 msgid "Error: Missing authorization information."
-msgstr "Error: Falta información de autorización."
+msgstr "Errore: Informazioni di autorizzazione mancanti."
 
 #: app.py:389
 msgid "Email not found."
-msgstr "Correo electrónico no encontrado."
+msgstr "Email non trovata."
 
 #: app.py:394 app.py:399 app.py:404
 msgid "Error: Authorization link expired. Please request a new one."
-msgstr "Error: El enlace de autorización ha caducado. Por favor, solicite uno nuevo."
+msgstr "Errore: Il link di autorizzazione è scaduto. Richiedine uno nuovo."
 
 #: templates/admin_user_profile.html:3 templates/base.html:83
 msgid "Profile"
-msgstr "Perfil"
+msgstr "Profilo"
 
 #: templates/admin_user_profile.html:18
 msgid "Change Avatar"
-msgstr "Cambiar avatar"
+msgstr "Cambia avatar"
 
 #: templates/admin_user_profile.html:26 templates/home.html:12
 msgid "Devices"
-msgstr "Dispositivos"
+msgstr "Dispositivi"
 
 #: templates/admin_user_profile.html:36
 msgid "Account Status"
-msgstr "Estado de la cuenta"
+msgstr "Stato account"
 
 #: templates/admin_user_profile.html:42
 msgid "Member Since"
-msgstr "Miembro desde"
+msgstr "Membro dal"
 
 #: templates/admin_user_profile.html:48
 msgid "Last Login"
-msgstr "Último acceso"
+msgstr "Ultimo accesso"
 
 #: templates/admin_user_profile.html:61
 msgid "Change Password"
-msgstr "Cambiar contraseña"
+msgstr "Cambia password"
 
 #: templates/admin_user_profile.html:69
 msgid "Current Password"
-msgstr "Contraseña actual"
+msgstr "Password attuale"
 
 #: templates/admin_user_profile.html:81
 msgid "New Password"
-msgstr "Nueva contraseña"
+msgstr "Nuova password"
 
 #: templates/admin_user_profile.html:90
 msgid "Minimum 8 characters"
-msgstr "Mínimo 8 caracteres"
+msgstr "Minimo 8 caratteri"
 
 #: templates/admin_user_profile.html:94
 msgid "Confirm New Password"
-msgstr "Confirmar nueva contraseña"
+msgstr "Conferma nuova password"
 
 #: templates/admin_user_profile.html:107
 msgid ""
 "Password must contain at least 8 characters, including uppercase, "
 "lowercase, and numbers"
 msgstr ""
-"La contraseña debe contener al menos 8 caracteres, incluyendo mayúsculas, "
-"minúsculas y números"
+"La password deve contenere almeno 8 caratteri, incluse lettere maiuscole, "
+"minuscole e numeri"
 
 #: templates/admin_user_profile.html:113
 msgid "Update Password"
-msgstr "Actualizar contraseña"
+msgstr "Aggiorna password"
 
 #: templates/alerts_dashboard.html:5 templates/alerts_dashboard.html:158
 msgid "Medical Alerts Dashboard"
-msgstr "Panel de alertas médicas"
+msgstr "Dashboard degli avvisi medici"
 
 #: templates/alerts_dashboard.html:118
 msgid "Welcome"
-msgstr "Bienvenido"
+msgstr "Benvenuto"
 
 #: templates/alerts_dashboard.html:123
 msgid "Alert Dashboard"
-msgstr "Panel de alertas"
+msgstr "Dashboard avvisi"
 
 #: templates/alerts_dashboard.html:128
 msgid "Link Device"
-msgstr "Vincular dispositivo"
+msgstr "Collega dispositivo"
 
 #: templates/alerts_dashboard.html:133 templates/base.html:94
 msgid "Logout"
-msgstr "Cerrar sesión"
+msgstr "Esci"
 
 #: templates/alerts_dashboard.html:140 templates/base.html:104
 msgid "Language"
-msgstr "Idioma"
+msgstr "Lingua"
 
 #: templates/alerts_dashboard.html:143 templates/base.html:110
 msgid "Italian"
@@ -176,39 +176,39 @@ msgstr "Italiano"
 
 #: templates/alerts_dashboard.html:144 templates/base.html:116
 msgid "English"
-msgstr "Inglés"
+msgstr "Inglese"
 
 #: templates/alerts_dashboard.html:145 templates/base.html:122
 msgid "Spanish"
-msgstr "Español"
+msgstr "Spagnolo"
 
 #: templates/alerts_dashboard.html:154
 msgid "Back"
-msgstr "Atrás"
+msgstr "Indietro"
 
 #: templates/alerts_dashboard.html:159 templates/alerts_dashboard.html:160
 msgid "Export to CSV"
-msgstr "Exportar a CSV"
+msgstr "Esporta in CSV"
 
 #: templates/alerts_dashboard.html:169
 msgid "High Priority Alerts"
-msgstr "Alertas de alta prioridad"
+msgstr "Avvisi ad alta priorità"
 
 #: templates/alerts_dashboard.html:175
 msgid "Medium Priority Alerts"
-msgstr "Alertas de prioridad media"
+msgstr "Avvisi a priorità media"
 
 #: templates/alerts_dashboard.html:181
 msgid "Low Priority Alerts"
-msgstr "Alertas de baja prioridad"
+msgstr "Avvisi a bassa priorità"
 
 #: templates/alerts_dashboard.html:187
 msgid "Unacknowledged Alerts"
-msgstr "Alertas no confirmadas"
+msgstr "Avvisi non confermati"
 
 #: templates/alerts_dashboard.html:194
 msgid "Priority Legend"
-msgstr "Leyenda de prioridad"
+msgstr "Legenda priorità"
 
 #: templates/alerts_dashboard.html:199 templates/alerts_dashboard.html:245
 msgid "High"
@@ -216,7 +216,7 @@ msgstr "Alta"
 
 #: templates/alerts_dashboard.html:199
 msgid "Requires immediate attention (e.g., cardiac anomalies)"
-msgstr "Requiere atención inmediata (ej. anomalías cardíacas)"
+msgstr "Richiede attenzione immediata (es. anomalie cardiache)"
 
 #: templates/alerts_dashboard.html:205 templates/alerts_dashboard.html:246
 msgid "Medium"
@@ -224,109 +224,109 @@ msgstr "Media"
 
 #: templates/alerts_dashboard.html:205
 msgid "Attention needed in the next hours (e.g., activity changes)"
-msgstr "Atención necesaria en las próximas horas (ej. cambios de actividad)"
+msgstr "Attenzione necessaria nelle prossime ore (es. variazioni di attività)"
 
 #: templates/alerts_dashboard.html:211 templates/alerts_dashboard.html:247
 msgid "Low"
-msgstr "Baja"
+msgstr "Bassa"
 
 #: templates/alerts_dashboard.html:211
 msgid "Routine monitoring (e.g., sleep patterns)"
-msgstr "Monitorización rutinaria (ej. patrones de sueño)"
+msgstr "Monitoraggio di routine (es. schemi del sonno)"
 
 #: templates/alerts_dashboard.html:221
 msgid "Date From"
-msgstr "Fecha desde"
+msgstr "Data da"
 
 #: templates/alerts_dashboard.html:225
 msgid "Date To"
-msgstr "Fecha hasta"
+msgstr "Data a"
 
 #: templates/alerts_dashboard.html:229 templates/alerts_dashboard.html:280
 #: templates/alerts_dashboard.html:384
 msgid "User"
-msgstr "Usuario"
+msgstr "Utente"
 
 #: templates/alerts_dashboard.html:230
 msgid "Name or email"
-msgstr "Nombre o correo electrónico"
+msgstr "Nome o email"
 
 #: templates/alerts_dashboard.html:233 templates/alerts_dashboard.html:281
 #: templates/alerts_dashboard.html:392
 msgid "Alert Type"
-msgstr "Tipo de alerta"
+msgstr "Tipo di avviso"
 
 #: templates/alerts_dashboard.html:235 templates/alerts_dashboard.html:244
 #: templates/alerts_dashboard.html:253
 msgid "All"
-msgstr "Todos"
+msgstr "Tutti"
 
 #: templates/alerts_dashboard.html:236
 msgid "Cardiac"
-msgstr "Cardíaco"
+msgstr "Cardiaco"
 
 #: templates/alerts_dashboard.html:237
 msgid "Activity"
-msgstr "Actividad"
+msgstr "Attività"
 
 #: templates/alerts_dashboard.html:238
 msgid "Sleep"
-msgstr "Sueño"
+msgstr "Sonno"
 
 #: templates/alerts_dashboard.html:242 templates/alerts_dashboard.html:282
 #: templates/alerts_dashboard.html:396
 msgid "Priority"
-msgstr "Prioridad"
+msgstr "Priorità"
 
 #: templates/alerts_dashboard.html:251 templates/alerts_dashboard.html:283
 #: templates/alerts_dashboard.html:413
 msgid "Status"
-msgstr "Estado"
+msgstr "Stato"
 
 #: templates/alerts_dashboard.html:254
 msgid "Unacknowledged"
-msgstr "No confirmada"
+msgstr "Non confermato"
 
 #: templates/alerts_dashboard.html:255 templates/alerts_dashboard.html:308
 #: templates/alerts_dashboard.html:544
 msgid "Acknowledged"
-msgstr "Confirmada"
+msgstr "Confermato"
 
 #: templates/alerts_dashboard.html:262
 msgid "Show only urgent alerts (unacknowledged for more than 24h)"
-msgstr "Mostrar solo alertas urgentes (no confirmadas durante más de 24 horas)"
+msgstr "Mostra solo avvisi urgenti (non confermati da più di 24 ore)"
 
 #: templates/alerts_dashboard.html:267
 msgid "Filter"
-msgstr "Filtrar"
+msgstr "Filtra"
 
 #: templates/alerts_dashboard.html:268
 msgid "Clear Filters"
-msgstr "Limpiar filtros"
+msgstr "Cancella filtri"
 
 #: templates/alerts_dashboard.html:278 templates/alerts_dashboard.html:388
 msgid "Date/Time"
-msgstr "Fecha/Hora"
+msgstr "Data/Ora"
 
 #: templates/alerts_dashboard.html:279
 msgid "Time Since Alert"
-msgstr "Tiempo desde la alerta"
+msgstr "Tempo dall'avviso"
 
 #: templates/alerts_dashboard.html:284 templates/home.html:94
 msgid "Actions"
-msgstr "Acciones"
+msgstr "Azioni"
 
 #: templates/alerts_dashboard.html:294 templates/alerts_dashboard.html:487
 msgid "hours"
-msgstr "horas"
+msgstr "ore"
 
 #: templates/alerts_dashboard.html:296 templates/home.html:191
 msgid "days"
-msgstr "días"
+msgstr "giorni"
 
 #: templates/alerts_dashboard.html:310 templates/alerts_dashboard.html:544
 msgid "Pending"
-msgstr "Pendiente"
+msgstr "In attesa"
 
 #: templates/alerts_dashboard.html:312
 msgid "Urgent"
@@ -334,121 +334,121 @@ msgstr "Urgente"
 
 #: templates/alerts_dashboard.html:321
 msgid "Mark as acknowledged"
-msgstr "Marcar como confirmada"
+msgstr "Segna come confermato"
 
 #: templates/alerts_dashboard.html:335
 msgid "Page navigation"
-msgstr "Navegación de página"
+msgstr "Navigazione pagina"
 
 #: templates/alerts_dashboard.html:339
 msgid "Previous"
-msgstr "Anterior"
+msgstr "Precedente"
 
 #: templates/alerts_dashboard.html:359
 msgid "Next"
-msgstr "Siguiente"
+msgstr "Successivo"
 
 #: templates/alerts_dashboard.html:375 templates/alerts_dashboard.html:537
 msgid "Alert Details"
-msgstr "Detalles de la alerta"
+msgstr "Dettagli avviso"
 
 #: templates/alerts_dashboard.html:376 templates/alerts_dashboard.html:436
 #: templates/base.html:140
 msgid "Close"
-msgstr "Cerrar"
+msgstr "Chiudi"
 
 #: templates/alerts_dashboard.html:381
 msgid "General Information"
-msgstr "Información general"
+msgstr "Informazioni generali"
 
 #: templates/alerts_dashboard.html:402
 msgid "Technical Details"
-msgstr "Detalles técnicos"
+msgstr "Dettagli tecnici"
 
 #: templates/alerts_dashboard.html:405
 msgid "Detected Value"
-msgstr "Valor detectado"
+msgstr "Valore rilevato"
 
 #: templates/alerts_dashboard.html:409
 msgid "Threshold"
-msgstr "Umbral"
+msgstr "Soglia"
 
 #: templates/alerts_dashboard.html:421
 msgid "Intraday Data (Last 24h)"
-msgstr "Datos intradía (últimas 24 horas)"
+msgstr "Dati infragiornalieri (ultime 24 ore)"
 
 #: templates/alerts_dashboard.html:429
 msgid "Additional Information"
-msgstr "Información adicional"
+msgstr "Informazioni aggiuntive"
 
 #: templates/alerts_dashboard.html:438 templates/alerts_dashboard.html:450
 msgid "Acknowledge Alert"
-msgstr "Confirmar alerta"
+msgstr "Conferma avviso"
 
 #: templates/alerts_dashboard.html:457
 msgid "Doctor Note"
-msgstr "Nota médica"
+msgstr "Nota medica"
 
 #: templates/alerts_dashboard.html:458
 msgid "Add a note about the action taken..."
-msgstr "Añadir una nota sobre la acción tomada..."
+msgstr "Aggiungi una nota sull'azione intrapresa..."
 
 #: templates/alerts_dashboard.html:463 templates/home.html:59
 #: templates/home.html:335
 msgid "Cancel"
-msgstr "Cancelar"
+msgstr "Annulla"
 
 #: templates/alerts_dashboard.html:464
 msgid "Acknowledge"
-msgstr "Confirmar"
+msgstr "Conferma"
 
 #: templates/alerts_dashboard.html:476
 msgid "Not enough intraday data to show activity pattern (<6 points)."
-msgstr "No hay suficientes datos intradía para mostrar el patrón de actividad (< 6 puntos)."
+msgstr "Dati infragiornalieri insufficienti per mostrare il pattern di attività (< 6 punti)."
 
 #: templates/alerts_dashboard.html:477
 msgid ""
 "This may be due to insufficient data recorded by the device or the device"
 " not being worn during the day."
 msgstr ""
-"Esto puede deberse a datos insuficientes registrados por el dispositivo "
-"o a que el dispositivo no se llevó puesto durante el día."
+"Ciò potrebbe essere dovuto a dati insufficienti registrati dal dispositivo "
+"o al mancato utilizzo del dispositivo durante la giornata."
 
 #: templates/alerts_dashboard.html:478
 msgid "No additional information available"
-msgstr "No hay información adicional disponible"
+msgstr "Nessuna informazione aggiuntiva disponibile"
 
 #: templates/alerts_dashboard.html:479
 msgid "No steps recorded between"
-msgstr "No se registraron pasos entre"
+msgstr "Nessun passo registrato tra"
 
 #: templates/alerts_dashboard.html:480
 msgid "and"
-msgstr "y"
+msgstr "e"
 
 #: templates/alerts_dashboard.html:481
 msgid "Prolonged period without activity detected"
-msgstr "Período prolongado sin actividad detectado"
+msgstr "Rilevato periodo prolungato senza attività"
 
 #: templates/alerts_dashboard.html:482
 msgid "Heart rate above normal threshold"
-msgstr "Frecuencia cardíaca por encima del umbral normal"
+msgstr "Frequenza cardiaca superiore alla soglia normale"
 
 #: templates/alerts_dashboard.html:483
 msgid "Significant decrease in daily steps"
-msgstr "Disminución significativa de los pasos diarios"
+msgstr "Significativa riduzione dei passi giornalieri"
 
 #: templates/alerts_dashboard.html:484
 msgid "Unusual sleep duration detected"
-msgstr "Duración del sueño inusual detectada"
+msgstr "Rilevata durata del sonno insolita"
 
 #: templates/alerts_dashboard.html:485
 msgid "Current value"
-msgstr "Valor actual"
+msgstr "Valore attuale"
 
 #: templates/alerts_dashboard.html:486
 msgid "compared to average"
-msgstr "en comparación con la media"
+msgstr "rispetto alla media"
 
 #: templates/alerts_dashboard.html:540
 msgid "' + alert.alert_type + '"
@@ -460,350 +460,350 @@ msgstr "' + alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1) + '
 
 #: templates/auth_confirmation.html:6
 msgid "Email Data Access Confirmation"
-msgstr "Confirmación de acceso a datos por correo electrónico"
+msgstr "Conferma accesso ai dati via email"
 
 #: templates/auth_confirmation.html:34
 msgid "Authorization Successful!"
-msgstr "¡Autorización exitosa!"
+msgstr "Autorizzazione riuscita!"
 
 #: templates/auth_confirmation.html:36
 #, python-format
 msgid "Wearable data access has been successfully obtained for %(address_name)s"
-msgstr "El acceso a los datos del wearable se ha obtenido correctamente para %(address_name)s"
+msgstr "L'accesso ai dati del wearable è stato ottenuto con successo per %(address_name)s"
 
 #: templates/auth_confirmation.html:54
 msgid "Link Date:"
-msgstr "Fecha de vinculación:"
+msgstr "Data di collegamento:"
 
 #: templates/auth_confirmation.html:55
 msgid "Loading..."
-msgstr "Cargando..."
+msgstr "Caricamento..."
 
 #: templates/auth_confirmation.html:61
 msgid "Secure Connection Established"
-msgstr "Conexión segura establecida"
+msgstr "Connessione sicura stabilita"
 
 #: templates/auth_confirmation.html:62
 msgid ""
 "All wearable data will be transmitted securely to the wearable platform "
 "and stored in a pseudonymized form."
 msgstr ""
-"Todos los datos del wearable se transmitirán de forma segura a la plataforma "
-"y se almacenarán de forma seudonimizada."
+"Tutti i dati del wearable saranno trasmessi in modo sicuro alla piattaforma "
+"e archiviati in forma pseudonimizzata."
 
 #: templates/auth_confirmation.html:69
 msgid "Advanced Wearable Devices Monitoring System"
-msgstr "Sistema avanzado de monitorización de dispositivos wearable"
+msgstr "Sistema avanzato di monitoraggio dei dispositivi indossabili"
 
 #: templates/auth_email_sent_confirmation.html:3
 msgid "Email Sent"
-msgstr "Correo enviado"
+msgstr "Email inviata"
 
 #: templates/auth_email_sent_confirmation.html:13
 msgid "Email Sent Successfully!"
-msgstr "¡Correo enviado correctamente!"
+msgstr "Email inviata con successo!"
 
 #: templates/auth_email_sent_confirmation.html:21
 msgid "Authorization Request Sent"
-msgstr "Solicitud de autorización enviada"
+msgstr "Richiesta di autorizzazione inviata"
 
 #: templates/auth_email_sent_confirmation.html:23
 msgid "We have sent the Fitbit authorization link to:"
-msgstr "Hemos enviado el enlace de autorización de Fitbit a:"
+msgstr "Abbiamo inviato il link di autorizzazione Fitbit a:"
 
 #: templates/auth_email_sent_confirmation.html:33
 msgid "Next Steps:"
-msgstr "Próximos pasos:"
+msgstr "Prossimi passi:"
 
 #: templates/auth_email_sent_confirmation.html:36
 msgid "Check your email inbox"
-msgstr "Revisa tu bandeja de entrada"
+msgstr "Controlla la tua casella di posta"
 
 #: templates/auth_email_sent_confirmation.html:37
 msgid "Click on the authorization link"
-msgstr "Haz clic en el enlace de autorización"
+msgstr "Clicca sul link di autorizzazione"
 
 #: templates/auth_email_sent_confirmation.html:38
 msgid "Complete the Fitbit authorization process"
-msgstr "Completa el proceso de autorización de Fitbit"
+msgstr "Completa il processo di autorizzazione Fitbit"
 
 #: templates/auth_email_sent_confirmation.html:39
 msgid "Return to the devices page"
-msgstr "Vuelve a la página de dispositivos"
+msgstr "Torna alla pagina dei dispositivi"
 
 #: templates/auth_email_sent_confirmation.html:46
 msgid "Back to Home"
-msgstr "Volver al inicio"
+msgstr "Torna alla home"
 
 #: templates/auth_email_sent_confirmation.html:54
 msgid "The authorization link will expire in 10 minutes for security reasons."
-msgstr "El enlace de autorización caducará en 10 minutos por razones de seguridad."
+msgstr "Il link di autorizzazione scadrà tra 10 minuti per motivi di sicurezza."
 
 #: templates/base.html:66
 msgid "Home"
-msgstr "Inicio"
+msgstr "Home"
 
 #: templates/base.html:74
 msgid "Account"
-msgstr "Cuenta"
+msgstr "Account"
 
 #: templates/base.html:78
 msgid "User Menu"
-msgstr "Menú de usuario"
+msgstr "Menu utente"
 
 #: templates/base.html:88
 msgid "Settings"
-msgstr "Configuración"
+msgstr "Impostazioni"
 
 #: templates/base.html:153
 msgid "All rights reserved"
-msgstr "Todos los derechos reservados"
+msgstr "Tutti i diritti riservati"
 
 #: templates/device_details.html:4 templates/home.html:256
 msgid "Device Details"
-msgstr "Detalles del dispositivo"
+msgstr "Dettagli dispositivo"
 
 #: templates/device_details.html:18
 msgid "Device Status"
-msgstr "Estado del dispositivo"
+msgstr "Stato dispositivo"
 
 #: templates/device_details.html:27
 msgid "Wearable Metrics & Anomalies"
-msgstr "Métricas y anomalías del wearable"
+msgstr "Metriche e anomalie del wearable"
 
 #: templates/device_details.html:360
 msgid "Passi"
-msgstr "Pasos"
+msgstr "Passi"
 
 #: templates/device_details.html:365
 msgid "Distanza (km)"
-msgstr "Distancia (km)"
+msgstr "Distanza (km)"
 
 #: templates/home.html:3
 msgid "Device Management"
-msgstr "Gestión de dispositivos"
+msgstr "Gestione dispositivi"
 
 #: templates/home.html:17
 msgid "Update Devices"
-msgstr "Actualizar dispositivos"
+msgstr "Aggiorna dispositivi"
 
 #: templates/home.html:22 templates/home.html:34 templates/home.html:62
 msgid "Add Device"
-msgstr "Añadir dispositivo"
+msgstr "Aggiungi dispositivo"
 
 #: templates/home.html:44 templates/home.html:79
 msgid "Email Address"
-msgstr "Dirección de correo electrónico"
+msgstr "Indirizzo email"
 
 #: templates/home.html:47
 msgid "Enter email address"
-msgstr "Introduce la dirección de correo electrónico"
+msgstr "Inserisci indirizzo email"
 
 #: templates/home.html:50
 msgid "Enter a valid email address linked to a device"
-msgstr "Introduce una dirección de correo electrónico válida vinculada a un dispositivo"
+msgstr "Inserisci un indirizzo email valido collegato a un dispositivo"
 
 #: templates/home.html:82
 msgid "Device Type"
-msgstr "Tipo de dispositivo"
+msgstr "Tipo dispositivo"
 
 #: templates/home.html:85
 msgid "Authorization"
-msgstr "Autorización"
+msgstr "Autorizzazione"
 
 #: templates/home.html:88
 msgid "Cloud Synchronization"
-msgstr "Sincronización en la nube"
+msgstr "Sincronizzazione cloud"
 
 #: templates/home.html:91
 msgid "Usage"
-msgstr "Uso"
+msgstr "Utilizzo"
 
 #: templates/home.html:119 templates/home.html:211 templates/home.html:235
 msgid "Not available"
-msgstr "No disponible"
+msgstr "Non disponibile"
 
 #: templates/home.html:127
 msgid ""
 "Authorization must be requested and granted before downloading data from "
 "the cloud"
 msgstr ""
-"La autorización debe ser solicitada y concedida antes de descargar datos "
-"de la nube"
+"L'autorizzazione deve essere richiesta e concessa prima di scaricare i dati "
+"dal cloud"
 
 #: templates/home.html:129
 msgid "Not Authorized"
-msgstr "No autorizado"
+msgstr "Non autorizzato"
 
 #: templates/home.html:134
 msgid "The authorization request has been sent and is awaiting approval"
-msgstr "La solicitud de autorización ha sido enviada y está pendiente de aprobación"
+msgstr "La richiesta di autorizzazione è stata inviata ed è in attesa di approvazione"
 
 #: templates/home.html:136
 msgid "Pending Request"
-msgstr "Solicitud pendiente"
+msgstr "Richiesta in attesa"
 
 #: templates/home.html:141
 msgid "Access authorization for this device's data has been obtained"
-msgstr "Se ha obtenido la autorización de acceso a los datos de este dispositivo"
+msgstr "L'autorizzazione all'accesso ai dati di questo dispositivo è stata ottenuta"
 
 #: templates/home.html:143
 msgid "Authorized"
-msgstr "Autorizado"
+msgstr "Autorizzato"
 
 #: templates/home.html:148
 msgid "Not Active"
-msgstr "No activo"
+msgstr "Non attivo"
 
 #: templates/home.html:158 templates/home.html:166 templates/home.html:173
 msgid "Data are updated to the last synchronization"
-msgstr "Los datos están actualizados a la última sincronización"
+msgstr "I dati sono aggiornati all'ultima sincronizzazione"
 
 #: templates/home.html:160 templates/home.html:168 templates/home.html:175
 #: templates/home.html:185
 msgid "last_sync"
-msgstr "Última sincronización"
+msgstr "Ultima sincronizzazione"
 
 #: templates/home.html:160 templates/home.html:185
 msgid "days ago"
-msgstr "hace días"
+msgstr "giorni fa"
 
 #: templates/home.html:168
 msgid "hours ago"
-msgstr "hace horas"
+msgstr "ore fa"
 
 #: templates/home.html:175
 msgid "minutes ago"
-msgstr "hace minutos"
+msgstr "minuti fa"
 
 #: templates/home.html:183
 msgid "Resync with the cloud to avoid data loss"
-msgstr "Vuelve a sincronizar con la nube para evitar pérdida de datos"
+msgstr "Risincronizza con il cloud per evitare la perdita di dati"
 
 #: templates/home.html:191
 msgid "Updating data to the last synchronization"
-msgstr "Actualizando datos a la última sincronización"
+msgstr "Aggiornamento dei dati all'ultima sincronizzazione"
 
 #: templates/home.html:193
 msgid "Updating data..."
-msgstr "Actualizando datos..."
+msgstr "Aggiornamento dati..."
 
 #: templates/home.html:199
 msgid "No data yet"
-msgstr "Sin datos todavía"
+msgstr "Nessun dato disponibile"
 
 #: templates/home.html:205
 msgid "Checking..."
-msgstr "Comprobando..."
+msgstr "Verifica in corso..."
 
 #: templates/home.html:220
 msgid ""
 "The patient has used the device for more than 8 hours a day over the past"
 " week"
 msgstr ""
-"El paciente ha utilizado el dispositivo durante más de 8 horas al día "
-"durante la semana pasada"
+"Il paziente ha utilizzato il dispositivo per più di 8 ore al giorno "
+"nell'ultima settimana"
 
 #: templates/home.html:222 templates/home.html:229
 msgid "8 hours a day"
-msgstr "8 horas al día"
+msgstr "8 ore al giorno"
 
 #: templates/home.html:227
 msgid ""
 "The patient has used the device for less than 8 hours a day over the past"
 " week"
 msgstr ""
-"El paciente ha utilizado el dispositivo durante menos de 8 horas al día "
-"durante la semana pasada"
+"Il paziente ha utilizzato il dispositivo per meno di 8 ore al giorno "
+"nell'ultima settimana"
 
 #: templates/home.html:246
 msgid ""
 "Send an email to request authorization to download the data collected by "
 "the wearable device"
 msgstr ""
-"Envía un correo electrónico para solicitar autorización para descargar "
-"los datos recopilados por el dispositivo wearable"
+"Invia un'email per richiedere l'autorizzazione al download dei dati "
+"raccolti dal dispositivo indossabile"
 
 #: templates/home.html:247
 msgid "Request Authorization"
-msgstr "Solicitar autorización"
+msgstr "Richiedi autorizzazione"
 
 #: templates/home.html:255
 msgid "View detailed device information"
-msgstr "Ver información detallada del dispositivo"
+msgstr "Visualizza informazioni dettagliate sul dispositivo"
 
 #: templates/home.html:261
 msgid "Disable"
-msgstr "Deshabilitar"
+msgstr "Disabilita"
 
 #: templates/home.html:267
 msgid "No action allowed"
-msgstr "Ninguna acción permitida"
+msgstr "Nessuna azione consentita"
 
 #: templates/home.html:285
 msgid "No devices inserted"
-msgstr "No se han insertado dispositivos"
+msgstr "Nessun dispositivo inserito"
 
 #: templates/home.html:286
 msgid "Add devices and start monitoring"
-msgstr "Añade dispositivos y comienza el monitoreo"
+msgstr "Aggiungi dispositivi e inizia il monitoraggio"
 
 #: templates/home.html:289
 msgid "Getting Started:"
-msgstr "Para empezar:"
+msgstr "Per iniziare:"
 
 #: templates/home.html:289
 msgid ""
 "Use the form above to add a new email address and begin monitoring the "
 "associated wearable."
 msgstr ""
-"Usa el formulario anterior para añadir una nueva dirección de correo "
-"y comenzar a monitorear el wearable asociado."
+"Usa il modulo sopra per aggiungere un nuovo indirizzo email e iniziare "
+"il monitoraggio del wearable associato."
 
 #: templates/home.html:305
 msgid "Confirm Deactivation"
-msgstr "Confirmar desactivación"
+msgstr "Conferma disattivazione"
 
 #: templates/home.html:319
 msgid "Are you sure you want to disable this device?"
-msgstr "¿Estás seguro de que deseas deshabilitar este dispositivo?"
+msgstr "Sei sicuro di voler disabilitare questo dispositivo?"
 
 #: templates/home.html:323
 msgid "Email Address:"
-msgstr "Dirección de correo electrónico:"
+msgstr "Indirizzo email:"
 
 #: templates/home.html:328
 msgid "This action will make the email address no longer usable in this service"
-msgstr "Esta acción hará que la dirección de correo electrónico deje de ser utilizable en este servicio"
+msgstr "Questa azione renderà l'indirizzo email non più utilizzabile in questo servizio"
 
 #: templates/home.html:340
 msgid "confirm"
-msgstr "Confirmar"
+msgstr "Conferma"
 
 #: templates/login.html:6
 msgid "Medical Platform Login"
-msgstr "Acceso a la plataforma médica"
+msgstr "Accesso alla piattaforma medica"
 
 #: templates/login.html:42
 msgid "Lively Ageing Wearable Platform"
-msgstr "Plataforma Wearable Lively Ageing"
+msgstr "Piattaforma Wearable Lively Ageing"
 
 #: templates/login.html:49
 msgid "Username"
-msgstr "Nombre de usuario"
+msgstr "Nome utente"
 
 #: templates/login.html:52
 msgid "Enter your username"
-msgstr "Introduce tu nombre de usuario"
+msgstr "Inserisci il tuo nome utente"
 
 #: templates/login.html:57
 msgid "Password"
-msgstr "Contraseña"
+msgstr "Password"
 
 #: templates/login.html:61
 msgid "Enter your password"
-msgstr "Introduce tu contraseña"
+msgstr "Inserisci la tua password"
 
 #: templates/login.html:70
 msgid "Sign In"
-msgstr "Iniciar sesión"
+msgstr "Accedi"

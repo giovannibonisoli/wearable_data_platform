@@ -116,6 +116,12 @@
                                     {{ _('English') }}
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item {% if get_locale() == 'es' %}active{% endif %}" 
+                                   href="{{ url_for('change_language', lang='es') }}">
+                                    {{ _('Spanish') }}
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
