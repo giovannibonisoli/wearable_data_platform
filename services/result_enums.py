@@ -30,3 +30,10 @@ class AuthGrantResult(Enum):
     INVALID_AUTH_LINK = "invalid_auth_link"
     ERROR_RETRIEVE_TOKENS = "error_retrieve_tokens"
     ERROR_STATE_UPDATE = "error_state_update"
+
+
+class CollectorResult(Enum):
+    """Result of a Fitbit data collection run for one device."""
+    SUCCESS = "success"
+    RATE_LIMITED = "rate_limited"
+    ERROR = "error"

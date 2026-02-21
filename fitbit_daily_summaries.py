@@ -1,7 +1,7 @@
 """
-FITBIT SLEEP COLLECTOR
+FITBIT DAILY SUMMARY COLLECTOR
 
-Runs continuously in background. Delegates to FitbitSleepCollectorService.
+Runs continuously in background. Delegates to FitbitDailySummaryCollectorService.
 """
 
 import time
@@ -9,7 +9,7 @@ import logging
 from dotenv import load_dotenv
 
 from database import ConnectionManager
-from services.collectors.fitbit_sleep_collector import FitbitSleepCollectorService
+from services.collectors.fitbit_daily_summary_collector import FitbitDailySummaryCollectorService
 
 load_dotenv()
 
@@ -29,11 +29,11 @@ NO_DEVICES_SLEEP_SECONDS = 60
 
 
 def main_loop():
-    logger.info("=== FITBIT SLEEP DATA COLLECTOR STARTED ===")
+    logger.info("=== DAILY SUMMARY COLLECTOR STARTED ===")
     while True:
         try:
             with ConnectionManager() as conn:
-                service = FitbitSleepCollectorService(conn)
+                service = FitbitDailySummaryCollectorService(conn)
                 results = service.collect_for_all_devices()
 
             total = sum(results.values())
@@ -57,9 +57,6 @@ def main_loop():
         except KeyboardInterrupt:
             logger.info("=== STOPPED BY USER ===")
             break
-        except Exception as e:
-            logger.error(f"Unexpected error in main loop: {e}", exc_info=True)
-            time.sleep(NO_DEVICES_SLEEP_SECONDS)
 
 
 if __name__ == "__main__":

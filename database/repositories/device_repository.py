@@ -174,6 +174,39 @@ class DeviceRepository:
             ]
         return []
 
+    def get_all_authorized(self) -> List[Device]:
+        """
+        Retrieve all authorized devices (regardless of admin user).
+
+        Returns:
+            List of Device objects with authorization_status 'authorized'.
+        """
+        query = """
+            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+                   created_at, last_synch, daily_summaries_checkpoint,
+                   intraday_checkpoint, sleep_checkpoint
+            FROM devices
+            WHERE authorization_status = 'authorized'
+            ORDER BY created_at DESC
+        """
+        result = self.db.execute_query(query, ())
+
+        return [
+            Device(
+                id=row[0],
+                email_address=row[1],
+                authorization_status=row[2],
+                admin_user_id=row[3],
+                device_type=row[4],
+                created_at=row[5],
+                last_synch=row[6],
+                daily_summaries_checkpoint=row[7],
+                intraday_checkpoint=row[8],
+                sleep_checkpoint=row[9]
+            )
+            for row in result
+        ] if result else []
+
     def get_all_authorized_by_admin_user(self, admin_user_id: int) -> List[Device]:
         """
         Retrieve all authorized devices.

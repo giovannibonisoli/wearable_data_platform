@@ -107,6 +107,33 @@ def generate_auth_url(code_challenge, state):
     return auth_url
 
 
+def fetch_fitbit_endpoint(url: str, access_token: str, optional: bool = False) -> tuple:
+    """
+    Fetch data from a Fitbit API endpoint.
+
+    Args:
+        url: The full Fitbit API URL to fetch.
+        access_token: OAuth access token for authorization.
+        optional: If True, 404/400 responses are treated as "no data" instead of error.
+
+    Returns:
+        Tuple of (data, rate_limited). data is dict or None; rate_limited is bool.
+    """
+    headers = {"Authorization": f"Bearer {access_token}"}
+    try:
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200:
+            return resp.json(), False
+        if resp.status_code == 429:
+            return None, True
+        if optional and resp.status_code in (404, 400):
+            return None, False
+        resp.raise_for_status()
+        return None, False
+    except requests.exceptions.HTTPError:
+        raise
+
+
 def get_device_info(access_token):
     headers = {"Authorization": f"Bearer {access_token}"}
     url = "https://api.fitbit.com/1/user/-/devices.json"

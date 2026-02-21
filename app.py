@@ -22,7 +22,6 @@ from translations import TRANSLATIONS
 import os
 import logging
 import json
-import base64
 import requests
 
 
