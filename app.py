@@ -9,8 +9,9 @@ from flask_babel import Babel, get_locale, format_date, format_datetime, gettext
 
 from device_statistics import get_device_sync_data, get_last_device_usage_statistics
 from auth import generate_state, get_tokens, generate_code_verifier, generate_code_challenge, generate_auth_url, get_device_info
-from database import Database, ConnectionManager, AdminUserRepository, DeviceRepository, AuthorizationRepository
-from services import DeviceService, DeviceStatisticsService
+
+from database import ConnectionManager
+from services import DeviceService, DeviceStatisticsService, AdminUserService
 from config import CLIENT_ID, REDIRECT_URI
 from translations import TRANSLATIONS
 from emails import send_email
@@ -120,8 +121,8 @@ def login():
         password = request.form['password']
         
         with ConnectionManager() as conn:
-            admin_repo = AdminUserRepository(conn)
-            user_data = admin_repo.verify_credentials(username, password)
+            admin_service = AdminUserService(conn)
+            user_data = admin_service.check_user(username, password)
 
             if user_data:
                 user = User(user_data['id'])
@@ -185,23 +186,11 @@ def index():
 def admin_user_profile():
     try:
         with ConnectionManager() as conn:
-            admin_repo = AdminUserRepository(conn)
-            device_repo = DeviceRepository(conn)
-            
+            admin_service = AdminUserService(conn)
             admin_user_id = int(current_user.id)
-            admin_user = admin_repo.get_by_id(admin_user_id)
-            devices = device_repo.get_by_admin_user(admin_user_id)
-            
-            admin_user = {
-                'id': admin_user_id,
-                'username': admin_user.username,
-                'full_name': admin_user.full_name,
-                'created_at': admin_user.created_at,
-                'last_login': admin_user.last_login,
-                'num_devices': len(devices)
-            }
-            
-            return render_template('admin_user_profile.html', admin_user=admin_user)
+            admin_user_info = admin_service.get_admin_user_info(admin_user_id)
+             
+            return render_template('admin_user_profile.html', admin_user=admin_user_info)
     except Exception as e:
         app.logger.error(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
@@ -215,28 +204,28 @@ def change_password():
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
 
-    if len(new_password) >= 8:
+    if new_password == confirm_password:
         admin_user_id = int(current_user.id)
+
+        print("MATCH")
+
+        if len(new_password) >= 8:
+            print("LEN CORRECT")
    
-        with ConnectionManager() as conn:
-            admin_repo = AdminUserRepository(conn)
-            user = admin_repo.get_by_id(admin_user_id)
+            with ConnectionManager() as conn:
+                admin_service = AdminUserService(conn)
+                result = admin_service.check_and_change_password(admin_user_id, current_password, new_password)
 
-            if user:
-                if new_password == confirm_password:
-
-                    result = admin_repo.update_password(admin_user_id, new_password)
-                    
-                    if result:
-                        flash_translated('flash.password_changed_successfully', 'success')
-                    else:
-                        flash_translated('flash.password_change_failed', 'danger')
+                if result == "success":
+                    flash_translated('flash.password_changed_successfully', 'success')
+                elif result == "no_current_password":
+                    flash_translated('flash.current_password_not_correct', 'danger')
                 else:
-                    flash_translated('flash.passwords_do_not_match', 'danger')
-            else:
-                flash_translated('flash.current_password_incorrect', 'danger')
+                    flash_translated('flash.password_change_failed', 'danger')
+        else:
+            flash_translated('flash.password_too_short', 'danger')
     else:
-        flash_translated('flash.password_too_short', 'danger')
+        flash_translated('flash.passwords_do_not_match', 'danger')
     
     return redirect(url_for('admin_user_profile'))
 

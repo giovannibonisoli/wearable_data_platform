@@ -58,6 +58,26 @@ class AdminUserRepository:
                 }
         return None
 
+
+    def verify_password(self, admin_user_id: int, password: str) -> bool:
+
+        query = """
+            SELECT password_hash
+            FROM admin_users
+            WHERE id = %s AND is_active = TRUE
+        """
+
+        result = self.db.execute_query(query, (admin_user_id,))
+
+        if result:
+            password_hash = result[0][0]
+
+            if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+                return True
+
+        return False
+        
+
     def get_by_id(self, admin_user_id: int) -> Optional[AdminUser]:
         """
         Fetch an admin user by ID.

@@ -22,8 +22,10 @@ Example:
 
 from services.device_service import DeviceService
 from services.device_statistics_service import DeviceStatisticsService
+from services.admin_user_service import AdminUserService
 
 __all__ = [
     'DeviceService',
-    'DeviceStatisticsService'
+    'DeviceStatisticsService',
+    'AdminUserService'
 ]
