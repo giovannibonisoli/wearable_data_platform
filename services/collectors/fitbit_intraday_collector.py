@@ -5,13 +5,12 @@ Collects minute-level intraday metrics (heart rate, steps, calories, distance, e
 from Fitbit API for authorized devices. Processes one date per device per cycle.
 """
 
-import time
 import logging
 import requests
 from datetime import datetime, timedelta
 
 from database import ConnectionManager, DeviceRepository, MetricsRepository, Device
-from services.integrations.fitbit import fetch_fitbit_endpoint, refresh_tokens, get_device_info
+from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
 
@@ -29,7 +28,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
         self.metrics_repo = MetricsRepository(conn)
 
     def _fetch_and_store_intraday_day(
-        self, access_token: str, device: Device, date_str: str, last_synch_date: datetime
+        self, client: FitbitClient, device: Device, date_str: str, last_synch_date: datetime
     ) -> tuple[bool, bool]:
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
         detail_level = "1min"
@@ -44,7 +43,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
 
         data_points: dict = {}
         for data_type, url, key in metrics_config:
-            data, rate_limited = fetch_fitbit_endpoint(url, access_token, optional=False)
+            data, rate_limited = client.get(url, optional=False)
             if rate_limited:
                 logger.warning(f"Rate limit hit for {device.email_address} on {data_type}")
                 return False, True
@@ -66,7 +65,6 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
         timestamps.sort()
 
         total_points = 0
-        last_timestamp = None
         for timestamp in timestamps:
             values = data_points[timestamp]
             steps = values.get("steps", 0)
@@ -75,7 +73,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             is_empty = heart_rate is None and steps == 0 and distance == 0
             if not is_empty:
                 self.metrics_repo.insert_intraday_metric(
-                    device.id, timestamp, data_type="heart_rate", value=values.get("heart_rate")
+                    device.id, timestamp, data_type="heart_rate", value=heart_rate
                 )
                 self.metrics_repo.insert_intraday_metric(
                     device.id, timestamp, data_type="steps", value=steps
@@ -94,7 +92,6 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
                 )
                 total_points += 1
 
-            last_timestamp = timestamp
             self.device_repo.update_intraday_checkpoint(device.id, timestamp)
 
         if total_points > 0:
@@ -125,10 +122,17 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             logger.warning(f"No last_synch for device {device_id}")
             return CollectorResult.ERROR.value
 
+        # One client per device: auto-refreshes and persists tokens on 401
+        client = FitbitClient(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),
+        )
+
         # Refresh last_synch from API if we're caught up
         if current_dt >= last_synch:
             try:
-                device_data = get_device_info(access_token)
+                device_data = client.get_device_info()
                 new_last_synch = device_data["lastSyncTime"]
                 if last_synch.tzinfo:
                     new_last_synch = new_last_synch.replace(tzinfo=last_synch.tzinfo)
@@ -148,35 +152,13 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
 
         date_str = current_dt.strftime("%Y-%m-%d")
 
-        def _try_collect(acc_token: str) -> tuple[bool, bool]:
-            return self._fetch_and_store_intraday_day(
-                acc_token, device, date_str, last_synch
-            )
-
         try:
-            success, rate_limited = _try_collect(access_token)
+            success, rate_limited = self._fetch_and_store_intraday_day(
+                client, device, date_str, last_synch
+            )
             if rate_limited:
                 return CollectorResult.RATE_LIMITED.value
             return CollectorResult.SUCCESS.value if success else CollectorResult.ERROR.value
-        except requests.exceptions.HTTPError as e:
-            if hasattr(e, "response") and e.response and e.response.status_code == 401:
-                logger.warning(f"Token expired for {email_address}, refreshing...")
-                new_access, new_refresh = refresh_tokens(refresh_token)
-                if new_access and new_refresh:
-                    self.device_repo.update_tokens(device_id, new_access, new_refresh)
-                    try:
-                        success, rate_limited = _try_collect(new_access)
-                        if rate_limited:
-                            return CollectorResult.RATE_LIMITED.value
-                        return CollectorResult.SUCCESS.value if success else CollectorResult.ERROR.value
-                    except Exception as e2:
-                        logger.error(f"Error after token refresh for {email_address}: {e2}")
-                        return CollectorResult.ERROR.value
-                else:
-                    logger.error(f"Failed to refresh token for {email_address}")
-                    return CollectorResult.ERROR.value
-            logger.error(f"HTTP error for {email_address}: {e}")
-            return CollectorResult.ERROR.value
         except Exception as e:
             logger.error(f"Unexpected error for {email_address}: {e}", exc_info=True)
             return CollectorResult.ERROR.value

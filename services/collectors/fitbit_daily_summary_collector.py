@@ -11,7 +11,7 @@ import requests
 from datetime import datetime, timedelta
 
 from database import ConnectionManager, DeviceRepository, MetricsRepository, Device
-from services.integrations.fitbit import fetch_fitbit_endpoint, refresh_tokens
+from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
 
@@ -29,7 +29,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
         self.metrics_repo = MetricsRepository(conn)
 
     def _fetch_and_store_daily_summary(
-        self, access_token: str, device_id: int, email_address: str, date_obj
+        self, client: FitbitClient, device_id: int, email_address: str, date_obj
     ) -> tuple[bool, bool]:
         """Fetch and store one day's summary. Returns (success, rate_limited)."""
         date_str = date_obj.strftime("%Y-%m-%d")
@@ -120,7 +120,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
 
         try:
             for url, optional, extractor in endpoints:
-                response_data, rate_limited = fetch_fitbit_endpoint(url, access_token, optional)
+                response_data, rate_limited = client.get(url, optional=optional)
                 if rate_limited:
                     return False, True
                 if response_data:
@@ -144,8 +144,6 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
         except requests.exceptions.HTTPError as e:
             if hasattr(e, "response") and e.response and e.response.status_code == 429:
                 return False, True
-            if hasattr(e, "response") and e.response and e.response.status_code == 401:
-                raise
             logger.error(f"HTTP error fetching summary for device {device_id} on {date_str}: {e}")
             return False, False
         except Exception as e:
@@ -173,18 +171,25 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
             logger.warning(f"No last_synch for device {device_id}")
             return CollectorResult.ERROR.value
 
-        end_date = (device.last_synch.date() - timedelta(days=1))
+        end_date = device.last_synch.date() - timedelta(days=1)
 
         if start_date > end_date:
             logger.info(f"Device {device_id} ({email_address}) is up to date for summaries")
             return CollectorResult.SUCCESS.value
+
+        # One client per device: auto-refreshes and persists tokens on 401
+        client = FitbitClient(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),
+        )
 
         current_date = start_date
 
         while current_date <= end_date:
             try:
                 success, rate_limited = self._fetch_and_store_daily_summary(
-                    access_token, device_id, email_address, current_date
+                    client, device_id, email_address, current_date
                 )
 
                 if rate_limited:
@@ -202,22 +207,6 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
                 current_date += timedelta(days=1)
                 time.sleep(1)
 
-            except requests.exceptions.HTTPError as e:
-                if hasattr(e, "response") and e.response and e.response.status_code == 401:
-                    logger.warning(f"Token expired for {email_address}, refreshing...")
-                    new_access, new_refresh = refresh_tokens(refresh_token)
-                    if new_access and new_refresh:
-                        self.device_repo.update_tokens(device_id, new_access, new_refresh)
-                        access_token = new_access
-                        refresh_token = new_refresh
-                        logger.info(f"Token refreshed for device {device_id} ({email_address})")
-                        continue
-                    else:
-                        logger.error(f"Failed to refresh token for device {device_id} ({email_address})")
-                        return CollectorResult.ERROR.value
-                else:
-                    logger.error(f"HTTP error for device {device_id} on {current_date}: {e}")
-                    return CollectorResult.ERROR.value
             except Exception as e:
                 logger.error(f"Unexpected error for device {device_id} on {current_date}: {e}")
                 return CollectorResult.ERROR.value

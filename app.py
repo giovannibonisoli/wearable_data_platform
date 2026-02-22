@@ -515,67 +515,66 @@ def change_language():
 #         return jsonify({'error': str(e)}), 500
 
 
-
-@app.route("/livelyageing/device_details/<int:device_id>")
-@login_required
-def device_details(device_id):
-    device = get_device(device_id)  # ← tuo metodo
-    metrics = get_device_metrics(device_id)
-        # Get all unique emails from the database
+# @app.route("/livelyageing/device_details/<int:device_id>")
+# @login_required
+# def device_details(device_id):
+#     device = get_device(device_id)  # ← tuo metodo
+#     metrics = get_device_metrics(device_id)
+#         # Get all unique emails from the database
         
 
-    device = {
-                        "last_sync": "",
-                        "last_daily_summary": "",
-                        "last_intraday": "",
+#     device = {
+#                         "last_sync": "",
+#                         "last_daily_summary": "",
+#                         "last_intraday": "",
                     
-            }
+#             }
 
-    metrics = {
-        "steps": {
-            "value": 7981,
-            "history": [5000, 7000, 6500, 8000, 7800]
-        },
-        "distance": {
-            "value": 5.3,
-            "history": [3.2, 4.1, 4.8, 5.0, 5.3]
-        },
-        "elevation": {
-            "value": 78,
-            "history": [40,50,60,80,78]
-        },
-        "floors": {
-            "value": 12,
-            "history": [10,12,9,15,12]
-        },
-        "heart_rate": {
-            "value": 75,
-            "range": "(62–110 bpm)",
-            "history": [70,72,75,78,75]
-        }
-    }
+#     metrics = {
+#         "steps": {
+#             "value": 7981,
+#             "history": [5000, 7000, 6500, 8000, 7800]
+#         },
+#         "distance": {
+#             "value": 5.3,
+#             "history": [3.2, 4.1, 4.8, 5.0, 5.3]
+#         },
+#         "elevation": {
+#             "value": 78,
+#             "history": [40,50,60,80,78]
+#         },
+#         "floors": {
+#             "value": 12,
+#             "history": [10,12,9,15,12]
+#         },
+#         "heart_rate": {
+#             "value": 75,
+#             "range": "(62–110 bpm)",
+#             "history": [70,72,75,78,75]
+#         }
+#     }
 
-    medical_alerts = [
-        "Battito cardiaco irregolare rilevato ieri",
-        "Pausa prolungata senza attività"
-    ]
+#     medical_alerts = [
+#         "Battito cardiaco irregolare rilevato ieri",
+#         "Pausa prolungata senza attività"
+#     ]
 
-    activity_alerts = [
-        "Passi troppo bassi per 3 giorni consecutivi"
-    ]
-    alerts = [
-        "Missing intraday data for 22 Apr",
-        "Sync gap > 24h detected"
-    ]
+#     activity_alerts = [
+#         "Passi troppo bassi per 3 giorni consecutivi"
+#     ]
+#     alerts = [
+#         "Missing intraday data for 22 Apr",
+#         "Sync gap > 24h detected"
+#     ]
 
-    return render_template(
-        "device_details.html",
-        device=device,
-        metrics=metrics,
-        alerts=alerts,
-        medical_alerts=medical_alerts,
-        activity_alerts=activity_alerts
-    )
+#     return render_template(
+#         "device_details.html",
+#         device=device,
+#         metrics=metrics,
+#         alerts=alerts,
+#         medical_alerts=medical_alerts,
+#         activity_alerts=activity_alerts
+#     )
 
 
 # @app.route('/livelyageing/api/daily_summary')
