@@ -644,8 +644,8 @@ msgid "Pending Request"
 msgstr "Solicitud pendiente"
 
 #: templates/home.html:141
-msgid "Access authorization for this device's data has been obtained"
-msgstr "Se ha obtenido la autorización de acceso a los datos de este dispositivo"
+msgid "Access authorization for data collected by this device has been obtained"
+msgstr "Se ha obtenido la autorización de acceso a los datos recopilados por este dispositivo"
 
 #: templates/home.html:143
 msgid "Authorized"
