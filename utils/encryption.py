@@ -1,4 +1,3 @@
-# encryption.py
 from cryptography.fernet import Fernet
 import base64
 from dotenv import load_dotenv

@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple, Dict, Any
 from datetime import datetime, date
 from database.connection import ConnectionManager
 from database.models import Device
-from encryption import encrypt_token, decrypt_token
+from utils.encryption import encrypt_token, decrypt_token
 
 
 class DeviceRepository:
