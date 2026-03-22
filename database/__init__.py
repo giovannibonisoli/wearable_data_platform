@@ -37,16 +37,15 @@ Repository Classes:
 
 Models:
 -------
-- AdminUser, Device, DailySummary, IntradayMetric
+- User, Device, DailySummary, IntradayMetric
 - SleepSession, SleepLog, SleepLevel
 - Alert, PendingAuthorization
 """
 
 from database.connection import ConnectionManager
-from database.facade import Database
 
 # Import repositories for direct use
-from database.repositories.admin_repository import AdminUserRepository
+from database.repositories.care_provider_repository import CareProviderUserRepository
 from database.repositories.device_repository import DeviceRepository
 from database.repositories.metrics_repository import MetricsRepository
 from database.repositories.sleep_repository import SleepRepository
@@ -55,7 +54,7 @@ from database.repositories.authorization_repository import AuthorizationReposito
 
 # Import models
 from database.models import (
-    AdminUser,
+    User,
     Device,
     DailySummary,
     IntradayMetric,
@@ -72,7 +71,7 @@ __all__ = [
     'Database',
     
     # Repositories
-    'AdminUserRepository',
+    'CareProviderUserRepository',
     'DeviceRepository',
     'MetricsRepository',
     'SleepRepository',
@@ -80,7 +79,7 @@ __all__ = [
     'AuthorizationRepository',
     
     # Models
-    'AdminUser',
+    'User',
     'Device',
     'DailySummary',
     'IntradayMetric',

@@ -6,12 +6,9 @@ Runs continuously in background. Delegates to FitbitSleepCollectorService.
 
 import time
 import logging
-from dotenv import load_dotenv
 
 from database import ConnectionManager
 from services.collectors.fitbit_sleep_collector import FitbitSleepCollectorService
-
-load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,

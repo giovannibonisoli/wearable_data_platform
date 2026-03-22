@@ -35,8 +35,8 @@ class DeviceService:
         self.auth_repo = AuthorizationRepository(connection_manager)
         self.device_repo = DeviceRepository(connection_manager)
 
-    def get_devices_info_by_admin_user(self, admin_user_id: int) -> list[dict]:
-        devices = self.device_repo.get_by_admin_user(admin_user_id)
+    def get_devices_info_by_user(self, user_id: int) -> list[dict]:
+        devices = self.device_repo.get_by_user(user_id)
 
         devices_data = []
         for device in devices:
@@ -50,21 +50,21 @@ class DeviceService:
 
         return devices_data
 
-    def add_new_device(self, admin_user_id: int, email_address: str) -> AddDeviceResult:
+    def add_new_device(self, user_id: int, email_address: str) -> AddDeviceResult:
         existing = self.device_repo.get_by_email(email_address)
 
         if existing:
             return AddDeviceResult.ALREADY_EXISTS
 
         device_id = self.device_repo.create(
-            admin_user_id=admin_user_id,
+            user_id=user_id,
             email_address=email_address,
         )
 
         return AddDeviceResult.ADDED if device_id else AddDeviceResult.ERROR
 
-    def update_devices_info_by_admin_user(self, admin_user_id: int) -> List[str]:
-        devices = self.device_repo.get_all_authorized_by_admin_user(admin_user_id)
+    def update_devices_info_by_user(self, user_id: int) -> List[str]:
+        devices = self.device_repo.get_all_authorized_by_user(user_id)
 
         errors = []
         for device in devices:

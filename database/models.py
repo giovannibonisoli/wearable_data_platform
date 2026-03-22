@@ -4,8 +4,8 @@ from typing import Optional
 
 
 @dataclass
-class AdminUser:
-    """Represents an admin user in the system."""
+class User:
+    """Represents an user in the system."""
     id: int
     username: str
     full_name: str
@@ -20,7 +20,7 @@ class Device:
     id: int
     email_address: str
     authorization_status: str
-    admin_user_id: int
+    user_id: int
     device_type: Optional[str] = None
     created_at: Optional[datetime] = None
     last_synch: Optional[datetime] = None

@@ -1,9 +1,6 @@
 from cryptography.fernet import Fernet
 import base64
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 # Generate a secret key (it must be the same for encryption and decryption)
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -15,7 +12,6 @@ if len(SECRET_KEY) != 32:
 # Convert the key to base64 format for Fernet
 fernet_key = base64.urlsafe_b64encode(SECRET_KEY.encode())
 cipher_suite = Fernet(fernet_key)
-
 
 def encrypt_token(token):
     """

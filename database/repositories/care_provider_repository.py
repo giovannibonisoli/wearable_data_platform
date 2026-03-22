@@ -1,14 +1,14 @@
 import bcrypt
 from typing import Optional, List, Dict, Any
 from database.connection import ConnectionManager
-from database.models import AdminUser
+from database.models import User
 
 
-class AdminUserRepository:
+class CareProviderUserRepository:
     """
-    Repository for admin user operations.
+    Repository for user operations.
     
-    Handles authentication, user management, and admin-specific queries.
+    Handles authentication, user management queries.
     """
     
     def __init__(self, connection_manager: ConnectionManager):
@@ -20,23 +20,23 @@ class AdminUserRepository:
         """
         self.db = connection_manager
 
-    def verify_credentials(self, username: str, password: str) -> Optional[AdminUser]:
+    def verify_credentials(self, username: str, password: str) -> Optional[User]:
         """
-        Authenticate an admin user.
+        Authenticate an user.
 
-        Checks the username and bcrypt-hashed password against the admin_users table.
+        Checks the username and bcrypt-hashed password against the users table.
         On success, updates last_login to the current timestamp.
 
         Args:
-            username: The admin username.
+            username: The username.
             password: The plaintext password to verify.
 
         Returns:
-            AdminUser object on success, None if credentials are invalid or user inactive.
+            User object on success, None if credentials are invalid or user inactive.
         """
         query = """
             SELECT id, username, password_hash, full_name
-            FROM admin_users
+            FROM users
             WHERE username = %s AND is_active = TRUE
         """
         result = self.db.execute_query(query, (username,))
@@ -47,7 +47,7 @@ class AdminUserRepository:
             if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
                 # Update last login
                 self.db.execute_query("""
-                    UPDATE admin_users 
+                    UPDATE users 
                     SET last_login = CURRENT_TIMESTAMP 
                     WHERE id = %s
                 """, (user_id,))
@@ -59,15 +59,15 @@ class AdminUserRepository:
         return None
 
 
-    def verify_password(self, admin_user_id: int, password: str) -> bool:
+    def verify_password(self, user_id: int, password: str) -> bool:
 
         query = """
             SELECT password_hash
-            FROM admin_users
+            FROM users
             WHERE id = %s AND is_active = TRUE
         """
 
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
 
         if result:
             password_hash = result[0][0]
@@ -78,26 +78,26 @@ class AdminUserRepository:
         return False
         
 
-    def get_by_id(self, admin_user_id: int) -> Optional[AdminUser]:
+    def get_by_id(self, user_id: int) -> Optional[User]:
         """
-        Fetch an admin user by ID.
+        Fetch an user by ID.
 
         Args:
-            admin_user_id: The ID of the admin user.
+            users: The ID of the user.
 
         Returns:
-            AdminUser object or None if not found.
+            User object or None if not found.
         """
         query = """
             SELECT id, username, full_name, created_at, last_login, is_active
-            FROM admin_users
+            FROM users
             WHERE id = %s
         """
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
         
         if result:
             row = result[0]
-            return AdminUser(
+            return User(
                 id=row[0],
                 username=row[1],
                 full_name=row[2],
@@ -107,23 +107,23 @@ class AdminUserRepository:
             )
         return None
 
-    def get_all(self) -> List[AdminUser]:
+    def get_all(self) -> List[User]:
         """
-        Retrieve all admin users.
+        Retrieve all users.
 
         Returns:
-            List of AdminUser objects ordered by creation date.
+            List of User objects ordered by creation date.
         """
         query = """
             SELECT id, username, email, full_name, created_at, last_login, is_active
-            FROM admin_users
+            FROM users
             ORDER BY created_at DESC
         """
         result = self.db.execute_query(query)
         
         if result:
             return [
-                AdminUser(
+                User(
                     id=row[0],
                     username=row[1],
                     email=row[2],
@@ -136,12 +136,12 @@ class AdminUserRepository:
             ]
         return []
 
-    def update_password(self, admin_user_id: int, new_password: str) -> bool:
+    def update_password(self, user_id: int, new_password: str) -> bool:
         """
-        Change the stored password of an admin user.
+        Change the stored password of an user.
 
         Args:
-            admin_user_id: The user to update.
+            user_id: The user to update.
             new_password: New plaintext password.
 
         Returns:
@@ -153,11 +153,11 @@ class AdminUserRepository:
         ).decode('utf-8')
         
         query = """
-            UPDATE admin_users
+            UPDATE users
             SET password_hash = %s
             WHERE id = %s
         """
-        result = self.db.execute_query(query, (password_hash, admin_user_id))
+        result = self.db.execute_query(query, (password_hash, user_id))
         return bool(result)
 
     def create(
@@ -168,12 +168,12 @@ class AdminUserRepository:
         email: Optional[str] = None
     ) -> Optional[int]:
         """
-        Create a new admin user.
+        Create a new user.
 
         Args:
             username: Unique username
             password: Plaintext password (will be hashed)
-            full_name: Full name of the admin
+            full_name: Full name of the user
             email: Optional email address
 
         Returns:
@@ -185,45 +185,45 @@ class AdminUserRepository:
         ).decode('utf-8')
         
         query = """
-            INSERT INTO admin_users (username, password_hash, full_name, email)
+            INSERT INTO users (username, password_hash, full_name, email)
             VALUES (%s, %s, %s, %s)
             RETURNING id
         """
         result = self.db.execute_query(query, (username, password_hash, full_name, email))
         return result[0][0] if result else None
 
-    def deactivate(self, admin_user_id: int) -> bool:
+    def deactivate(self, user_id: int) -> bool:
         """
-        Deactivate an admin user (soft delete).
+        Deactivate an user (soft delete).
 
         Args:
-            admin_user_id: The user to deactivate
+            user_id: The user to deactivate
 
         Returns:
             bool: True if successful
         """
         query = """
-            UPDATE admin_users
+            UPDATE users
             SET is_active = FALSE
             WHERE id = %s
         """
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
         return bool(result)
 
-    def activate(self, admin_user_id: int) -> bool:
+    def activate(self, user_id: int) -> bool:
         """
-        Reactivate a deactivated admin user.
+        Reactivate a deactivated user.
 
         Args:
-            admin_user_id: The user to activate
+            user_id: The user to activate
 
         Returns:
             bool: True if successful
         """
         query = """
-            UPDATE admin_users
+            UPDATE users
             SET is_active = TRUE
             WHERE id = %s
         """
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
         return bool(result)

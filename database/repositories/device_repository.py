@@ -23,18 +23,18 @@ class DeviceRepository:
 
     def create(
         self,
-        admin_user_id: int,
+        user_id: int,
         email_address: str,
         access_token: Optional[str] = None,
         refresh_token: Optional[str] = None,
     ) -> Optional[int]:
         """
-        Insert a new device for an admin user.
+        Insert a new device for an user.
 
         Tokens are encrypted if provided.
 
         Args:
-            admin_user_id: Owner admin user.
+            user_id: Owner user.
             email_address: Unique identifier for the device.
             access_token: Token returned from an external provider.
             refresh_token: Token used to refresh the access_token.
@@ -50,7 +50,7 @@ class DeviceRepository:
             encrypted_refresh_token = None
 
         query = """
-            INSERT INTO devices (admin_user_id, email_address, authorization_status, device_type, 
+            INSERT INTO devices (user_id, email_address, authorization_status, device_type, 
                                     daily_summaries_checkpoint, intraday_checkpoint, sleep_checkpoint, 
                                     last_synch, access_token, refresh_token)
             VALUES (%s, %s,'inserted', NULL, NULL, NULL, NULL, NULL, %s, %s)
@@ -59,7 +59,7 @@ class DeviceRepository:
 
         result = self.db.execute_query(
             query, 
-            (admin_user_id, email_address, encrypted_access_token, encrypted_refresh_token)
+            (user_id, email_address, encrypted_access_token, encrypted_refresh_token)
         )
 
         return result[0][0] if result else None
@@ -75,7 +75,7 @@ class DeviceRepository:
             Device object or None if not found.
         """
         query = """
-            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+            SELECT id, email_address, authorization_status, user_id, device_type,
                    created_at, last_synch, daily_summaries_checkpoint, 
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
@@ -89,7 +89,7 @@ class DeviceRepository:
                 id=row[0],
                 email_address=row[1],
                 authorization_status=row[2],
-                admin_user_id=row[3],
+                user_id=row[3],
                 device_type=row[4],
                 created_at=row[5],
                 last_synch=row[6],
@@ -110,7 +110,7 @@ class DeviceRepository:
             Device object if found, None otherwise.
         """
         query = """
-            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+            SELECT id, email_address, authorization_status, user_id, device_type,
                    created_at, last_synch, daily_summaries_checkpoint, 
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
@@ -126,7 +126,7 @@ class DeviceRepository:
                 id=row[0],
                 email_address=row[1],
                 authorization_status=row[2],
-                admin_user_id=row[3],
+                user_id=row[3],
                 device_type=row[4],
                 created_at=row[5],
                 last_synch=row[6],
@@ -136,25 +136,25 @@ class DeviceRepository:
             )
         return None
 
-    def get_by_admin_user(self, admin_user_id: int) -> List[Device]:
+    def get_by_user(self, user_id: int) -> List[Device]:
         """
-        List all devices linked to a particular admin user.
+        List all devices linked to a particular user.
 
         Args:
-            admin_user_id: The admin user's primary key.
+            user_id: The user's primary key.
 
         Returns:
             List of Device objects sorted by creation date descending.
         """
         query = """
-            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+            SELECT id, email_address, authorization_status, user_id, device_type,
                    created_at, last_synch, daily_summaries_checkpoint, 
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
-            WHERE admin_user_id = %s
+            WHERE user_id = %s
             ORDER BY created_at DESC
         """
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
         
         if result:
             return [
@@ -162,7 +162,7 @@ class DeviceRepository:
                     id=row[0],
                     email_address=row[1],
                     authorization_status=row[2],
-                    admin_user_id=row[3],
+                    user_id=row[3],
                     device_type=row[4],
                     created_at=row[5],
                     last_synch=row[6],
@@ -176,13 +176,13 @@ class DeviceRepository:
 
     def get_all_authorized(self) -> List[Device]:
         """
-        Retrieve all authorized devices (regardless of admin user).
+        Retrieve all authorized devices (regardless of user).
 
         Returns:
             List of Device objects with authorization_status 'authorized'.
         """
         query = """
-            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+            SELECT id, email_address, authorization_status, user_id, device_type,
                    created_at, last_synch, daily_summaries_checkpoint,
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
@@ -196,7 +196,7 @@ class DeviceRepository:
                 id=row[0],
                 email_address=row[1],
                 authorization_status=row[2],
-                admin_user_id=row[3],
+                user_id=row[3],
                 device_type=row[4],
                 created_at=row[5],
                 last_synch=row[6],
@@ -207,7 +207,7 @@ class DeviceRepository:
             for row in result
         ] if result else []
 
-    def get_all_authorized_by_admin_user(self, admin_user_id: int) -> List[Device]:
+    def get_all_authorized_by_user(self, user_id: int) -> List[Device]:
         """
         Retrieve all authorized devices.
 
@@ -215,21 +215,21 @@ class DeviceRepository:
             List of dicts with id and email_address for authorized devices.
         """
         query = """
-            SELECT id, email_address, authorization_status, admin_user_id, device_type,
+            SELECT id, email_address, authorization_status, user_id, device_type,
                    created_at, last_synch, daily_summaries_checkpoint, 
                    intraday_checkpoint, sleep_checkpoint
             FROM devices
-            WHERE admin_user_id = %s
+            WHERE user_id = %s
             ORDER BY created_at DESC
         """
-        result = self.db.execute_query(query, (admin_user_id,))
+        result = self.db.execute_query(query, (user_id,))
         
         return [
             Device(
                     id=row[0],
                     email_address=row[1],
                     authorization_status=row[2],
-                    admin_user_id=row[3],
+                    user_id=row[3],
                     device_type=row[4],
                     created_at=row[5],
                     last_synch=row[6],

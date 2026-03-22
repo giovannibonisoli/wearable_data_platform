@@ -5,10 +5,10 @@ from rich import _console
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
 from datetime import datetime, timedelta, timezone, time
-from flask_babel import Babel, get_locale, format_date, format_datetime, gettext
+from flask_babel import Babel, get_locale, gettext
 
 from database import ConnectionManager
-from services import DeviceService, DeviceStatisticsService, AdminUserService
+from services import DeviceService, DeviceStatisticsService, CareProviderUserService
 from services.result_enums import (
     ChangePasswordResult,
     AddDeviceResult,
@@ -16,12 +16,8 @@ from services.result_enums import (
     AuthGrantResult,
 )
 
-from config import CLIENT_ID, REDIRECT_URI
-
 import os
 import logging
-import json
-import requests
 
 
 # Initialize Flask app
@@ -123,15 +119,15 @@ def login():
         password = request.form['password']
         
         with ConnectionManager() as conn:
-            admin_service = AdminUserService(conn)
-            user_data = admin_service.check_user(username, password)
+            care_provider_user_service = CareProviderUserService(conn)
+            user_data = care_provider_user_service.check_user(username, password)
 
             if user_data:
                 user = User(user_data['id'])
                 login_user(user)
                     
                 # Store user info in session for easy access
-                session['admin_user_id'] = user_data['id']
+                session['user_id'] = user_data['id']
                 session['username'] = user_data['username']
                     
                 name = user_data["full_name"] or username
@@ -183,16 +179,16 @@ def index():
     return redirect(url_for('home'))
 
 
-@app.route('/livelyageing/admin_user_profile')
+@app.route('/livelyageing/care_provider_user_profile')
 @login_required
-def admin_user_profile():
+def care_provider_user_profile():
     try:
         with ConnectionManager() as conn:
-            admin_service = AdminUserService(conn)
-            admin_user_id = int(current_user.id)
-            admin_user_info = admin_service.get_admin_user_info(admin_user_id)
+            care_provider_user_service = CareProviderUserService(conn)
+            user_id = int(current_user.id)
+            user_info = care_provider_user_service.get_user_info(user_id)
              
-            return render_template('admin_user_profile.html', admin_user=admin_user_info)
+            return render_template('care_provider_user_profile.html', user=user_info)
     except Exception as e:
         app.logger.error(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
@@ -207,12 +203,12 @@ def change_password():
     confirm_password = request.form['confirm_password']
 
     if new_password == confirm_password:
-        admin_user_id = int(current_user.id)
+        user_id = int(current_user.id)
 
         if len(new_password) >= 8:
             with ConnectionManager() as conn:
-                admin_service = AdminUserService(conn)
-                result = admin_service.check_and_change_password(admin_user_id, current_password, new_password)
+                care_provider_user_service = CareProviderUserService(conn)
+                result = care_provider_user_service.check_and_change_password(user_id, current_password, new_password)
 
                 if result == ChangePasswordResult.SUCCESS:
                     flash(gettext('Password changed successfully.'), 'success')
@@ -225,15 +221,14 @@ def change_password():
     else:
         flash(gettext('Passwords do not match.'), 'danger')
     
-    return redirect(url_for('admin_user_profile'))
+    return redirect(url_for('care_provider_user_profile'))
 
 
 @app.route('/livelyageing/home')
 @login_required
 def home():
     """
-    Display all devices for the logged-in admin.
-    
+    Display all devices for the logged-in user.
     """
 
     with ConnectionManager() as conn:
@@ -241,8 +236,8 @@ def home():
         device_stats_service = DeviceStatisticsService(conn)
 
         try:
-            admin_user_id = int(current_user.id)
-            devices_data = device_service.get_devices_info_by_admin_user(admin_user_id)
+            user_id = int(current_user.id)
+            devices_data = device_service.get_devices_info_by_user(user_id)
             
             final_devices_data = []
             for device_data in devices_data:
@@ -281,17 +276,17 @@ def home():
 @login_required
 def add_device():
     """
-    Add a new device for the logged-in admin.
+    Add a new device for the logged-in user.
     """
     try:
         
         email_address = request.form['emailAddress']
-        admin_user_id = int(current_user.id)
+        user_id = int(current_user.id)
         
         with ConnectionManager() as conn:
             device_service = DeviceService(conn)
             
-            result = device_service.add_new_device(admin_user_id, email_address)
+            result = device_service.add_new_device(user_id, email_address)
 
             if result == AddDeviceResult.ALREADY_EXISTS:
                 flash(gettext('This device is already registered.'), 'warning')
@@ -315,12 +310,12 @@ def update_devices_info():
     This retrieves device type and last sync time automatically.
     """
 
-    admin_user_id = int(current_user.id)
+    user_id = int(current_user.id)
 
     with ConnectionManager() as conn:
         device_service = DeviceService(conn)
 
-        errors = device_service.update_devices_info_by_admin_user(admin_user_id)
+        errors = device_service.update_devices_info_by_user(user_id)
 
         if len(errors) > 0:
             app.logger.error(f"Error while updating info for devices linked to {', '.join(errors)}")

@@ -8,12 +8,9 @@ import os
 import sys
 import time
 import logging
-from dotenv import load_dotenv
 
 from database import ConnectionManager
 from services.collectors.fitbit_intraday_collector import FitbitIntradayCollectorService
-
-load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,

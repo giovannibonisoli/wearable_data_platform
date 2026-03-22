@@ -1,15 +1,11 @@
 """
 Configuration Module
 
-Loads all configuration from environment variables.
-All secrets should be in .env file, NEVER hardcoded here!
+Loads all configuration from the process environment (e.g. export on Linux,
+systemd, Docker, or your hosting provider). Secrets must never be hardcoded.
 """
 
 import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv(override=True)
 
 
 class ConfigurationError(Exception):
@@ -34,7 +30,7 @@ def get_required_env(var_name: str) -> str:
     if not value:
         raise ConfigurationError(
             f"Required environment variable '{var_name}' is not set. "
-            f"Please add it to your .env file."
+            f"Export it in the shell, or configure it in your process manager / container."
         )
     return value
 

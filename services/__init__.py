@@ -22,7 +22,7 @@ Example:
 
 from services.device_service import DeviceService
 from services.device_statistics_service import DeviceStatisticsService
-from services.admin_user_service import AdminUserService
+from services.care_provider_user_service import CareProviderUserService
 from services.collectors import (
     FitbitDailySummaryCollectorService,
     FitbitSleepCollectorService,
@@ -32,7 +32,7 @@ from services.collectors import (
 __all__ = [
     'DeviceService',
     'DeviceStatisticsService',
-    'AdminUserService',
+    'CareProviderUserService',
     'FitbitDailySummaryCollectorService',
     'FitbitSleepCollectorService',
     'FitbitIntradayCollectorService',
