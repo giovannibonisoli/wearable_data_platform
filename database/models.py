@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, date
 from typing import Optional
 
+USER_ROLE_ADMIN = "admin"
+USER_ROLE_CARE_PROVIDER = "care_provider"
 
 @dataclass
 class User:
@@ -9,6 +11,7 @@ class User:
     id: int
     username: str
     full_name: str
+    role: str = USER_ROLE_CARE_PROVIDER
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     is_active: bool = True

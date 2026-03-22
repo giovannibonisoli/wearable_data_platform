@@ -62,7 +62,9 @@ from database.models import (
     SleepLog,
     SleepLevel,
     Alert,
-    PendingAuthorization
+    PendingAuthorization,
+    USER_ROLE_ADMIN,
+    USER_ROLE_CARE_PROVIDER,
 )
 
 __all__ = [
@@ -88,4 +90,6 @@ __all__ = [
     'SleepLevel',
     'Alert',
     'PendingAuthorization',
+    'USER_ROLE_ADMIN',
+    'USER_ROLE_CARE_PROVIDER',
 ]

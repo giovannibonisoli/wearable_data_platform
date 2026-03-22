@@ -1,7 +1,7 @@
 import bcrypt
 from typing import Optional, List, Dict, Any
 from database.connection import ConnectionManager
-from database.models import User
+from database.models import User, USER_ROLE_ADMIN, USER_ROLE_CARE_PROVIDER
 
 
 class CareProviderUserRepository:
@@ -35,14 +35,16 @@ class CareProviderUserRepository:
             User object on success, None if credentials are invalid or user inactive.
         """
         query = """
-            SELECT id, username, password_hash, full_name
+            SELECT id, username, password_hash, full_name, role
             FROM users
             WHERE username = %s AND is_active = TRUE
         """
         result = self.db.execute_query(query, (username,))
         
         if result:
-            user_id, username, password_hash, full_name = result[0]
+            user_id, username, password_hash, full_name, role = result[0]
+            if role not in (USER_ROLE_ADMIN, USER_ROLE_CARE_PROVIDER):
+                return None
             # Verify password
             if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
                 # Update last login
@@ -54,7 +56,8 @@ class CareProviderUserRepository:
                 return {
                     'id': user_id,
                     'username': username,
-                    'full_name': full_name
+                    'full_name': full_name,
+                    'role': role,
                 }
         return None
 
@@ -89,7 +92,7 @@ class CareProviderUserRepository:
             User object or None if not found.
         """
         query = """
-            SELECT id, username, full_name, created_at, last_login, is_active
+            SELECT id, username, full_name, role, created_at, last_login, is_active
             FROM users
             WHERE id = %s
         """
@@ -101,9 +104,10 @@ class CareProviderUserRepository:
                 id=row[0],
                 username=row[1],
                 full_name=row[2],
-                created_at=row[3],
-                last_login=row[4],
-                is_active=row[5]
+                role=row[3],
+                created_at=row[4],
+                last_login=row[5],
+                is_active=row[6]
             )
         return None
 
@@ -115,7 +119,7 @@ class CareProviderUserRepository:
             List of User objects ordered by creation date.
         """
         query = """
-            SELECT id, username, email, full_name, created_at, last_login, is_active
+            SELECT id, username, full_name, role, created_at, last_login, is_active
             FROM users
             ORDER BY created_at DESC
         """
@@ -126,8 +130,8 @@ class CareProviderUserRepository:
                 User(
                     id=row[0],
                     username=row[1],
-                    email=row[2],
-                    full_name=row[3],
+                    full_name=row[2],
+                    role=row[3],
                     created_at=row[4],
                     last_login=row[5],
                     is_active=row[6]
@@ -135,6 +139,73 @@ class CareProviderUserRepository:
                 for row in result
             ]
         return []
+
+    def username_exists(self, username: str) -> bool:
+        """Return True if a user with this username already exists."""
+        query = "SELECT 1 FROM users WHERE username = %s"
+        result = self.db.execute_query(query, (username,))
+        return bool(result)
+
+    def get_role(self, user_id: int) -> Optional[str]:
+        """Return the role for a user, or None if missing."""
+        query = "SELECT role FROM users WHERE id = %s"
+        result = self.db.execute_query(query, (user_id,))
+        if result:
+            return result[0][0]
+        return None
+
+    def list_care_providers_with_device_counts(self) -> List[Dict[str, Any]]:
+        """
+        All care_provider users with device counts (including inactive users).
+        """
+        query = """
+            SELECT u.id, u.username, u.full_name, u.is_active,
+                   COUNT(d.id)::int AS device_count
+            FROM users u
+            LEFT JOIN devices d ON d.user_id = u.id
+            WHERE u.role = %s
+            GROUP BY u.id, u.username, u.full_name, u.is_active
+            ORDER BY u.username
+        """
+        result = self.db.execute_query(query, (USER_ROLE_CARE_PROVIDER,))
+        if not result:
+            return []
+        return [
+            {
+                "id": row[0],
+                "username": row[1],
+                "full_name": row[2] or "",
+                "is_active": row[3],
+                "device_count": row[4],
+            }
+            for row in result
+        ]
+
+    def update_password_for_care_provider(self, user_id: int, new_password: str) -> bool:
+        """Set password for a care_provider user (admin reset). Returns False if not a care_provider."""
+        password_hash = bcrypt.hashpw(
+            new_password.encode('utf-8'),
+            bcrypt.gensalt()
+        ).decode('utf-8')
+        query = """
+            UPDATE users
+            SET password_hash = %s
+            WHERE id = %s AND role = %s
+            RETURNING id
+        """
+        result = self.db.execute_query(query, (password_hash, user_id, USER_ROLE_CARE_PROVIDER))
+        return bool(result)
+
+    def deactivate_care_provider(self, user_id: int) -> bool:
+        """Soft-deactivate a user only if they are a care_provider."""
+        query = """
+            UPDATE users
+            SET is_active = FALSE
+            WHERE id = %s AND role = %s
+            RETURNING id
+        """
+        result = self.db.execute_query(query, (user_id, USER_ROLE_CARE_PROVIDER))
+        return bool(result)
 
     def update_password(self, user_id: int, new_password: str) -> bool:
         """
@@ -185,11 +256,14 @@ class CareProviderUserRepository:
         ).decode('utf-8')
         
         query = """
-            INSERT INTO users (username, password_hash, full_name, email)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (username, password_hash, full_name, email, role)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING id
         """
-        result = self.db.execute_query(query, (username, password_hash, full_name, email))
+        result = self.db.execute_query(
+            query,
+            (username, password_hash, full_name, email, USER_ROLE_CARE_PROVIDER),
+        )
         return result[0][0] if result else None
 
     def deactivate(self, user_id: int) -> bool:

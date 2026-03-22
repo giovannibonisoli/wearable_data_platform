@@ -9,7 +9,7 @@ import time
 import logging
 from datetime import datetime, timedelta
 
-from database import ConnectionManager, DeviceRepository, SleepRepository, Device
+from database import ConnectionManager, SleepRepository, Device
 from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
