@@ -9,15 +9,16 @@ from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, gettext
 
 from database import ConnectionManager
-from services import DeviceService, DeviceStatisticsService, CareProviderUserService
+from services import DeviceService, DeviceStatisticsService, StaffUserService, CareProviderService
 from services.result_enums import (
     ChangePasswordResult,
     AddDeviceResult,
     SendAuthEmailResult,
     AuthGrantResult,
-    AdminCreateCareProviderResult,
+    AdminCreateStaffUserResult,
     AdminResetPasswordResult,
-    AdminDeactivateCareProviderResult,
+    AdminDeactivateStaffUserResult,
+    AdminCreateCareProviderResult
 )
 
 import os
@@ -131,13 +132,13 @@ def admin_required(view):
     return wrapped
 
 
-def care_provider_required(view):
+def staff_user_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for('login'))
-        if session.get('role') != 'care_provider':
-            flash(gettext('This area is only available to care provider accounts.'), 'info')
+        if session.get('role') != 'staff':
+            flash(gettext('This area is only available to staff user accounts.'), 'info')
             return redirect(url_for('admin_care_providers'))
         return view(*args, **kwargs)
     return wrapped
@@ -155,8 +156,8 @@ def login():
         password = request.form['password']
         
         with ConnectionManager() as conn:
-            svc = CareProviderUserService(conn)
-            user_data = svc.check_user(username, password)
+            staff_user_service = StaffUserService(conn)
+            user_data = staff_user_service.check_user(username, password)
 
             if user_data:
                 user = User(user_data['id'])
@@ -202,8 +203,8 @@ def require_login():
 
     if current_user.is_authenticated and session.get('role') is None:
         with ConnectionManager() as conn:
-            svc = CareProviderUserService(conn)
-            role = svc.get_role_for_user(int(current_user.id))
+            staff_user_service = StaffUserService(conn)
+            role = staff_user_service.get_role_for_user(int(current_user.id))
         if role:
             session['role'] = role
         else:
@@ -243,9 +244,9 @@ def index():
 def care_provider_user_profile():
     try:
         with ConnectionManager() as conn:
-            svc = CareProviderUserService(conn)
+            staff_user_service = StaffUserService(conn)
             user_id = int(current_user.id)
-            user_info = svc.get_user_info(user_id)
+            user_info = staff_user_service.get_user_info(user_id)
              
             return render_template('care_provider_user_profile.html', user=user_info)
     except Exception as e:
@@ -266,8 +267,8 @@ def change_password():
 
         if len(new_password) >= 8:
             with ConnectionManager() as conn:
-                svc = CareProviderUserService(conn)
-                result = svc.check_and_change_password(user_id, current_password, new_password)
+                staff_user_service = StaffUserService(conn)
+                result = staff_user_service.check_and_change_password(user_id, current_password, new_password)
 
                 if result == ChangePasswordResult.SUCCESS:
                     flash(gettext('Password changed successfully.'), 'success')
@@ -285,7 +286,7 @@ def change_password():
 
 @app.route('/livelyageing/home')
 @login_required
-@care_provider_required
+@staff_user_required
 def home():
     """
     Display all devices for the logged-in user.
@@ -334,7 +335,7 @@ def home():
 
 @app.route('/livelyageing/add_device', methods=['POST'])
 @login_required
-@care_provider_required
+@staff_user_required
 def add_device():
     """
     Add a new device for the logged-in user.
@@ -365,7 +366,7 @@ def add_device():
 
 @app.route('/livelyageing/update_devices_info')
 @login_required
-@care_provider_required
+@staff_user_required
 def update_devices_info():
     """
     Fetch device information from Fitbit and update database.
@@ -391,7 +392,7 @@ def update_devices_info():
 
 @app.route('/livelyageing/send_auth_request', methods=['POST'])
 @login_required
-@care_provider_required
+@staff_user_required
 def send_auth_request():
     """Generate authorization url and send it by email"""
     device_id = request.form.get('deviceIdAuth')
@@ -478,7 +479,7 @@ def callback():
 
 @app.route('/livelyageing/deactivate_device', methods=['POST'])
 @login_required
-@care_provider_required
+@staff_user_required
 def deactivate_device():
     """ Deactivate authorized device"""
     device_id = request.form.get('DeactivateId')
@@ -496,66 +497,96 @@ def deactivate_device():
 @admin_required
 def admin_care_providers():
     with ConnectionManager() as conn:
-        svc = CareProviderUserService(conn)
-        rows = svc.list_care_providers_for_admin()
-    return render_template('admin_care_providers.html', care_providers=rows)
+        care_provider_service = CareProviderService(conn)
+        care_providers = care_provider_service.get_all_care_providers()
+
+    return render_template('admin_care_providers.html', care_providers=care_providers)
 
 
 @app.route('/livelyageing/admin/care_providers/add', methods=['POST'])
 @login_required
 @admin_required
 def admin_add_care_provider():
+    full_name = (request.form.get('full_name') or '').strip()
+
+    with ConnectionManager() as conn:
+        care_provider_service = CareProviderService(conn)
+        result = care_provider_service.create_care_provider(full_name)
+
+    if result == AdminCreateCareProviderResult.SUCCESS:
+        flash(gettext('Care provider created.'), 'success')
+    else:
+        flash(gettext('Could not create care provider.'), 'danger')
+
+    return redirect(url_for('admin_care_providers'))
+
+
+@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users', methods=['GET'])
+@login_required
+@admin_required
+def admin_staff_users(care_provider_id):
+    with ConnectionManager() as conn:
+        staff_user_service = StaffUserService(conn)
+        staff_users = staff_user_service.get_staff_users_by_care_provider(care_provider_id)
+ 
+    return render_template(
+        'admin_staff_users.html',
+        staff_users=staff_users,
+        current_care_provider_id=care_provider_id,
+    )
+
+@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/add', methods=['POST'])
+@login_required
+@admin_required
+def admin_add_staff_user(care_provider_id):
     username = (request.form.get('username') or '').strip()
     full_name = (request.form.get('full_name') or '').strip()
     password = request.form.get('password') or ''
     confirm = request.form.get('confirm_password') or ''
-
+ 
     if not username:
         flash(gettext('Username is required.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
+        return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
     if password != confirm:
         flash(gettext('Passwords do not match.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
+        return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
     if len(password) < 8:
         flash(gettext('The password must be at least 8 characters.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
-
+        return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
+ 
     with ConnectionManager() as conn:
-        svc = CareProviderUserService(conn)
-        result = svc.admin_create_care_provider(username, full_name, password)
-    if result == AdminCreateCareProviderResult.SUCCESS:
-        flash(gettext('Care provider user created.'), 'success')
-    elif result == AdminCreateCareProviderResult.USERNAME_EXISTS:
+        staff_user_service = StaffUserService(conn)
+        result = staff_user_service.create_staff_user(username, full_name, password, care_provider_id)
+ 
+    if result == AdminCreateStaffUserResult.SUCCESS:
+        flash(gettext('Staff user created.'), 'success')
+    elif result == AdminCreateStaffUserResult.USERNAME_EXISTS:
         flash(gettext('That username is already taken.'), 'warning')
     else:
-        flash(gettext('Could not create care provider user.'), 'danger')
-    return redirect(url_for('admin_care_providers'))
+        flash(gettext('Could not create staff user.'), 'danger')
+ 
+    return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
 
 
-@app.route('/livelyageing/admin/care_providers/reset_password', methods=['POST'])
+@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/reset_password', methods=['POST'])
 @login_required
 @admin_required
-def admin_reset_care_provider_password():
-    try:
-        target = int(request.form.get('user_id') or 0)
-    except ValueError:
-        flash(gettext('Invalid user.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
+def admin_reset_staff_user_password(care_provider_id, user_id):
     new_password = request.form.get('new_password') or ''
     confirm = request.form.get('confirm_password') or ''
-
+ 
     if new_password != confirm:
         flash(gettext('Passwords do not match.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
+        return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
     if len(new_password) < 8:
         flash(gettext('The password must be at least 8 characters.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
-
+        return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
+ 
     admin_id = int(current_user.id)
     with ConnectionManager() as conn:
-        svc = CareProviderUserService(conn)
-        result = svc.admin_reset_care_provider_password(admin_id, target, new_password)
-
+        staff_user_service = StaffUserService(conn)
+        result = staff_user_service.admin_reset_staff_user_password(admin_id, user_id, new_password)
+ 
     if result == AdminResetPasswordResult.SUCCESS:
         flash(gettext('Password updated.'), 'success')
     elif result == AdminResetPasswordResult.NOT_FOUND:
@@ -564,33 +595,29 @@ def admin_reset_care_provider_password():
         flash(gettext('You cannot change that password.'), 'danger')
     else:
         flash(gettext('Password update failed.'), 'danger')
-    return redirect(url_for('admin_care_providers'))
+ 
+    return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
+    
 
-
-@app.route('/livelyageing/admin/care_providers/deactivate', methods=['POST'])
+@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/deactivate', methods=['POST'])
 @login_required
 @admin_required
-def admin_deactivate_care_provider():
-    try:
-        target = int(request.form.get('user_id') or 0)
-    except ValueError:
-        flash(gettext('Invalid user.'), 'danger')
-        return redirect(url_for('admin_care_providers'))
-
+def admin_deactivate_staff_user(care_provider_id, user_id):
     admin_id = int(current_user.id)
     with ConnectionManager() as conn:
-        svc = CareProviderUserService(conn)
-        result = svc.admin_deactivate_care_provider(admin_id, target)
-
-    if result == AdminDeactivateCareProviderResult.SUCCESS:
-        flash(gettext('User deactivated.'), 'success')
-    elif result == AdminDeactivateCareProviderResult.NOT_FOUND:
-        flash(gettext('User not found.'), 'danger')
-    elif result == AdminDeactivateCareProviderResult.FORBIDDEN:
-        flash(gettext('You cannot deactivate that user.'), 'danger')
+        staff_user_service = StaffUserService(conn)
+        result = staff_user_service.admin_deactivate_staff_user(admin_id, user_id)
+ 
+    if result == AdminDeactivateStaffUserResult.SUCCESS:
+        flash(gettext('Staff user deactivated.'), 'success')
+    elif result == AdminDeactivateStaffUserResult.NOT_FOUND:
+        flash(gettext('Staff user not found.'), 'danger')
+    elif result == AdminDeactivateStaffUserResult.FORBIDDEN:
+        flash(gettext('You cannot deactivate this staff user.'), 'danger')
     else:
         flash(gettext('Deactivation failed.'), 'danger')
-    return redirect(url_for('admin_care_providers'))
+ 
+    return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
 
 
 # Template filters

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Staff users') }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    {# ── Page header ── #}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users-cog me-2"></i>{{ _('Staff users') }}
+        </h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffUserModal">
+            <i class="fas fa-user-plus me-2"></i>{{ _('Add staff user') }}
+        </button>
+    </div>
+
+    {# ── Staff users table ── #}
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{{ _('Username') }}</th>
+                            <th>{{ _('Full name') }}</th>
+                            <th>{{ _('Status') }}</th>
+                            <th class="text-end">{{ _('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in staff_users %}
+                        <tr>
+                            <td>{{ row.username }}</td>
+                            <td>{{ row.full_name or '—' }}</td>
+                            <td>
+                                {% if row.is_active %}
+                                <span class="badge bg-success">{{ _('Active') }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-nowrap">
+                                {# Reset password button — opens modal #}
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-primary reset-pw-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#resetPasswordModal"
+                                    data-user-id="{{ row.id }}"
+                                    data-username="{{ row.username }}"
+                                    data-reset-url="{{ url_for('admin_reset_staff_user_password', care_provider_id=current_care_provider_id, user_id=row.id) }}"
+                                    {% if not row.is_active %}disabled{% endif %}>
+                                    <i class="fas fa-key me-1"></i>{{ _('Change password') }}
+                                </button>
+
+                                {# Deactivate form — confirmation handled via JS #}
+                                <form method="post"
+                                    action="{{ url_for('admin_deactivate_staff_user', care_provider_id=current_care_provider_id, user_id=row.id) }}"
+                                    class="d-inline deactivate-user-form"
+                                    data-confirm="{{ _('Deactivate this user? They will no longer be able to sign in.') }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        {% if not row.is_active %}disabled{% endif %}>
+                                        <i class="fas fa-user-slash me-1"></i>{{ _('Deactivate') }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">{{ _('No staff users yet.') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# ── Back button ── #}
+    <div class="mt-3">
+        <a href="{{ url_for('admin_care_providers') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{{ _('Care providers') }}
+        </a>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   Modal — Add staff user
+══════════════════════════════════════════ #}
+<div class="modal fade" id="addStaffUserModal" tabindex="-1"
+    aria-labelledby="addStaffUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post"
+                action="{{ url_for('admin_add_staff_user', care_provider_id=current_care_provider_id) }}"
+                id="addStaffUserForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStaffUserModalLabel">
+                        <i class="fas fa-user-plus me-2"></i>{{ _('Add staff user') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="{{ _('Close') }}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="add_username">{{ _('Username') }}</label>
+                        <input type="text" class="form-control" id="add_username" name="username"
+                            required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="add_full_name">{{ _('Full name') }}</label>
+                        <input type="text" class="form-control" id="add_full_name" name="full_name"
+                            autocomplete="name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="add_password">{{ _('Password') }}</label>
+                        <input type="password" class="form-control" id="add_password" name="password"
+                            required minlength="8" autocomplete="new-password">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label" for="add_confirm_password">{{ _('Confirm password') }}</label>
+                        <input type="password" class="form-control" id="add_confirm_password"
+                            name="confirm_password" required minlength="8" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ _('Cancel') }}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>{{ _('Create user') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════
+   Modal — Reset password
+   The form action is set dynamically via JS
+   using the data-reset-url on the trigger button.
+══════════════════════════════════════════ #}
+<div class="modal fade" id="resetPasswordModal" tabindex="-1"
+    aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="resetPasswordForm" action="">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resetPasswordModalLabel">
+                        {{ _('Reset password') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="{{ _('Close') }}"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3" id="reset_for_user"></p>
+                    <div class="mb-3">
+                        <label class="form-label" for="new_password">{{ _('New password') }}</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password"
+                            required minlength="8" autocomplete="new-password">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label" for="reset_confirm_password">{{ _('Confirm password') }}</label>
+                        <input type="password" class="form-control" id="reset_confirm_password"
+                            name="confirm_password" required minlength="8" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ _('Cancel') }}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {{ _('Save password') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Reset the add-user form when the modal is closed.
+document.getElementById('addStaffUserModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('addStaffUserForm').reset();
+});
+
+// Populate the reset-password modal with the target user's data.
+document.querySelectorAll('.reset-pw-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var username = this.getAttribute('data-username');
+        var resetUrl = this.getAttribute('data-reset-url');
+
+        document.getElementById('resetPasswordForm').action = resetUrl;
+        document.getElementById('resetPasswordForm').reset();
+        document.getElementById('reset_for_user').textContent =
+            {{ _('Reset password for')|tojson }} + ' ' + username;
+    });
+});
+
+// Ask for confirmation before submitting the deactivate form.
+document.querySelectorAll('.deactivate-user-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+        var msg = form.getAttribute('data-confirm') || '';
+        if (!window.confirm(msg)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

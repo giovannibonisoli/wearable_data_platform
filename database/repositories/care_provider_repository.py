@@ -1,296 +1,96 @@
-import bcrypt
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from database.connection import ConnectionManager
-from database.models import User, USER_ROLE_ADMIN, USER_ROLE_CARE_PROVIDER
+
+from database.models import CareProvider
 
 
-class CareProviderUserRepository:
+class CareProviderRepository:
     """
-    Repository for user operations.
+    Repository for care provider operations.
     
-    Handles authentication, user management queries.
+    Handles care provider management queries.
     """
     
     def __init__(self, connection_manager: ConnectionManager):
         """
         Initialize the repository with a connection manager.
-        
-        Args:
-            connection_manager: Active ConnectionManager instance
         """
+
         self.db = connection_manager
 
-    def verify_credentials(self, username: str, password: str) -> Optional[User]:
+    def get_by_id(self, care_provider_id: int) -> Optional[CareProvider]:
         """
-        Authenticate an user.
-
-        Checks the username and bcrypt-hashed password against the users table.
-        On success, updates last_login to the current timestamp.
+        Fetch an care provider by ID.
 
         Args:
-            username: The username.
-            password: The plaintext password to verify.
+            care_provider_id: The ID of the care_provider_id.
 
         Returns:
-            User object on success, None if credentials are invalid or user inactive.
+            CareProvider object or None if not found.
         """
         query = """
-            SELECT id, username, password_hash, full_name, role
-            FROM users
-            WHERE username = %s AND is_active = TRUE
+            SELECT id, full_name, created_at
+            FROM care_providers 
+            id = %s
         """
-        result = self.db.execute_query(query, (username,))
-        
-        if result:
-            user_id, username, password_hash, full_name, role = result[0]
-            if role not in (USER_ROLE_ADMIN, USER_ROLE_CARE_PROVIDER):
-                return None
-            # Verify password
-            if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
-                # Update last login
-                self.db.execute_query("""
-                    UPDATE users 
-                    SET last_login = CURRENT_TIMESTAMP 
-                    WHERE id = %s
-                """, (user_id,))
-                return {
-                    'id': user_id,
-                    'username': username,
-                    'full_name': full_name,
-                    'role': role,
-                }
-        return None
-
-
-    def verify_password(self, user_id: int, password: str) -> bool:
-
-        query = """
-            SELECT password_hash
-            FROM users
-            WHERE id = %s AND is_active = TRUE
-        """
-
-        result = self.db.execute_query(query, (user_id,))
-
-        if result:
-            password_hash = result[0][0]
-
-            if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
-                return True
-
-        return False
-        
-
-    def get_by_id(self, user_id: int) -> Optional[User]:
-        """
-        Fetch an user by ID.
-
-        Args:
-            users: The ID of the user.
-
-        Returns:
-            User object or None if not found.
-        """
-        query = """
-            SELECT id, username, full_name, role, created_at, last_login, is_active
-            FROM users
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (user_id,))
+        result = self.db.execute_query(query, (care_provider_id,))
         
         if result:
             row = result[0]
-            return User(
+            return CareProvider(
                 id=row[0],
-                username=row[1],
-                full_name=row[2],
-                role=row[3],
-                created_at=row[4],
-                last_login=row[5],
-                is_active=row[6]
+                full_name=row[1],
+                created_at=row[2]
             )
         return None
 
-    def get_all(self) -> List[User]:
+    
+    def get_all(self) -> List[CareProvider]:
         """
-        Retrieve all users.
+        Retrieve all care providers.
 
         Returns:
-            List of User objects ordered by creation date.
+            List of CareProvider objects ordered by creation date.
         """
         query = """
-            SELECT id, username, full_name, role, created_at, last_login, is_active
-            FROM users
-            ORDER BY created_at DESC
+            SELECT id, full_name, created_at
+            FROM care_providers
         """
         result = self.db.execute_query(query)
         
         if result:
             return [
-                User(
+                CareProvider(
                     id=row[0],
-                    username=row[1],
-                    full_name=row[2],
-                    role=row[3],
-                    created_at=row[4],
-                    last_login=row[5],
-                    is_active=row[6]
+                    full_name=row[1],
+                    created_at=row[2],
                 )
                 for row in result
             ]
         return []
 
-    def username_exists(self, username: str) -> bool:
-        """Return True if a user with this username already exists."""
-        query = "SELECT 1 FROM users WHERE username = %s"
-        result = self.db.execute_query(query, (username,))
-        return bool(result)
 
-    def get_role(self, user_id: int) -> Optional[str]:
-        """Return the role for a user, or None if missing."""
-        query = "SELECT role FROM users WHERE id = %s"
-        result = self.db.execute_query(query, (user_id,))
-        if result:
-            return result[0][0]
-        return None
-
-    def list_care_providers_with_device_counts(self) -> List[Dict[str, Any]]:
+    def create(self, full_name: str) -> Optional[int]:
         """
-        All care_provider users with device counts (including inactive users).
-        """
-        query = """
-            SELECT u.id, u.username, u.full_name, u.is_active,
-                   COUNT(d.id)::int AS device_count
-            FROM users u
-            LEFT JOIN devices d ON d.user_id = u.id
-            WHERE u.role = %s
-            GROUP BY u.id, u.username, u.full_name, u.is_active
-            ORDER BY u.username
-        """
-        result = self.db.execute_query(query, (USER_ROLE_CARE_PROVIDER,))
-        if not result:
-            return []
-        return [
-            {
-                "id": row[0],
-                "username": row[1],
-                "full_name": row[2] or "",
-                "is_active": row[3],
-                "device_count": row[4],
-            }
-            for row in result
-        ]
-
-    def update_password_for_care_provider(self, user_id: int, new_password: str) -> bool:
-        """Set password for a care_provider user (admin reset). Returns False if not a care_provider."""
-        password_hash = bcrypt.hashpw(
-            new_password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
-        query = """
-            UPDATE users
-            SET password_hash = %s
-            WHERE id = %s AND role = %s
-            RETURNING id
-        """
-        result = self.db.execute_query(query, (password_hash, user_id, USER_ROLE_CARE_PROVIDER))
-        return bool(result)
-
-    def deactivate_care_provider(self, user_id: int) -> bool:
-        """Soft-deactivate a user only if they are a care_provider."""
-        query = """
-            UPDATE users
-            SET is_active = FALSE
-            WHERE id = %s AND role = %s
-            RETURNING id
-        """
-        result = self.db.execute_query(query, (user_id, USER_ROLE_CARE_PROVIDER))
-        return bool(result)
-
-    def update_password(self, user_id: int, new_password: str) -> bool:
-        """
-        Change the stored password of an user.
+        Create a new care provider.
 
         Args:
-            user_id: The user to update.
-            new_password: New plaintext password.
+            full_name: Full name of the care provider
 
         Returns:
-            bool: True if update succeeded, False otherwise.
+            int: New care provider ID on success, None on failure
         """
-        password_hash = bcrypt.hashpw(
-            new_password.encode('utf-8'), 
-            bcrypt.gensalt()
-        ).decode('utf-8')
         
         query = """
-            UPDATE users
-            SET password_hash = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (password_hash, user_id))
-        return bool(result)
-
-    def create(self, username: str, password: str, full_name: str) -> Optional[int]:
-        """
-        Create a new user.
-
-        Args:
-            username: Unique username
-            password: Plaintext password (will be hashed)
-            full_name: Full name of the user
-
-        Returns:
-            int: New user ID on success, None on failure
-        """
-        password_hash = bcrypt.hashpw(
-            password.encode('utf-8'), 
-            bcrypt.gensalt()
-        ).decode('utf-8')
-        
-        query = """
-            INSERT INTO users (username, password_hash, full_name, role)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO care_providers (full_name)
+            VALUES (%s)
             RETURNING id
         """
         result = self.db.execute_query(
-            query,
-            (username, password_hash, full_name, USER_ROLE_CARE_PROVIDER),
+            query, (full_name,),
         )
-        return result[0][0] if result else None
 
-    def deactivate(self, user_id: int) -> bool:
-        """
-        Deactivate an user (soft delete).
+        if not result:
+            return None
 
-        Args:
-            user_id: The user to deactivate
-
-        Returns:
-            bool: True if successful
-        """
-        query = """
-            UPDATE users
-            SET is_active = FALSE
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (user_id,))
-        return bool(result)
-
-    def activate(self, user_id: int) -> bool:
-        """
-        Reactivate a deactivated user.
-
-        Args:
-            user_id: The user to activate
-
-        Returns:
-            bool: True if successful
-        """
-        query = """
-            UPDATE users
-            SET is_active = TRUE
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (user_id,))
-        return bool(result)
+        return result[0][0]

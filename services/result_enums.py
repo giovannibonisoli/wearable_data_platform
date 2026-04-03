@@ -39,8 +39,12 @@ class CollectorResult(Enum):
     RATE_LIMITED = "rate_limited"
     ERROR = "error"
 
-
 class AdminCreateCareProviderResult(Enum):
+    SUCCESS = "success"
+    ERROR = "error"
+
+
+class AdminCreateStaffUserResult(Enum):
     SUCCESS = "success"
     USERNAME_EXISTS = "username_exists"
     ERROR = "error"
@@ -53,7 +57,7 @@ class AdminResetPasswordResult(Enum):
     ERROR = "error"
 
 
-class AdminDeactivateCareProviderResult(Enum):
+class AdminDeactivateStaffUserResult(Enum):
     SUCCESS = "success"
     NOT_FOUND = "not_found"
     FORBIDDEN = "forbidden"

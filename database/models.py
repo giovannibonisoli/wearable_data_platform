@@ -3,7 +3,7 @@ from datetime import datetime, date
 from typing import Optional
 
 USER_ROLE_ADMIN = "admin"
-USER_ROLE_CARE_PROVIDER = "care_provider"
+USER_ROLE_STAFF = "staff"
 
 @dataclass
 class User:
@@ -11,11 +11,22 @@ class User:
     id: int
     username: str
     full_name: str
-    role: str = USER_ROLE_CARE_PROVIDER
-    created_at: Optional[datetime] = None
-    last_login: Optional[datetime] = None
-    is_active: bool = True
+    role: str
+    created_at: Optional[datetime]
+    last_login: Optional[datetime]
+    is_active: bool
 
+@dataclass
+class CareProvider:
+    """Represents a care service provider in the system."""
+    id: int
+    full_name: str
+    created_at: Optional[datetime] = None
+
+@dataclass
+class StaffUser(User):
+    """Represents a staff user in the system."""
+    care_provider_id: int
 
 @dataclass
 class Device:
@@ -23,7 +34,7 @@ class Device:
     id: int
     email_address: str
     authorization_status: str
-    user_id: int
+    care_provider_id: int
     device_type: Optional[str] = None
     created_at: Optional[datetime] = None
     last_synch: Optional[datetime] = None

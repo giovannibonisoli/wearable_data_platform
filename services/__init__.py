@@ -20,9 +20,10 @@ Example:
         usage = stats_service.get_last_device_usage_statistics(device_id, timedelta(days=7))
 """
 
+from services.care_provider_service import CareProviderService
 from services.device_service import DeviceService
 from services.device_statistics_service import DeviceStatisticsService
-from services.care_provider_user_service import CareProviderUserService
+from services.staff_user_service import StaffUserService
 from services.collectors import (
     FitbitDailySummaryCollectorService,
     FitbitSleepCollectorService,
@@ -30,9 +31,10 @@ from services.collectors import (
 )
 
 __all__ = [
+    'CareProviderService',
     'DeviceService',
     'DeviceStatisticsService',
-    'CareProviderUserService',
+    'StaffUserService',
     'FitbitDailySummaryCollectorService',
     'FitbitSleepCollectorService',
     'FitbitIntradayCollectorService',

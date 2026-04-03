@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any
 
-from database import ConnectionManager, DeviceRepository, MetricsRepository, Device 
+from database import ConnectionManager, DeviceRepository, MetricsRepository
 
 
 class DeviceStatisticsService:

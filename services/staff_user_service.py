@@ -1,0 +1,118 @@
+from typing import Dict, Any, Optional, List
+
+from database import ConnectionManager, StaffUserRepository, DeviceRepository
+from database.models import USER_ROLE_STAFF
+from services.result_enums import (
+    ChangePasswordResult,
+    AdminCreateStaffUserResult,
+    AdminResetPasswordResult,
+    AdminDeactivateStaffUserResult,
+)
+
+class StaffUserService:
+    """
+    Service for retrieving.
+    """
+    
+    def __init__(self, connection_manager: ConnectionManager):
+        """
+        Initialize the service with a connection manager.
+        
+        Args:
+            connection_manager: Active ConnectionManager instance
+        """
+        self.conn = connection_manager
+        self.staff_user_repo = StaffUserRepository(connection_manager)
+        self.device_repo = DeviceRepository(connection_manager)
+
+    def get_role_for_user(self, user_id: int) -> Optional[str]:
+        return self.staff_user_repo.get_role(user_id)
+
+    def check_user(self, username: str, password: str):
+        return self.staff_user_repo.verify_credentials(username, password)
+
+    def get_user_info(self, user_id: int) -> Dict[str, Any]:
+
+        user = self.staff_user_repo.get_by_id(user_id)
+            
+        user = {
+                        'id': user_id,
+                        'username': user.username,
+                        'full_name': user.full_name,
+                        'role': user.role,
+                        'created_at': user.created_at,
+                        'last_login': user.last_login,
+                        'care_provider_id': user.care_provider_id
+                    }
+
+        return user
+
+    def get_staff_users_by_care_provider(self, care_provider_id: int) -> List[Dict]:
+        staff_users_data = []
+
+        staff_users = self.staff_user_repo.get_by_care_provider(care_provider_id)
+
+        for staff_user in staff_users:
+
+            staff_users_data.append({
+                "id": staff_user.id,
+                "username": staff_user.username,
+                "full_name": staff_user.full_name,
+                "role": staff_user.role,
+                "created_at": staff_user.created_at,
+                "last_login": staff_user.last_login,
+                "is_active": staff_user.is_active,
+                "care_provider_id": staff_user.care_provider_id,
+            })
+
+        return staff_users_data
+
+
+    def check_and_change_password(self, user_id: int, current_password: str, new_password: str) -> ChangePasswordResult:
+        if self.staff_user_repo.verify_password(user_id, current_password):
+            if self.staff_user_repo.update_password(user_id, new_password):
+                return ChangePasswordResult.SUCCESS
+            else:
+                return ChangePasswordResult.ERROR
+        else:
+            return ChangePasswordResult.NO_CURRENT_PASSWORD
+
+
+    def create_staff_user(self, username: str, full_name: str, password: str, care_provider_id: int) -> AdminCreateStaffUserResult:
+
+        if self.staff_user_repo.username_exists(username.strip()):
+            return AdminCreateStaffUserResult.USERNAME_EXISTS
+
+        user_id = self.staff_user_repo.create(username.strip(), password, full_name.strip() or username.strip(), care_provider_id)
+        if user_id:
+            return AdminCreateStaffUserResult.SUCCESS
+        return AdminCreateStaffUserResult.ERROR
+
+
+    def admin_reset_staff_user_password(self, admin_user_id: int, target_user_id: int, new_password: str) -> AdminResetPasswordResult:
+        if target_user_id == admin_user_id:
+            return AdminResetPasswordResult.FORBIDDEN
+
+        role = self.staff_user_repo.get_role(target_user_id)
+
+        if role is None:
+            return AdminResetPasswordResult.NOT_FOUND
+        if role != USER_ROLE_STAFF:
+            return AdminResetPasswordResult.FORBIDDEN
+        if self.staff_user_repo.update_password_for_staff_user(target_user_id, new_password):
+            return AdminResetPasswordResult.SUCCESS
+        return AdminResetPasswordResult.ERROR
+
+    def admin_deactivate_staff_user(
+        self, admin_user_id: int, target_user_id: int
+    ) -> AdminDeactivateStaffUserResult:
+        if target_user_id == admin_user_id:
+            return AdminDeactivateStaffUserResult.FORBIDDEN
+        role = self.staff_user_repo.get_role(target_user_id)
+        if role is None:
+            return AdminDeactivateStaffUserResult.NOT_FOUND
+        if role != USER_ROLE_STAFF:
+            return AdminDeactivateStaffUserResult.FORBIDDEN
+        if self.staff_user_repo.deactivate_staff_user(target_user_id):
+            return AdminDeactivateStaffUserResult.SUCCESS
+        return AdminDeactivateStaffUserResult.ERROR

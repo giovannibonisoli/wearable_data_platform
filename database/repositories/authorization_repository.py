@@ -1,7 +1,6 @@
 from typing import Optional, Dict, Any
 from datetime import datetime
 from database.connection import ConnectionManager
-from database.models import PendingAuthorization
 
 
 class AuthorizationRepository:

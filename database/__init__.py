@@ -45,16 +45,19 @@ Models:
 from database.connection import ConnectionManager
 
 # Import repositories for direct use
-from database.repositories.care_provider_repository import CareProviderUserRepository
+from database.repositories.staff_user_repository import StaffUserRepository
 from database.repositories.device_repository import DeviceRepository
 from database.repositories.metrics_repository import MetricsRepository
 from database.repositories.sleep_repository import SleepRepository
 from database.repositories.alert_repository import AlertRepository
 from database.repositories.authorization_repository import AuthorizationRepository
+from database.repositories.care_provider_repository import CareProviderRepository
 
 # Import models
 from database.models import (
     User,
+    CareProvider,
+    StaffUser,
     Device,
     DailySummary,
     IntradayMetric,
@@ -64,7 +67,7 @@ from database.models import (
     Alert,
     PendingAuthorization,
     USER_ROLE_ADMIN,
-    USER_ROLE_CARE_PROVIDER,
+    USER_ROLE_STAFF,
 )
 
 __all__ = [
@@ -73,7 +76,8 @@ __all__ = [
     'Database',
     
     # Repositories
-    'CareProviderUserRepository',
+    'CareProviderRepository',
+    'StaffUserRepository',
     'DeviceRepository',
     'MetricsRepository',
     'SleepRepository',
@@ -82,6 +86,8 @@ __all__ = [
     
     # Models
     'User',
+    'CareProvider',
+    'StaffUser',
     'Device',
     'DailySummary',
     'IntradayMetric',
@@ -91,5 +97,5 @@ __all__ = [
     'Alert',
     'PendingAuthorization',
     'USER_ROLE_ADMIN',
-    'USER_ROLE_CARE_PROVIDER',
+    'USER_ROLE_STAFF',
 ]

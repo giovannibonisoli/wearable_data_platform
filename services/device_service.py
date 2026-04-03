@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
-from database import ConnectionManager, DeviceRepository, AuthorizationRepository, Device
+from database import ConnectionManager, DeviceRepository, AuthorizationRepository
 from services.integrations.fitbit import (
     FitbitClient,
     generate_state,
@@ -35,8 +35,8 @@ class DeviceService:
         self.auth_repo = AuthorizationRepository(connection_manager)
         self.device_repo = DeviceRepository(connection_manager)
 
-    def get_devices_info_by_user(self, user_id: int) -> list[dict]:
-        devices = self.device_repo.get_by_user(user_id)
+    def get_devices_by_care_provider(self, care_provider_id: int) -> List[dict]:
+        devices = self.device_repo.get_by_care_provider(care_provider_id)
 
         devices_data = []
         for device in devices:
