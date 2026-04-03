@@ -28,7 +28,12 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
         self.metrics_repo = MetricsRepository(conn)
 
     def _fetch_and_store_intraday_day(
-        self, client: FitbitClient, device: Device, date_str: str, last_synch_date: datetime
+        self,
+        client: FitbitClient,
+        device: Device,
+        date_str: str,
+        window_start: datetime,
+        last_synch_date: datetime,
     ) -> tuple[bool, bool]:
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
         detail_level = "1min"
@@ -61,7 +66,13 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
                             data_points[timestamp] = {}
                         data_points[timestamp][data_type] = value
 
-        timestamps = [t for t in data_points if t <= last_synch_date]
+        day_end = datetime.strptime(f"{date_str} 23:59:00", "%Y-%m-%d %H:%M:%S")
+        if last_synch_date.tzinfo:
+            day_end = day_end.replace(tzinfo=last_synch_date.tzinfo)
+        window_end = min(day_end, last_synch_date)
+
+        # Only process points that are strictly after current checkpoint window start.
+        timestamps = [t for t in data_points if window_start <= t <= window_end]
         timestamps.sort()
 
         total_points = 0
@@ -98,28 +109,43 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             logger.info(f"Collected {total_points} intraday points for {device.email_address} on {date_str}")
             return True, False
         else:
-            logger.warning(f"No intraday data for {device.email_address} on {date_str}")
-            return False, False
+            # Avoid getting stuck on the same day when Fitbit has no points in the
+            # remaining time window (e.g., last value at 22:59). Move checkpoint to
+            # the end of the current collection window so next cycle can advance.
+            self.device_repo.update_intraday_checkpoint(device.id, window_end)
+            logger.info(
+                f"No intraday points in remaining window for {device.email_address} on {date_str}; "
+                f"advanced checkpoint to {window_end}"
+            )
+            return True, False
 
     def _process_one_device(self, device: Device) -> str:
         device_id = device.id
         email_address = device.email_address
 
+        last_synch = device.last_synch
+        if not last_synch:
+            logger.warning(f"No last_synch for device {device_id}")
+            return CollectorResult.ERROR.value
+
         intraday_checkpoint = device.intraday_checkpoint
         if intraday_checkpoint:
+            if last_synch.tzinfo:
+                if intraday_checkpoint.tzinfo:
+                    intraday_checkpoint = intraday_checkpoint.astimezone(last_synch.tzinfo)
+                else:
+                    intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_synch.tzinfo)
             current_dt = intraday_checkpoint + timedelta(minutes=1)
+            current_dt = current_dt.replace(second=0, microsecond=0)
         else:
             current_dt = datetime.combine(DEFAULT_START_DATE, datetime.min.time())
+            if last_synch.tzinfo:
+                current_dt = current_dt.replace(tzinfo=last_synch.tzinfo)
             self.device_repo.update_intraday_checkpoint(device_id, current_dt)
 
         access_token, refresh_token = self.device_repo.get_tokens(device_id)
         if not access_token or not refresh_token:
             logger.warning(f"No tokens for device {device_id} ({email_address})")
-            return CollectorResult.ERROR.value
-
-        last_synch = device.last_synch
-        if not last_synch:
-            logger.warning(f"No last_synch for device {device_id}")
             return CollectorResult.ERROR.value
 
         # One client per device: auto-refreshes and persists tokens on 401
@@ -136,25 +162,26 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
                 new_last_synch = device_data["lastSyncTime"]
                 if last_synch.tzinfo:
                     new_last_synch = new_last_synch.replace(tzinfo=last_synch.tzinfo)
-                if new_last_synch != last_synch:
+                # Never move last_synch backwards if provider returns stale metadata.
+                if new_last_synch > last_synch:
                     self.device_repo.update_last_synch(
                         device_id, new_last_synch.strftime("%Y-%m-%d %H:%M:%S")
                     )
                     last_synch = new_last_synch
                 logger.info(f"Device {device_id} ({email_address}) is up to date (last: {last_synch})")
-                return CollectorResult.SUCCESS.value
+                return CollectorResult.UP_TO_DATE.value
             except Exception as e:
                 logger.error(f"Failed to refresh last_synch for {email_address}: {e}")
                 return CollectorResult.ERROR.value
 
         if current_dt >= last_synch:
-            return CollectorResult.SUCCESS.value
+            return CollectorResult.UP_TO_DATE.value
 
         date_str = current_dt.strftime("%Y-%m-%d")
 
         try:
             success, rate_limited = self._fetch_and_store_intraday_day(
-                client, device, date_str, last_synch
+                client, device, date_str, current_dt, last_synch
             )
             if rate_limited:
                 return CollectorResult.RATE_LIMITED.value

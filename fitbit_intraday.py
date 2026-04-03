@@ -43,14 +43,15 @@ def main_loop():
                 continue
 
             logger.info(
-                f"Cycle: {results['success']} success, "
+                f"Cycle: {results['success']} progressed, "
+                f"{results.get('up_to_date', 0)} up-to-date, "
                 f"{results['rate_limited']} rate-limited, {results['error']} errors"
             )
 
             if results["rate_limited"] == total and results["rate_limited"] > 0:
                 logger.info("ALL devices rate-limited. Sleeping 10 minutes.")
                 time.sleep(RATE_LIMIT_SLEEP_SECONDS)
-            elif results["success"] == total:
+            elif results.get("up_to_date", 0) == total:
                 logger.info("All devices up to date. Sleeping 10 minutes.")
                 time.sleep(UP_TO_DATE_SLEEP_SECONDS)
             else:
