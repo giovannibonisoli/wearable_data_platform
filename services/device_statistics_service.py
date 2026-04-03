@@ -13,7 +13,7 @@ Services should:
 
 from datetime import datetime, timedelta
 from collections import defaultdict
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 from database import ConnectionManager, DeviceRepository, MetricsRepository, Device 
 
@@ -36,46 +36,6 @@ class DeviceStatisticsService:
         self.conn = connection_manager
         self.device_repo = DeviceRepository(connection_manager)
         self.metrics_repo = MetricsRepository(connection_manager)
-
-
-    def get_device_sync_data(self, device_id: int):
-        data_reception_details = {}
-        data_reception_status = 'no_data'
-
-        try:
-
-            last_sync = device_repo.get_last_synch(device_id)
-            now = datetime.now()
-
-            last_sync = last_sync.replace(tzinfo=now.tzinfo)
-            data_reception_details['sync_days'] = (now - last_sync).days
-            data_reception_details['sync_hours'] = (now - last_sync).seconds // 3600
-            data_reception_details['sync_minutes'] = (now - last_sync).seconds // 60
-
-            intraday_checkpoint = device_repo.get_intraday_checkpoint(device_id)
-
-            if intraday_checkpoint:
-                intraday_checkpoint = intraday_checkpoint.replace(tzinfo=last_sync.tzinfo)
-                data_reception_details['gap_days'] = max((last_sync - intraday_checkpoint).days, 0)
-                        
-            else:
-                data_reception_details['gap_days'] = 0
-                                    
-                # Determine overall status
-            if data_reception_details['sync_days'] > 7:
-                data_reception_status = 'sync_warning'
-            else:
-                if data_reception_details['gap_days'] > 3:
-                    data_reception_status = 'gap_warning' 
-                else:
-                    data_reception_status = 'ok'
-
-            return data_reception_status, data_reception_details
-
-        except Exception as e:
-            error_msg = f"Error while computing data reception details: {e}"
-        
-            raise Exception(error_msg)
     
     def calculate_usage_statistics(
         self, 
@@ -276,6 +236,7 @@ class DeviceStatisticsService:
             data_reception_status = 'ok'
         
         return data_reception_status, data_reception_details
+
     
     def print_usage_report(
         self, 

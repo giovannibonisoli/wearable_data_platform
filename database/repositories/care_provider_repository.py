@@ -231,13 +231,7 @@ class CareProviderUserRepository:
         result = self.db.execute_query(query, (password_hash, user_id))
         return bool(result)
 
-    def create(
-        self, 
-        username: str, 
-        password: str, 
-        full_name: str, 
-        email: Optional[str] = None
-    ) -> Optional[int]:
+    def create(self, username: str, password: str, full_name: str) -> Optional[int]:
         """
         Create a new user.
 
@@ -245,7 +239,6 @@ class CareProviderUserRepository:
             username: Unique username
             password: Plaintext password (will be hashed)
             full_name: Full name of the user
-            email: Optional email address
 
         Returns:
             int: New user ID on success, None on failure
@@ -256,13 +249,13 @@ class CareProviderUserRepository:
         ).decode('utf-8')
         
         query = """
-            INSERT INTO users (username, password_hash, full_name, email, role)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO users (username, password_hash, full_name, role)
+            VALUES (%s, %s, %s, %s)
             RETURNING id
         """
         result = self.db.execute_query(
             query,
-            (username, password_hash, full_name, email, USER_ROLE_CARE_PROVIDER),
+            (username, password_hash, full_name, USER_ROLE_CARE_PROVIDER),
         )
         return result[0][0] if result else None
 

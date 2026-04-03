@@ -67,24 +67,22 @@ class CareProviderUserService:
     def list_care_providers_for_admin(self) -> List[Dict[str, Any]]:
         return self.care_provider_repo.list_care_providers_with_device_counts()
 
-    def admin_create_care_provider(
-        self, username: str, full_name: str, password: str
-    ) -> AdminCreateCareProviderResult:
+    def admin_create_care_provider(self, username: str, full_name: str, password: str) -> AdminCreateCareProviderResult:
+
         if self.care_provider_repo.username_exists(username.strip()):
             return AdminCreateCareProviderResult.USERNAME_EXISTS
-        user_id = self.care_provider_repo.create(
-            username.strip(), password, full_name.strip() or username.strip(), email=None
-        )
+
+        user_id = self.care_provider_repo.create(username.strip(), password, full_name.strip() or username.strip())
         if user_id:
             return AdminCreateCareProviderResult.SUCCESS
         return AdminCreateCareProviderResult.ERROR
 
-    def admin_reset_care_provider_password(
-        self, admin_user_id: int, target_user_id: int, new_password: str
-    ) -> AdminResetPasswordResult:
+    def admin_reset_care_provider_password(self, admin_user_id: int, target_user_id: int, new_password: str) -> AdminResetPasswordResult:
         if target_user_id == admin_user_id:
             return AdminResetPasswordResult.FORBIDDEN
+
         role = self.care_provider_repo.get_role(target_user_id)
+
         if role is None:
             return AdminResetPasswordResult.NOT_FOUND
         if role != USER_ROLE_CARE_PROVIDER:

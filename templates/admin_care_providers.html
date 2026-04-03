@@ -44,7 +44,7 @@
                                     data-bs-toggle="modal" data-bs-target="#resetPasswordModal"
                                     data-user-id="{{ row.id }}" data-username="{{ row.username }}"
                                     {% if not row.is_active %}disabled{% endif %}>
-                                    <i class="fas fa-key me-1"></i>{{ _('Reset password') }}
+                                    <i class="fas fa-key me-1"></i>{{ _('Change password') }}
                                 </button>
                                 <form method="post" action="{{ url_for('admin_deactivate_care_provider') }}" class="d-inline deactivate-user-form"
                                     data-confirm="{{ _('Deactivate this user? They will no longer be able to sign in.') }}">
