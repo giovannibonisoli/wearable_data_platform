@@ -9,7 +9,7 @@
             <i class="fas fa-users-cog me-2"></i>{{ _('Care providers') }}
         </h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCareProviderModal">
-            <i class="fas fa-user-plus me-2"></i>{{ _('Add care provider') }}
+            <i class="fas fa-plus me-2"></i>{{ _('Add care provider') }}
         </button>
     </div>
 
@@ -20,7 +20,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>{{ _('Full name') }}</th>
-                            <th class="text-end">{{ _('Staff Users') }}</th>
+                            <th class="text-end">{{ _('Staff users') }}</th>
                             <th class="text-end">{{ _('Devices') }}</th>
                             <th class="text-end">{{ _('Actions') }}</th>
                         </tr>
@@ -31,16 +31,18 @@
                             <td>{{ row.full_name or '—' }}</td>
                             <td class="text-end">{{ row.staff_users_count | number }}</td>
                             <td class="text-end">{{ row.device_count | number }}</td>
-                            <td><a href="/livelyageing/admin/{{row.id}}/staff_users"
-                                class="btn btn-info btn-sm action-btn"
-                                data-bs-toggle="tooltip"
-                                title="{{ _('View details about staff users of this care provider') }}">
-                                    <i class="bi bi-info-circle me-2"></i>{{ _('Staff users') }}
-                            </a>  </td>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ url_for('admin_staff_users', care_provider_id=row.id) }}"
+                                    class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="tooltip"
+                                    title="{{ _('Manage staff users for this facility') }}">
+                                    <i class="fas fa-hospital-user me-1"></i>{{ _('Staff users') }}
+                                </a>
+                            </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">{{ _('No care providers yet.') }}</td>
+                            <td colspan="4" class="text-center text-muted py-4">{{ _('No care providers yet.') }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -56,7 +58,7 @@
             <form method="post" action="{{ url_for('admin_add_care_provider') }}" id="addCareProviderForm">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addCareProviderModalLabel">
-                        <i class="fas fa-user-plus me-2"></i>{{ _('Add care provider') }}
+                        <i class="fas fa-plus me-2"></i>{{ _('Add care provider') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button>
                 </div>
@@ -83,28 +85,8 @@
 var addCareProviderModal = document.getElementById('addCareProviderModal');
 if (addCareProviderModal) {
     addCareProviderModal.addEventListener('hidden.bs.modal', function () {
-        var form = document.getElementById('addCareProviderForm');
-        if (form) {
-            form.reset();
-        }
+        document.getElementById('addCareProviderForm').reset();
     });
 }
-document.querySelectorAll('.reset-pw-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        var id = this.getAttribute('data-user-id');
-        var uname = this.getAttribute('data-username');
-        document.getElementById('reset_user_id').value = id;
-        var prefix = {{ _('Reset password for')|tojson }};
-        document.getElementById('reset_for_user').textContent = prefix + ' ' + uname;
-    });
-});
-document.querySelectorAll('.deactivate-user-form').forEach(function (form) {
-    form.addEventListener('submit', function (e) {
-        var msg = form.getAttribute('data-confirm') || '';
-        if (!window.confirm(msg)) {
-            e.preventDefault();
-        }
-    });
-});
 </script>
 {% endblock %}

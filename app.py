@@ -239,16 +239,16 @@ def index():
     return redirect(url_for('home'))
 
 
-@app.route('/livelyageing/care_provider_user_profile')
+@app.route('/livelyageing/user_profile_info')
 @login_required
-def care_provider_user_profile():
+def user_profile_info():
     try:
         with ConnectionManager() as conn:
             staff_user_service = StaffUserService(conn)
             user_id = int(current_user.id)
             user_info = staff_user_service.get_user_info(user_id)
              
-            return render_template('care_provider_user_profile.html', user=user_info)
+            return render_template('user_profile_info.html', user=user_info)
     except Exception as e:
         app.logger.error(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
@@ -281,7 +281,7 @@ def change_password():
     else:
         flash(gettext('Passwords do not match.'), 'danger')
     
-    return redirect(url_for('care_provider_user_profile'))
+    return redirect(url_for('user_profile_info'))
 
 
 @app.route('/livelyageing/home')
@@ -295,14 +295,15 @@ def home():
     with ConnectionManager() as conn:
         device_service = DeviceService(conn)
         device_stats_service = DeviceStatisticsService(conn)
+        staff_user_service = StaffUserService(conn)
 
         try:
             user_id = int(current_user.id)
-            devices_data = device_service.get_devices_info_by_user(user_id)
+            user_info = staff_user_service.get_user_info(user_id)
+            devices_data = device_service.get_devices_by_care_provider(user_info['care_provider_id'])
             
             final_devices_data = []
             for device_data in devices_data:
-                auth_status = device_data["auth_status"]
 
                 data_reception_status = 'no_data'
                 data_reception_details = {}
