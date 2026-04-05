@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-21 16:35+0100\n"
+"POT-Creation-Date: 2026-04-05 23:17+0200\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -14,449 +14,331 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: app.py:138
+#: app.py:130
+msgid "Access denied."
+msgstr ""
+
+#: app.py:142
+msgid "This area is only available to staff user accounts."
+msgstr ""
+
+#: app.py:173
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "¡Bienvenido, %(name)s!"
 
-#: app.py:141
+#: app.py:178
 msgid "Incorrect username or password."
 msgstr "Nombre de usuario o contraseña incorrectos."
 
-#: app.py:218
+#: app.py:275
 msgid "Password changed successfully."
 msgstr "Contraseña cambiada correctamente."
 
-#: app.py:220
+#: app.py:277
 msgid "The current password is wrong."
 msgstr "La contraseña actual es incorrecta."
 
-#: app.py:222
+#: app.py:279
 msgid "Password change failed."
 msgstr "El cambio de contraseña ha fallado."
 
-#: app.py:224
+#: app.py:281
 msgid "The new password must be at least 8 characters."
 msgstr "La nueva contraseña debe tener al menos 8 caracteres."
 
-#: app.py:226
+#: app.py:283 app.py:608 app.py:636
 msgid "Passwords do not match."
 msgstr "Las contraseñas no coinciden."
 
-#: app.py:297
+#: app.py:315
+#, fuzzy
+msgid "Error loading the home page."
+msgstr "Error al añadir el dispositivo."
+
+#: app.py:387
 msgid "This device is already registered."
 msgstr "Este dispositivo ya está registrado."
 
-#: app.py:299
+#: app.py:389
 msgid "Device added successfully."
 msgstr "Dispositivo añadido correctamente."
 
-#: app.py:301
+#: app.py:391
 msgid "Error adding device."
 msgstr "Error al añadir el dispositivo."
 
-#: app.py:305
+#: app.py:395
 msgid "An error occurred."
 msgstr "Se ha producido un error."
 
-#: app.py:327
+#: app.py:418
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Error al actualizar la información del dispositivo para: %(devices)s"
 
-#: app.py:330
+#: app.py:421
 msgid "Device information updated successfully for all devices."
-msgstr "Información del dispositivo actualizada correctamente para todos los dispositivos."
+msgstr ""
+"Información del dispositivo actualizada correctamente para todos los "
+"dispositivos."
 
-#: app.py:352
+#: app.py:444
 msgid "Error sending device. Please try again."
 msgstr "Error al enviar el dispositivo. Por favor, inténtelo de nuevo."
 
-#: app.py:355
+#: app.py:447
 msgid "Error storing authorization request."
 msgstr "Error al almacenar la solicitud de autorización."
 
-#: app.py:374 app.py:384
+#: app.py:466 app.py:476
 msgid "Error: Missing authorization information."
 msgstr "Error: Falta información de autorización."
 
-#: app.py:389
+#: app.py:481
 msgid "Email not found."
 msgstr "Correo electrónico no encontrado."
 
-#: app.py:394 app.py:399 app.py:404
+#: app.py:486 app.py:491 app.py:496
 msgid "Error: Authorization link expired. Please request a new one."
-msgstr "Error: El enlace de autorización ha caducado. Por favor, solicite uno nuevo."
+msgstr ""
+"Error: El enlace de autorización ha caducado. Por favor, solicite uno "
+"nuevo."
 
-#: templates/admin_user_profile.html:3 templates/base.html:83
-msgid "Profile"
-msgstr "Perfil"
+#: app.py:550
+msgid "Care provider created."
+msgstr ""
 
-#: templates/admin_user_profile.html:18
-msgid "Change Avatar"
-msgstr "Cambiar avatar"
+#: app.py:552
+msgid "Could not create care provider."
+msgstr ""
 
-#: templates/admin_user_profile.html:26 templates/home.html:12
+#: app.py:564
+msgid "Full name is required."
+msgstr ""
+
+#: app.py:572
+msgid "Care provider renamed."
+msgstr ""
+
+#: app.py:574
+msgid "A care provider with that name already exists."
+msgstr ""
+
+#: app.py:576
+msgid "Could not rename care provider."
+msgstr ""
+
+#: app.py:605
+msgid "Username is required."
+msgstr ""
+
+#: app.py:611 app.py:639
+#, fuzzy
+msgid "The password must be at least 8 characters."
+msgstr "La nueva contraseña debe tener al menos 8 caracteres."
+
+#: app.py:619
+msgid "Staff user created."
+msgstr ""
+
+#: app.py:621
+msgid "That username is already taken."
+msgstr ""
+
+#: app.py:623
+msgid "Could not create staff user."
+msgstr ""
+
+#: app.py:648
+#, fuzzy
+msgid "Password updated."
+msgstr "Las contraseñas no coinciden."
+
+#: app.py:650
+#, fuzzy
+msgid "User not found."
+msgstr "Correo electrónico no encontrado."
+
+#: app.py:652
+#, fuzzy
+msgid "You cannot change that password."
+msgstr "Cambiar contraseña"
+
+#: app.py:654
+#, fuzzy
+msgid "Password update failed."
+msgstr "El cambio de contraseña ha fallado."
+
+#: app.py:669
+msgid "Staff user deactivated."
+msgstr ""
+
+#: app.py:671
+#, fuzzy
+msgid "Staff user not found."
+msgstr "Correo electrónico no encontrado."
+
+#: app.py:673
+msgid "You cannot deactivate this staff user."
+msgstr ""
+
+#: app.py:675
+#, fuzzy
+msgid "Deactivation failed."
+msgstr "Confirmar desactivación"
+
+#: templates/admin_care_providers.html:3 templates/admin_care_providers.html:9
+#: templates/admin_staff_users.html:82
+msgid "Care providers"
+msgstr ""
+
+#: templates/admin_care_providers.html:12
+#: templates/admin_care_providers.html:72
+msgid "Add care provider"
+msgstr ""
+
+#: templates/admin_care_providers.html:22
+#: templates/admin_care_providers.html:78
+#: templates/admin_care_providers.html:109 templates/admin_staff_users.html:26
+#: templates/admin_staff_users.html:111
+msgid "Full name"
+msgstr ""
+
+#: templates/admin_care_providers.html:23
+#: templates/admin_care_providers.html:47 templates/admin_staff_users.html:3
+#: templates/admin_staff_users.html:11
+msgid "Staff users"
+msgstr ""
+
+#: templates/admin_care_providers.html:24 templates/device_list.html:12
 msgid "Devices"
 msgstr "Dispositivos"
 
-#: templates/admin_user_profile.html:36
-msgid "Account Status"
-msgstr "Estado de la cuenta"
-
-#: templates/admin_user_profile.html:42
-msgid "Member Since"
-msgstr "Miembro desde"
-
-#: templates/admin_user_profile.html:48
-msgid "Last Login"
-msgstr "Último acceso"
-
-#: templates/admin_user_profile.html:61
-msgid "Change Password"
-msgstr "Cambiar contraseña"
-
-#: templates/admin_user_profile.html:69
-msgid "Current Password"
-msgstr "Contraseña actual"
-
-#: templates/admin_user_profile.html:81
-msgid "New Password"
-msgstr "Nueva contraseña"
-
-#: templates/admin_user_profile.html:90
-msgid "Minimum 8 characters"
-msgstr "Mínimo 8 caracteres"
-
-#: templates/admin_user_profile.html:94
-msgid "Confirm New Password"
-msgstr "Confirmar nueva contraseña"
-
-#: templates/admin_user_profile.html:107
-msgid ""
-"Password must contain at least 8 characters, including uppercase, "
-"lowercase, and numbers"
-msgstr ""
-"La contraseña debe contener al menos 8 caracteres, incluyendo mayúsculas, "
-"minúsculas y números"
-
-#: templates/admin_user_profile.html:113
-msgid "Update Password"
-msgstr "Actualizar contraseña"
-
-#: templates/alerts_dashboard.html:5 templates/alerts_dashboard.html:158
-msgid "Medical Alerts Dashboard"
-msgstr "Panel de alertas médicas"
-
-#: templates/alerts_dashboard.html:118
-msgid "Welcome"
-msgstr "Bienvenido"
-
-#: templates/alerts_dashboard.html:123
-msgid "Alert Dashboard"
-msgstr "Panel de alertas"
-
-#: templates/alerts_dashboard.html:128
-msgid "Link Device"
-msgstr "Vincular dispositivo"
-
-#: templates/alerts_dashboard.html:133 templates/base.html:94
-msgid "Logout"
-msgstr "Cerrar sesión"
-
-#: templates/alerts_dashboard.html:140 templates/base.html:104
-msgid "Language"
-msgstr "Idioma"
-
-#: templates/alerts_dashboard.html:143 templates/base.html:110
-msgid "Italian"
-msgstr "Italiano"
-
-#: templates/alerts_dashboard.html:144 templates/base.html:116
-msgid "English"
-msgstr "Inglés"
-
-#: templates/alerts_dashboard.html:145 templates/base.html:122
-msgid "Spanish"
-msgstr "Español"
-
-#: templates/alerts_dashboard.html:154
-msgid "Back"
-msgstr "Atrás"
-
-#: templates/alerts_dashboard.html:159 templates/alerts_dashboard.html:160
-msgid "Export to CSV"
-msgstr "Exportar a CSV"
-
-#: templates/alerts_dashboard.html:169
-msgid "High Priority Alerts"
-msgstr "Alertas de alta prioridad"
-
-#: templates/alerts_dashboard.html:175
-msgid "Medium Priority Alerts"
-msgstr "Alertas de prioridad media"
-
-#: templates/alerts_dashboard.html:181
-msgid "Low Priority Alerts"
-msgstr "Alertas de baja prioridad"
-
-#: templates/alerts_dashboard.html:187
-msgid "Unacknowledged Alerts"
-msgstr "Alertas no confirmadas"
-
-#: templates/alerts_dashboard.html:194
-msgid "Priority Legend"
-msgstr "Leyenda de prioridad"
-
-#: templates/alerts_dashboard.html:199 templates/alerts_dashboard.html:245
-msgid "High"
-msgstr "Alta"
-
-#: templates/alerts_dashboard.html:199
-msgid "Requires immediate attention (e.g., cardiac anomalies)"
-msgstr "Requiere atención inmediata (ej. anomalías cardíacas)"
-
-#: templates/alerts_dashboard.html:205 templates/alerts_dashboard.html:246
-msgid "Medium"
-msgstr "Media"
-
-#: templates/alerts_dashboard.html:205
-msgid "Attention needed in the next hours (e.g., activity changes)"
-msgstr "Atención necesaria en las próximas horas (ej. cambios de actividad)"
-
-#: templates/alerts_dashboard.html:211 templates/alerts_dashboard.html:247
-msgid "Low"
-msgstr "Baja"
-
-#: templates/alerts_dashboard.html:211
-msgid "Routine monitoring (e.g., sleep patterns)"
-msgstr "Monitorización rutinaria (ej. patrones de sueño)"
-
-#: templates/alerts_dashboard.html:221
-msgid "Date From"
-msgstr "Fecha desde"
-
-#: templates/alerts_dashboard.html:225
-msgid "Date To"
-msgstr "Fecha hasta"
-
-#: templates/alerts_dashboard.html:229 templates/alerts_dashboard.html:280
-#: templates/alerts_dashboard.html:384
-msgid "User"
-msgstr "Usuario"
-
-#: templates/alerts_dashboard.html:230
-msgid "Name or email"
-msgstr "Nombre o correo electrónico"
-
-#: templates/alerts_dashboard.html:233 templates/alerts_dashboard.html:281
-#: templates/alerts_dashboard.html:392
-msgid "Alert Type"
-msgstr "Tipo de alerta"
-
-#: templates/alerts_dashboard.html:235 templates/alerts_dashboard.html:244
-#: templates/alerts_dashboard.html:253
-msgid "All"
-msgstr "Todos"
-
-#: templates/alerts_dashboard.html:236
-msgid "Cardiac"
-msgstr "Cardíaco"
-
-#: templates/alerts_dashboard.html:237
-msgid "Activity"
-msgstr "Actividad"
-
-#: templates/alerts_dashboard.html:238
-msgid "Sleep"
-msgstr "Sueño"
-
-#: templates/alerts_dashboard.html:242 templates/alerts_dashboard.html:282
-#: templates/alerts_dashboard.html:396
-msgid "Priority"
-msgstr "Prioridad"
-
-#: templates/alerts_dashboard.html:251 templates/alerts_dashboard.html:283
-#: templates/alerts_dashboard.html:413
-msgid "Status"
-msgstr "Estado"
-
-#: templates/alerts_dashboard.html:254
-msgid "Unacknowledged"
-msgstr "No confirmada"
-
-#: templates/alerts_dashboard.html:255 templates/alerts_dashboard.html:308
-#: templates/alerts_dashboard.html:544
-msgid "Acknowledged"
-msgstr "Confirmada"
-
-#: templates/alerts_dashboard.html:262
-msgid "Show only urgent alerts (unacknowledged for more than 24h)"
-msgstr "Mostrar solo alertas urgentes (no confirmadas durante más de 24 horas)"
-
-#: templates/alerts_dashboard.html:267
-msgid "Filter"
-msgstr "Filtrar"
-
-#: templates/alerts_dashboard.html:268
-msgid "Clear Filters"
-msgstr "Limpiar filtros"
-
-#: templates/alerts_dashboard.html:278 templates/alerts_dashboard.html:388
-msgid "Date/Time"
-msgstr "Fecha/Hora"
-
-#: templates/alerts_dashboard.html:279
-msgid "Time Since Alert"
-msgstr "Tiempo desde la alerta"
-
-#: templates/alerts_dashboard.html:284 templates/home.html:94
+#: templates/admin_care_providers.html:25 templates/admin_staff_users.html:28
+#: templates/device_list.html:94
 msgid "Actions"
 msgstr "Acciones"
 
-#: templates/alerts_dashboard.html:294 templates/alerts_dashboard.html:487
-msgid "hours"
-msgstr "horas"
+#: templates/admin_care_providers.html:41
+msgid "Rename this care provider"
+msgstr ""
 
-#: templates/alerts_dashboard.html:296 templates/home.html:191
-msgid "days"
-msgstr "días"
+#: templates/admin_care_providers.html:42
+#, fuzzy
+msgid "Rename"
+msgstr "Nombre de usuario"
 
-#: templates/alerts_dashboard.html:310 templates/alerts_dashboard.html:544
-msgid "Pending"
-msgstr "Pendiente"
+#: templates/admin_care_providers.html:46
+msgid "Manage staff users for this facility"
+msgstr ""
 
-#: templates/alerts_dashboard.html:312
-msgid "Urgent"
-msgstr "Urgente"
+#: templates/admin_care_providers.html:53
+msgid "No care providers yet."
+msgstr ""
 
-#: templates/alerts_dashboard.html:321
-msgid "Mark as acknowledged"
-msgstr "Marcar como confirmada"
-
-#: templates/alerts_dashboard.html:335
-msgid "Page navigation"
-msgstr "Navegación de página"
-
-#: templates/alerts_dashboard.html:339
-msgid "Previous"
-msgstr "Anterior"
-
-#: templates/alerts_dashboard.html:359
-msgid "Next"
-msgstr "Siguiente"
-
-#: templates/alerts_dashboard.html:375 templates/alerts_dashboard.html:537
-msgid "Alert Details"
-msgstr "Detalles de la alerta"
-
-#: templates/alerts_dashboard.html:376 templates/alerts_dashboard.html:436
-#: templates/base.html:140
+#: templates/admin_care_providers.html:74
+#: templates/admin_care_providers.html:105 templates/admin_staff_users.html:102
+#: templates/admin_staff_users.html:154 templates/base.html:158
 msgid "Close"
 msgstr "Cerrar"
 
-#: templates/alerts_dashboard.html:381
-msgid "General Information"
-msgstr "Información general"
-
-#: templates/alerts_dashboard.html:402
-msgid "Technical Details"
-msgstr "Detalles técnicos"
-
-#: templates/alerts_dashboard.html:405
-msgid "Detected Value"
-msgstr "Valor detectado"
-
-#: templates/alerts_dashboard.html:409
-msgid "Threshold"
-msgstr "Umbral"
-
-#: templates/alerts_dashboard.html:421
-msgid "Intraday Data (Last 24h)"
-msgstr "Datos intradía (últimas 24 horas)"
-
-#: templates/alerts_dashboard.html:429
-msgid "Additional Information"
-msgstr "Información adicional"
-
-#: templates/alerts_dashboard.html:438 templates/alerts_dashboard.html:450
-msgid "Acknowledge Alert"
-msgstr "Confirmar alerta"
-
-#: templates/alerts_dashboard.html:457
-msgid "Doctor Note"
-msgstr "Nota médica"
-
-#: templates/alerts_dashboard.html:458
-msgid "Add a note about the action taken..."
-msgstr "Añadir una nota sobre la acción tomada..."
-
-#: templates/alerts_dashboard.html:463 templates/home.html:59
-#: templates/home.html:335
+#: templates/admin_care_providers.html:83
+#: templates/admin_care_providers.html:115 templates/admin_staff_users.html:128
+#: templates/admin_staff_users.html:171 templates/device_list.html:59
+#: templates/device_list.html:335
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: templates/alerts_dashboard.html:464
-msgid "Acknowledge"
-msgstr "Confirmar"
-
-#: templates/alerts_dashboard.html:476
-msgid "Not enough intraday data to show activity pattern (<6 points)."
-msgstr "No hay suficientes datos intradía para mostrar el patrón de actividad (< 6 puntos)."
-
-#: templates/alerts_dashboard.html:477
-msgid ""
-"This may be due to insufficient data recorded by the device or the device"
-" not being worn during the day."
+#: templates/admin_care_providers.html:85
+msgid "Create care provider"
 msgstr ""
-"Esto puede deberse a datos insuficientes registrados por el dispositivo "
-"o a que el dispositivo no se llevó puesto durante el día."
 
-#: templates/alerts_dashboard.html:478
-msgid "No additional information available"
-msgstr "No hay información adicional disponible"
+#: templates/admin_care_providers.html:103
+msgid "Rename care provider"
+msgstr ""
 
-#: templates/alerts_dashboard.html:479
-msgid "No steps recorded between"
-msgstr "No se registraron pasos entre"
+#: templates/admin_care_providers.html:117
+#, fuzzy
+msgid "Save"
+msgstr "Uso"
 
-#: templates/alerts_dashboard.html:480
-msgid "and"
-msgstr "y"
+#: templates/admin_staff_users.html:14 templates/admin_staff_users.html:99
+msgid "Add staff user"
+msgstr ""
 
-#: templates/alerts_dashboard.html:481
-msgid "Prolonged period without activity detected"
-msgstr "Período prolongado sin actividad detectado"
+#: templates/admin_staff_users.html:25 templates/admin_staff_users.html:106
+#: templates/login.html:49
+msgid "Username"
+msgstr "Nombre de usuario"
 
-#: templates/alerts_dashboard.html:482
-msgid "Heart rate above normal threshold"
-msgstr "Frecuencia cardíaca por encima del umbral normal"
+#: templates/admin_staff_users.html:27
+msgid "Status"
+msgstr "Estado"
 
-#: templates/alerts_dashboard.html:483
-msgid "Significant decrease in daily steps"
-msgstr "Disminución significativa de los pasos diarios"
+#: templates/admin_staff_users.html:38
+#, fuzzy
+msgid "Active"
+msgstr "No activo"
 
-#: templates/alerts_dashboard.html:484
-msgid "Unusual sleep duration detected"
-msgstr "Duración del sueño inusual detectada"
+#: templates/admin_staff_users.html:40
+#, fuzzy
+msgid "Inactive"
+msgstr "No activo"
 
-#: templates/alerts_dashboard.html:485
-msgid "Current value"
-msgstr "Valor actual"
+#: templates/admin_staff_users.html:53
+#, fuzzy
+msgid "Change password"
+msgstr "Cambiar contraseña"
 
-#: templates/alerts_dashboard.html:486
-msgid "compared to average"
-msgstr "en comparación con la media"
+#: templates/admin_staff_users.html:60
+msgid "Deactivate this user? They will no longer be able to sign in."
+msgstr ""
 
-#: templates/alerts_dashboard.html:540
-msgid "' + alert.alert_type + '"
-msgstr "' + alert.alert_type + '"
+#: templates/admin_staff_users.html:63
+#, fuzzy
+msgid "Deactivate"
+msgstr "Actividad"
 
-#: templates/alerts_dashboard.html:541
-msgid "' + alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1) + '"
-msgstr "' + alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1) + '"
+#: templates/admin_staff_users.html:70
+#, fuzzy
+msgid "No staff users yet."
+msgstr "Sin datos todavía"
+
+#: templates/admin_staff_users.html:116 templates/login.html:57
+msgid "Password"
+msgstr "Contraseña"
+
+#: templates/admin_staff_users.html:121 templates/admin_staff_users.html:164
+#, fuzzy
+msgid "Confirm password"
+msgstr "Confirmar nueva contraseña"
+
+#: templates/admin_staff_users.html:131
+msgid "Create user"
+msgstr ""
+
+#: templates/admin_staff_users.html:151
+#, fuzzy
+msgid "Reset password"
+msgstr "Contraseña actual"
+
+#: templates/admin_staff_users.html:159
+#, fuzzy
+msgid "New password"
+msgstr "Nueva contraseña"
+
+#: templates/admin_staff_users.html:174
+#, fuzzy
+msgid "Save password"
+msgstr "Nueva contraseña"
+
+#: templates/admin_staff_users.html:199
+#, fuzzy
+msgid "Reset password for"
+msgstr "Contraseña actual"
 
 #: templates/auth_confirmation.html:6
 msgid "Email Data Access Confirmation"
@@ -469,7 +351,9 @@ msgstr "¡Autorización exitosa!"
 #: templates/auth_confirmation.html:36
 #, python-format
 msgid "Wearable data access has been successfully obtained for %(address_name)s"
-msgstr "El acceso a los datos del wearable se ha obtenido correctamente para %(address_name)s"
+msgstr ""
+"El acceso a los datos del wearable se ha obtenido correctamente para "
+"%(address_name)s"
 
 #: templates/auth_confirmation.html:54
 msgid "Link Date:"
@@ -488,8 +372,8 @@ msgid ""
 "All wearable data will be transmitted securely to the wearable platform "
 "and stored in a pseudonymized form."
 msgstr ""
-"Todos los datos del wearable se transmitirán de forma segura a la plataforma "
-"y se almacenarán de forma seudonimizada."
+"Todos los datos del wearable se transmitirán de forma segura a la "
+"plataforma y se almacenarán de forma seudonimizada."
 
 #: templates/auth_confirmation.html:69
 msgid "Advanced Wearable Devices Monitoring System"
@@ -539,27 +423,60 @@ msgstr "Volver al inicio"
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "El enlace de autorización caducará en 10 minutos por razones de seguridad."
 
-#: templates/base.html:66
+#: templates/base.html:66 templates/home.html:3
 msgid "Home"
 msgstr "Inicio"
 
-#: templates/base.html:74
+#: templates/base.html:73
+#, fuzzy
+msgid "Device List"
+msgstr "Dispositivos"
+
+#: templates/base.html:82
+msgid "Care Providers"
+msgstr ""
+
+#: templates/base.html:92
 msgid "Account"
 msgstr "Cuenta"
 
-#: templates/base.html:78
+#: templates/base.html:96
 msgid "User Menu"
 msgstr "Menú de usuario"
 
-#: templates/base.html:88
+#: templates/base.html:101 templates/user_profile_info.html:3
+msgid "Profile"
+msgstr "Perfil"
+
+#: templates/base.html:106
 msgid "Settings"
 msgstr "Configuración"
 
-#: templates/base.html:153
+#: templates/base.html:112
+msgid "Logout"
+msgstr "Cerrar sesión"
+
+#: templates/base.html:122
+msgid "Language"
+msgstr "Idioma"
+
+#: templates/base.html:128
+msgid "Italian"
+msgstr "Italiano"
+
+#: templates/base.html:134
+msgid "English"
+msgstr "Inglés"
+
+#: templates/base.html:140
+msgid "Spanish"
+msgstr "Español"
+
+#: templates/base.html:171
 msgid "All rights reserved"
 msgstr "Todos los derechos reservados"
 
-#: templates/device_details.html:4 templates/home.html:256
+#: templates/device_details.html:4 templates/device_list.html:256
 msgid "Device Details"
 msgstr "Detalles del dispositivo"
 
@@ -579,51 +496,55 @@ msgstr "Pasos"
 msgid "Distanza (km)"
 msgstr "Distancia (km)"
 
-#: templates/home.html:3
+#: templates/device_list.html:3 templates/home.html:259
 msgid "Device Management"
 msgstr "Gestión de dispositivos"
 
-#: templates/home.html:17
+#: templates/device_list.html:17
 msgid "Update Devices"
 msgstr "Actualizar dispositivos"
 
-#: templates/home.html:22 templates/home.html:34 templates/home.html:62
+#: templates/device_list.html:22 templates/device_list.html:34
+#: templates/device_list.html:62
 msgid "Add Device"
 msgstr "Añadir dispositivo"
 
-#: templates/home.html:44 templates/home.html:79
+#: templates/device_list.html:44 templates/device_list.html:79
 msgid "Email Address"
 msgstr "Dirección de correo electrónico"
 
-#: templates/home.html:47
+#: templates/device_list.html:47
 msgid "Enter email address"
 msgstr "Introduce la dirección de correo electrónico"
 
-#: templates/home.html:50
+#: templates/device_list.html:50
 msgid "Enter a valid email address linked to a device"
-msgstr "Introduce una dirección de correo electrónico válida vinculada a un dispositivo"
+msgstr ""
+"Introduce una dirección de correo electrónico válida vinculada a un "
+"dispositivo"
 
-#: templates/home.html:82
+#: templates/device_list.html:82
 msgid "Device Type"
 msgstr "Tipo de dispositivo"
 
-#: templates/home.html:85
+#: templates/device_list.html:85
 msgid "Authorization"
 msgstr "Autorización"
 
-#: templates/home.html:88
+#: templates/device_list.html:88
 msgid "Cloud Synchronization"
 msgstr "Sincronización en la nube"
 
-#: templates/home.html:91
+#: templates/device_list.html:91
 msgid "Usage"
 msgstr "Uso"
 
-#: templates/home.html:119 templates/home.html:211 templates/home.html:235
+#: templates/device_list.html:119 templates/device_list.html:211
+#: templates/device_list.html:235
 msgid "Not available"
 msgstr "No disponible"
 
-#: templates/home.html:127
+#: templates/device_list.html:127
 msgid ""
 "Authorization must be requested and granted before downloading data from "
 "the cloud"
@@ -631,72 +552,81 @@ msgstr ""
 "La autorización debe ser solicitada y concedida antes de descargar datos "
 "de la nube"
 
-#: templates/home.html:129
+#: templates/device_list.html:129
 msgid "Not Authorized"
 msgstr "No autorizado"
 
-#: templates/home.html:134
+#: templates/device_list.html:134
 msgid "The authorization request has been sent and is awaiting approval"
-msgstr "La solicitud de autorización ha sido enviada y está pendiente de aprobación"
+msgstr ""
+"La solicitud de autorización ha sido enviada y está pendiente de "
+"aprobación"
 
-#: templates/home.html:136
+#: templates/device_list.html:136
 msgid "Pending Request"
 msgstr "Solicitud pendiente"
 
-#: templates/home.html:141
+#: templates/device_list.html:141
 msgid "Access authorization for data collected by this device has been obtained"
-msgstr "Se ha obtenido la autorización de acceso a los datos recopilados por este dispositivo"
+msgstr ""
+"Se ha obtenido la autorización de acceso a los datos recopilados por este"
+" dispositivo"
 
-#: templates/home.html:143
+#: templates/device_list.html:143
 msgid "Authorized"
 msgstr "Autorizado"
 
-#: templates/home.html:148
+#: templates/device_list.html:148
 msgid "Not Active"
 msgstr "No activo"
 
-#: templates/home.html:158 templates/home.html:166 templates/home.html:173
+#: templates/device_list.html:158 templates/device_list.html:166
+#: templates/device_list.html:173
 msgid "Data are updated to the last synchronization"
 msgstr "Los datos están actualizados a la última sincronización"
 
-#: templates/home.html:160 templates/home.html:168 templates/home.html:175
-#: templates/home.html:185
+#: templates/device_list.html:160 templates/device_list.html:168
+#: templates/device_list.html:175 templates/device_list.html:185
 msgid "last_sync"
 msgstr "Última sincronización"
 
-#: templates/home.html:160 templates/home.html:185
+#: templates/device_list.html:160 templates/device_list.html:185
 msgid "days ago"
 msgstr "hace días"
 
-#: templates/home.html:168
+#: templates/device_list.html:168
 msgid "hours ago"
 msgstr "hace horas"
 
-#: templates/home.html:175
+#: templates/device_list.html:175
 msgid "minutes ago"
 msgstr "hace minutos"
 
-#: templates/home.html:183
+#: templates/device_list.html:183
 msgid "Resync with the cloud to avoid data loss"
 msgstr "Vuelve a sincronizar con la nube para evitar pérdida de datos"
 
-#: templates/home.html:191
+#: templates/device_list.html:191
 msgid "Updating data to the last synchronization"
 msgstr "Actualizando datos a la última sincronización"
 
-#: templates/home.html:193
+#: templates/device_list.html:191
+msgid "days"
+msgstr "días"
+
+#: templates/device_list.html:193
 msgid "Updating data..."
 msgstr "Actualizando datos..."
 
-#: templates/home.html:199
+#: templates/device_list.html:199
 msgid "No data yet"
 msgstr "Sin datos todavía"
 
-#: templates/home.html:205
+#: templates/device_list.html:205
 msgid "Checking..."
 msgstr "Comprobando..."
 
-#: templates/home.html:220
+#: templates/device_list.html:220
 msgid ""
 "The patient has used the device for more than 8 hours a day over the past"
 " week"
@@ -704,11 +634,11 @@ msgstr ""
 "El paciente ha utilizado el dispositivo durante más de 8 horas al día "
 "durante la semana pasada"
 
-#: templates/home.html:222 templates/home.html:229
+#: templates/device_list.html:222 templates/device_list.html:229
 msgid "8 hours a day"
 msgstr "8 horas al día"
 
-#: templates/home.html:227
+#: templates/device_list.html:227
 msgid ""
 "The patient has used the device for less than 8 hours a day over the past"
 " week"
@@ -716,7 +646,7 @@ msgstr ""
 "El paciente ha utilizado el dispositivo durante menos de 8 horas al día "
 "durante la semana pasada"
 
-#: templates/home.html:246
+#: templates/device_list.html:246
 msgid ""
 "Send an email to request authorization to download the data collected by "
 "the wearable device"
@@ -724,61 +654,98 @@ msgstr ""
 "Envía un correo electrónico para solicitar autorización para descargar "
 "los datos recopilados por el dispositivo wearable"
 
-#: templates/home.html:247
+#: templates/device_list.html:247
 msgid "Request Authorization"
 msgstr "Solicitar autorización"
 
-#: templates/home.html:255
+#: templates/device_list.html:255
 msgid "View detailed device information"
 msgstr "Ver información detallada del dispositivo"
 
-#: templates/home.html:261
+#: templates/device_list.html:261
 msgid "Disable"
 msgstr "Deshabilitar"
 
-#: templates/home.html:267
+#: templates/device_list.html:267
 msgid "No action allowed"
 msgstr "Ninguna acción permitida"
 
-#: templates/home.html:285
+#: templates/device_list.html:285
 msgid "No devices inserted"
 msgstr "No se han insertado dispositivos"
 
-#: templates/home.html:286
+#: templates/device_list.html:286
 msgid "Add devices and start monitoring"
 msgstr "Añade dispositivos y comienza el monitoreo"
 
-#: templates/home.html:289
+#: templates/device_list.html:289
 msgid "Getting Started:"
 msgstr "Para empezar:"
 
-#: templates/home.html:289
+#: templates/device_list.html:289
 msgid ""
 "Use the form above to add a new email address and begin monitoring the "
 "associated wearable."
 msgstr ""
-"Usa el formulario anterior para añadir una nueva dirección de correo "
-"y comenzar a monitorear el wearable asociado."
+"Usa el formulario anterior para añadir una nueva dirección de correo y "
+"comenzar a monitorear el wearable asociado."
 
-#: templates/home.html:305
+#: templates/device_list.html:305
 msgid "Confirm Deactivation"
 msgstr "Confirmar desactivación"
 
-#: templates/home.html:319
+#: templates/device_list.html:319
 msgid "Are you sure you want to disable this device?"
 msgstr "¿Estás seguro de que deseas deshabilitar este dispositivo?"
 
-#: templates/home.html:323
+#: templates/device_list.html:323
 msgid "Email Address:"
 msgstr "Dirección de correo electrónico:"
 
-#: templates/home.html:328
+#: templates/device_list.html:328
 msgid "This action will make the email address no longer usable in this service"
-msgstr "Esta acción hará que la dirección de correo electrónico deje de ser utilizable en este servicio"
+msgstr ""
+"Esta acción hará que la dirección de correo electrónico deje de ser "
+"utilizable en este servicio"
 
-#: templates/home.html:340
+#: templates/device_list.html:340
 msgid "confirm"
 msgstr "Confirmar"
+
+#: templates/home.html:198
+#, fuzzy
+msgid "Welcome back"
+msgstr "¡Bienvenido, %(name)s!"
+
+#: templates/home.html:201
+msgid "You are logged in and your session is active"
+msgstr ""
+
+#: templates/home.html:218
+msgid "Care Provider"
+msgstr ""
+
+#: templates/home.html:225
+msgid "Your user is linked to this organization"
+msgstr ""
+
+#: templates/home.html:239
+#, fuzzy
+msgid "Registered Devices"
+msgstr "Actualizar dispositivos"
+
+#: templates/home.html:246
+msgid "Wearables linked to your organization"
+msgstr ""
+
+#: templates/home.html:262
+msgid "View, manage and monitor all wearable devices linked to your organization."
+msgstr ""
+
+#: templates/home.html:267
+#, fuzzy
+msgid "Go to Device List"
+msgstr "Estado del dispositivo"
 
 #: templates/login.html:6
 msgid "Medical Platform Login"
@@ -788,17 +755,9 @@ msgstr "Acceso a la plataforma médica"
 msgid "Lively Ageing Wearable Platform"
 msgstr "Plataforma Wearable Lively Ageing"
 
-#: templates/login.html:49
-msgid "Username"
-msgstr "Nombre de usuario"
-
 #: templates/login.html:52
 msgid "Enter your username"
 msgstr "Introduce tu nombre de usuario"
-
-#: templates/login.html:57
-msgid "Password"
-msgstr "Contraseña"
 
 #: templates/login.html:61
 msgid "Enter your password"
@@ -807,3 +766,262 @@ msgstr "Introduce tu contraseña"
 #: templates/login.html:70
 msgid "Sign In"
 msgstr "Iniciar sesión"
+
+#: templates/user_profile_info.html:18
+msgid "Change Avatar"
+msgstr "Cambiar avatar"
+
+#: templates/user_profile_info.html:29
+msgid "Account Status"
+msgstr "Estado de la cuenta"
+
+#: templates/user_profile_info.html:35
+msgid "Member Since"
+msgstr "Miembro desde"
+
+#: templates/user_profile_info.html:41
+msgid "Last Login"
+msgstr "Último acceso"
+
+#: templates/user_profile_info.html:54
+msgid "Change Password"
+msgstr "Cambiar contraseña"
+
+#: templates/user_profile_info.html:62
+msgid "Current Password"
+msgstr "Contraseña actual"
+
+#: templates/user_profile_info.html:74
+msgid "New Password"
+msgstr "Nueva contraseña"
+
+#: templates/user_profile_info.html:83
+msgid "Minimum 8 characters"
+msgstr "Mínimo 8 caracteres"
+
+#: templates/user_profile_info.html:87
+msgid "Confirm New Password"
+msgstr "Confirmar nueva contraseña"
+
+#: templates/user_profile_info.html:100
+msgid ""
+"Password must contain at least 8 characters, including uppercase, "
+"lowercase, and numbers"
+msgstr ""
+"La contraseña debe contener al menos 8 caracteres, incluyendo mayúsculas,"
+" minúsculas y números"
+
+#: templates/user_profile_info.html:106
+msgid "Update Password"
+msgstr "Actualizar contraseña"
+
+#~ msgid "Medical Alerts Dashboard"
+#~ msgstr "Panel de alertas médicas"
+
+#~ msgid "Welcome"
+#~ msgstr "Bienvenido"
+
+#~ msgid "Alert Dashboard"
+#~ msgstr "Panel de alertas"
+
+#~ msgid "Link Device"
+#~ msgstr "Vincular dispositivo"
+
+#~ msgid "Back"
+#~ msgstr "Atrás"
+
+#~ msgid "Export to CSV"
+#~ msgstr "Exportar a CSV"
+
+#~ msgid "High Priority Alerts"
+#~ msgstr "Alertas de alta prioridad"
+
+#~ msgid "Medium Priority Alerts"
+#~ msgstr "Alertas de prioridad media"
+
+#~ msgid "Low Priority Alerts"
+#~ msgstr "Alertas de baja prioridad"
+
+#~ msgid "Unacknowledged Alerts"
+#~ msgstr "Alertas no confirmadas"
+
+#~ msgid "Priority Legend"
+#~ msgstr "Leyenda de prioridad"
+
+#~ msgid "High"
+#~ msgstr "Alta"
+
+#~ msgid "Requires immediate attention (e.g., cardiac anomalies)"
+#~ msgstr "Requiere atención inmediata (ej. anomalías cardíacas)"
+
+#~ msgid "Medium"
+#~ msgstr "Media"
+
+#~ msgid "Attention needed in the next hours (e.g., activity changes)"
+#~ msgstr "Atención necesaria en las próximas horas (ej. cambios de actividad)"
+
+#~ msgid "Low"
+#~ msgstr "Baja"
+
+#~ msgid "Routine monitoring (e.g., sleep patterns)"
+#~ msgstr "Monitorización rutinaria (ej. patrones de sueño)"
+
+#~ msgid "Date From"
+#~ msgstr "Fecha desde"
+
+#~ msgid "Date To"
+#~ msgstr "Fecha hasta"
+
+#~ msgid "User"
+#~ msgstr "Usuario"
+
+#~ msgid "Name or email"
+#~ msgstr "Nombre o correo electrónico"
+
+#~ msgid "Alert Type"
+#~ msgstr "Tipo de alerta"
+
+#~ msgid "All"
+#~ msgstr "Todos"
+
+#~ msgid "Cardiac"
+#~ msgstr "Cardíaco"
+
+#~ msgid "Sleep"
+#~ msgstr "Sueño"
+
+#~ msgid "Priority"
+#~ msgstr "Prioridad"
+
+#~ msgid "Unacknowledged"
+#~ msgstr "No confirmada"
+
+#~ msgid "Acknowledged"
+#~ msgstr "Confirmada"
+
+#~ msgid "Show only urgent alerts (unacknowledged for more than 24h)"
+#~ msgstr "Mostrar solo alertas urgentes (no confirmadas durante más de 24 horas)"
+
+#~ msgid "Filter"
+#~ msgstr "Filtrar"
+
+#~ msgid "Clear Filters"
+#~ msgstr "Limpiar filtros"
+
+#~ msgid "Date/Time"
+#~ msgstr "Fecha/Hora"
+
+#~ msgid "Time Since Alert"
+#~ msgstr "Tiempo desde la alerta"
+
+#~ msgid "hours"
+#~ msgstr "horas"
+
+#~ msgid "Pending"
+#~ msgstr "Pendiente"
+
+#~ msgid "Urgent"
+#~ msgstr "Urgente"
+
+#~ msgid "Mark as acknowledged"
+#~ msgstr "Marcar como confirmada"
+
+#~ msgid "Page navigation"
+#~ msgstr "Navegación de página"
+
+#~ msgid "Previous"
+#~ msgstr "Anterior"
+
+#~ msgid "Next"
+#~ msgstr "Siguiente"
+
+#~ msgid "Alert Details"
+#~ msgstr "Detalles de la alerta"
+
+#~ msgid "General Information"
+#~ msgstr "Información general"
+
+#~ msgid "Technical Details"
+#~ msgstr "Detalles técnicos"
+
+#~ msgid "Detected Value"
+#~ msgstr "Valor detectado"
+
+#~ msgid "Threshold"
+#~ msgstr "Umbral"
+
+#~ msgid "Intraday Data (Last 24h)"
+#~ msgstr "Datos intradía (últimas 24 horas)"
+
+#~ msgid "Additional Information"
+#~ msgstr "Información adicional"
+
+#~ msgid "Acknowledge Alert"
+#~ msgstr "Confirmar alerta"
+
+#~ msgid "Doctor Note"
+#~ msgstr "Nota médica"
+
+#~ msgid "Add a note about the action taken..."
+#~ msgstr "Añadir una nota sobre la acción tomada..."
+
+#~ msgid "Acknowledge"
+#~ msgstr "Confirmar"
+
+#~ msgid "Not enough intraday data to show activity pattern (<6 points)."
+#~ msgstr ""
+#~ "No hay suficientes datos intradía para"
+#~ " mostrar el patrón de actividad (<"
+#~ " 6 puntos)."
+
+#~ msgid ""
+#~ "This may be due to insufficient "
+#~ "data recorded by the device or the"
+#~ " device not being worn during the "
+#~ "day."
+#~ msgstr ""
+#~ "Esto puede deberse a datos insuficientes"
+#~ " registrados por el dispositivo o a"
+#~ " que el dispositivo no se llevó "
+#~ "puesto durante el día."
+
+#~ msgid "No additional information available"
+#~ msgstr "No hay información adicional disponible"
+
+#~ msgid "No steps recorded between"
+#~ msgstr "No se registraron pasos entre"
+
+#~ msgid "and"
+#~ msgstr "y"
+
+#~ msgid "Prolonged period without activity detected"
+#~ msgstr "Período prolongado sin actividad detectado"
+
+#~ msgid "Heart rate above normal threshold"
+#~ msgstr "Frecuencia cardíaca por encima del umbral normal"
+
+#~ msgid "Significant decrease in daily steps"
+#~ msgstr "Disminución significativa de los pasos diarios"
+
+#~ msgid "Unusual sleep duration detected"
+#~ msgstr "Duración del sueño inusual detectada"
+
+#~ msgid "Current value"
+#~ msgstr "Valor actual"
+
+#~ msgid "compared to average"
+#~ msgstr "en comparación con la media"
+
+#~ msgid "' + alert.alert_type + '"
+#~ msgstr "' + alert.alert_type + '"
+
+#~ msgid ""
+#~ "' + alert.priority.charAt(0).toUpperCase() + "
+#~ "alert.priority.slice(1) + '"
+#~ msgstr ""
+#~ "' + alert.priority.charAt(0).toUpperCase() + "
+#~ "alert.priority.slice(1) + '"
+
+#~ msgid "Care Service Provider"
+#~ msgstr ""
+

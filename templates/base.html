@@ -67,6 +67,24 @@
                         </a>
                     </li>
 
+                    {% if session.get('role') == 'staff' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('device_list') }}">
+                            <i class="bi bi-smartwatch me-1"></i>{{ _('Device List') }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Show Care Providers management for admin users only -->
+                    {% if session.get('role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_care_providers') }}">
+                            <i class="bi bi-building me-1"></i>{{ _('Care Providers') }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle user-dropdown" href="#" id="userDropdown" role="button" 
                            data-bs-toggle="dropdown" aria-expanded="false">

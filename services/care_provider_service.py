@@ -49,6 +49,15 @@ class CareProviderService:
 
         return care_providers_data
 
+    def get_care_provider_by_id(self, care_provider_id: int) -> Dict:
+        care_provider = self.care_provider_repo.get_by_id(care_provider_id)
+
+        return {
+            "id": care_provider.id,
+            "full_name": care_provider.full_name,
+            "created_at": care_provider.created_at
+        }
+
     
     def create_care_provider(self, full_name: str) -> AdminCreateCareProviderResult:
 

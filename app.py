@@ -289,6 +289,37 @@ def change_password():
 @login_required
 @staff_user_required
 def home():
+    try:
+        with ConnectionManager() as conn:
+            staff_user_service = StaffUserService(conn)
+            care_provider_service = CareProviderService(conn)
+            device_service = DeviceService(conn)
+ 
+            user_id = int(current_user.id)
+            user_info = staff_user_service.get_user_info(user_id)
+ 
+            care_provider_id = user_info['care_provider_id']
+            care_provider = care_provider_service.get_care_provider_by_id(care_provider_id)
+ 
+            devices = device_service.get_devices_by_care_provider(care_provider_id)
+            device_count = len(devices) if devices else 0
+ 
+        return render_template(
+            "home.html",
+            user_info=user_info,
+            care_provider=care_provider,
+            device_count=device_count
+        )
+    except Exception as e:
+        app.logger.error(f"Error loading home page: {e}")
+        flash(gettext('Error loading the home page.'), 'danger')
+        return redirect(url_for('login'))
+
+
+@app.route('/livelyageing/device_list')
+@login_required
+@staff_user_required
+def device_list():
     """
     Display all devices for the logged-in user.
     """
@@ -327,7 +358,7 @@ def home():
                         "device_usage_details": device_usage_details
                     })
                 
-            return render_template('home.html', devices=final_devices_data)
+            return render_template('device_list.html', devices=final_devices_data)
                 
         except Exception as e:
             app.logger.error(f"Error retrieving devices: {e}")
@@ -363,7 +394,7 @@ def add_device():
         app.logger.error(f"Error adding device: {e}")
         flash(gettext('An error occurred.'), 'danger')
     
-    return redirect(url_for('home'))
+    return redirect(url_for('device_list'))
 
 
 @app.route('/livelyageing/update_devices_info')
@@ -389,7 +420,7 @@ def update_devices_info():
             app.logger.error(f"Info regarding all the devices have been successfully updated")
             flash(gettext('Device information updated successfully for all devices.'), 'success')
 
-    return redirect(url_for('home'))
+    return redirect(url_for('device_list'))
 
 
 @app.route('/livelyageing/send_auth_request', methods=['POST'])
@@ -415,7 +446,7 @@ def send_auth_request():
             app.logger.error(f"Error storing authorization request in db for {email_address} linked to device {device_id}")
             flash(gettext('Error storing authorization request.'), 'danger')
 
-    return redirect(url_for('home'))
+    return redirect(url_for('device_list'))
 
 
 # Callback to handle authorization confirmation
@@ -433,7 +464,7 @@ def callback():
     if not code or not state:
         app.logger.error("Missing code or state parameter")
         flash(gettext('Error: Missing authorization information.'), 'danger')
-        return redirect(url_for('home'))
+        return redirect(url_for('device_list'))
 
     with ConnectionManager() as conn:
         try:
@@ -443,27 +474,27 @@ def callback():
             if message == AuthGrantResult.MISSING_AUTH_INFO:
                 app.logger.error("No code or state found")
                 flash(gettext('Error: Missing authorization information.'), 'danger')
-                return redirect(url_for('home'))
+                return redirect(url_for('device_list'))
 
             elif message == AuthGrantResult.EMAIL_NOT_FOUND:
                 app.logger.error("No email found")
                 flash(gettext('Email not found.'), 'danger')
-                return redirect(url_for('home'))
+                return redirect(url_for('device_list'))
 
             elif message == AuthGrantResult.INVALID_AUTH_LINK:
                 app.logger.error("No pending authorization found or expired")
                 flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
-                return redirect(url_for('home'))
+                return redirect(url_for('device_list'))
 
             elif message == AuthGrantResult.ERROR_RETRIEVE_TOKENS:
                 app.logger.error("Error while retrieving tokens")
                 flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
-                return redirect(url_for('home'))
+                return redirect(url_for('device_list'))
 
             elif message == AuthGrantResult.ERROR_STATE_UPDATE:
                 app.logger.error("Error while updating state")
                 flash(gettext('Error: Authorization link expired. Please request a new one.'), 'danger')
-                return redirect(url_for('home'))
+                return redirect(url_for('device_list'))
 
             else:
                 app.logger.info("Authorization obtained!")
@@ -491,7 +522,7 @@ def deactivate_device():
         device_service.deactivate_device(device_id)
         app.logger.info(f"Device {device_id} deactivated.")
 
-    return redirect(url_for('home'))
+    return redirect(url_for('device_list'))
 
 
 @app.route('/livelyageing/admin/care_providers', methods=['GET'])

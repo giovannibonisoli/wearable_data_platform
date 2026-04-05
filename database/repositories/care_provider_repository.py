@@ -31,7 +31,7 @@ class CareProviderRepository:
         query = """
             SELECT id, full_name, created_at
             FROM care_providers 
-            id = %s
+            WHERE id = %s
         """
         result = self.db.execute_query(query, (care_provider_id,))
         
