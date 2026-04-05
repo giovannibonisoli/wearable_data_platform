@@ -19,10 +19,10 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>{{ _('Full name') }}</th>
-                            <th class="text-end">{{ _('Staff users') }}</th>
-                            <th class="text-end">{{ _('Devices') }}</th>
-                            <th class="text-end">{{ _('Actions') }}</th>
+                            <th><i class="fas fa-building me-2 text-white"></i>{{ _('Full name') }}</th>
+                            <th class="text-end"><i class="fas fa-hospital-user me-2 text-white"></i>{{ _('Staff users') }}</th>
+                            <th class="text-end"><i class="fas fa-tablet-alt me-2 text-white"></i>{{ _('Devices') }}</th>
+                            <th class="text-end"><i class="fas fa-sliders-h me-2 text-white"></i>{{ _('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,9 +32,17 @@
                             <td class="text-end">{{ row.staff_users_count | number }}</td>
                             <td class="text-end">{{ row.device_count | number }}</td>
                             <td class="text-end text-nowrap">
+                                <button type="button"
+                                    class="btn btn-secondary btn-sm rename-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#renameCareProviderModal"
+                                    data-id="{{ row.id }}"
+                                    data-full-name="{{ row.full_name or '' }}"
+                                    title="{{ _('Rename this care provider') }}">
+                                    <i class="fas fa-pen me-1"></i>{{ _('Rename') }}
+                                </button>
                                 <a href="{{ url_for('admin_staff_users', care_provider_id=row.id) }}"
                                     class="btn btn-outline-primary btn-sm"
-                                    data-bs-toggle="tooltip"
                                     title="{{ _('Manage staff users for this facility') }}">
                                     <i class="fas fa-hospital-user me-1"></i>{{ _('Staff users') }}
                                 </a>
@@ -52,6 +60,9 @@
     </div>
 </div>
 
+{# ══════════════════════════════════════════
+   Modal — Add care provider
+══════════════════════════════════════════ #}
 <div class="modal fade" id="addCareProviderModal" tabindex="-1" aria-labelledby="addCareProviderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -63,7 +74,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
+                    <div class="mb-0">
                         <label class="form-label" for="add_full_name">{{ _('Full name') }}</label>
                         <input type="text" class="form-control" id="add_full_name" name="full_name" autocomplete="name">
                     </div>
@@ -78,15 +89,58 @@
         </div>
     </div>
 </div>
+
+{# ══════════════════════════════════════════
+   Modal — Rename care provider
+   Form action and current name populated via JS.
+══════════════════════════════════════════ #}
+<div class="modal fade" id="renameCareProviderModal" tabindex="-1" aria-labelledby="renameCareProviderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="renameCareProviderForm" action="">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="renameCareProviderModalLabel">
+                        <i class="fas fa-pen me-2"></i>{{ _('Rename care provider') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-0">
+                        <label class="form-label" for="rename_full_name">{{ _('Full name') }}</label>
+                        <input type="text" class="form-control" id="rename_full_name" name="full_name"
+                            required autocomplete="name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>{{ _('Save') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-var addCareProviderModal = document.getElementById('addCareProviderModal');
-if (addCareProviderModal) {
-    addCareProviderModal.addEventListener('hidden.bs.modal', function () {
-        document.getElementById('addCareProviderForm').reset();
+// Reset add form on close.
+document.getElementById('addCareProviderModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('addCareProviderForm').reset();
+});
+
+// Populate rename modal with the selected row's data.
+document.querySelectorAll('.rename-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var id = this.getAttribute('data-id');
+        var fullName = this.getAttribute('data-full-name');
+
+        document.getElementById('renameCareProviderForm').action =
+            {{ url_for('admin_rename_care_provider', care_provider_id=0)|tojson }}.replace('/0/', '/' + id + '/');
+        document.getElementById('renameCareProviderForm').reset();
+        document.getElementById('rename_full_name').value = fullName;
     });
-}
+});
 </script>
 {% endblock %}

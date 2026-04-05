@@ -18,7 +18,8 @@ from services.result_enums import (
     AdminCreateStaffUserResult,
     AdminResetPasswordResult,
     AdminDeactivateStaffUserResult,
-    AdminCreateCareProviderResult
+    AdminCreateCareProviderResult,
+    AdminRenameCareProviderResult
 )
 
 import os
@@ -519,6 +520,30 @@ def admin_add_care_provider():
     else:
         flash(gettext('Could not create care provider.'), 'danger')
 
+    return redirect(url_for('admin_care_providers'))
+
+
+@app.route('/livelyageing/admin/<int:care_provider_id>/rename', methods=['POST'])
+@login_required
+@admin_required
+def admin_rename_care_provider(care_provider_id):
+    full_name = (request.form.get('full_name') or '').strip()
+ 
+    if not full_name:
+        flash(gettext('Full name is required.'), 'danger')
+        return redirect(url_for('admin_care_providers'))
+ 
+    with ConnectionManager() as conn:
+        care_provider_service = CareProviderService(conn)
+        result = care_provider_service.rename_care_provider(care_provider_id, full_name)
+ 
+    if result == AdminRenameCareProviderResult.SUCCESS:
+        flash(gettext('Care provider renamed.'), 'success')
+    elif result == AdminRenameCareProviderResult.NAME_EXISTS:
+        flash(gettext('A care provider with that name already exists.'), 'warning')
+    else:
+        flash(gettext('Could not rename care provider.'), 'danger')
+ 
     return redirect(url_for('admin_care_providers'))
 
 

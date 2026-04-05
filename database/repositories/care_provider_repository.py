@@ -94,3 +94,23 @@ class CareProviderRepository:
             return None
 
         return result[0][0]
+
+
+    def rename(self, care_provider_id: int, full_name: str)  -> bool:
+        """
+        Renam care provider 
+
+        Args:
+            care_provider_id: Care provider to rename
+            full_name: new full name
+
+        Returns:
+            bool: True if successful
+        """
+        query = """
+            UPDATE care_providers
+            SET full_name = %s
+            WHERE id = %s
+        """
+        result = self.db.execute_query(query, (full_name,care_provider_id))
+        return bool(result)

@@ -5,7 +5,8 @@ from typing import Dict, List, Any
 from database import ConnectionManager, CareProviderRepository, DeviceRepository, StaffUserRepository
 
 from services.result_enums import (
-    AdminCreateCareProviderResult
+    AdminCreateCareProviderResult,
+    AdminRenameCareProviderResult
 )
 
 
@@ -49,10 +50,18 @@ class CareProviderService:
         return care_providers_data
 
     
-    def create_care_provider(self, full_name: str) -> List[Dict]:
+    def create_care_provider(self, full_name: str) -> AdminCreateCareProviderResult:
 
         care_provider_id = self.care_provider_repo.create(full_name.strip())
         if care_provider_id:
             return AdminCreateCareProviderResult.SUCCESS
         return AdminCreateCareProviderResult.ERROR
+
+
+    def rename_care_provider(self, care_provider_id: int, full_name: str) -> AdminRenameCareProviderResult:
+        
+        if self.care_provider_repo.rename(care_provider_id, full_name):
+            return AdminRenameCareProviderResult.SUCCESS
+        else:
+            return AdminRenameCareProviderResult.ERROR
 

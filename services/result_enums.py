@@ -44,6 +44,12 @@ class AdminCreateCareProviderResult(Enum):
     ERROR = "error"
 
 
+class AdminRenameCareProviderResult(Enum):
+    SUCCESS = "success"
+    NAME_EXISTS = "name_exists"
+    ERROR = "error"
+
+
 class AdminCreateStaffUserResult(Enum):
     SUCCESS = "success"
     USERNAME_EXISTS = "username_exists"

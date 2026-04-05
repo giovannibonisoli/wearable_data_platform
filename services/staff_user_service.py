@@ -103,9 +103,7 @@ class StaffUserService:
             return AdminResetPasswordResult.SUCCESS
         return AdminResetPasswordResult.ERROR
 
-    def admin_deactivate_staff_user(
-        self, admin_user_id: int, target_user_id: int
-    ) -> AdminDeactivateStaffUserResult:
+    def admin_deactivate_staff_user(self, admin_user_id: int, target_user_id: int) -> AdminDeactivateStaffUserResult:
         if target_user_id == admin_user_id:
             return AdminDeactivateStaffUserResult.FORBIDDEN
         role = self.staff_user_repo.get_role(target_user_id)
