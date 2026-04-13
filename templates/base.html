@@ -70,7 +70,7 @@
                     {% if session.get('role') == 'staff' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('device_list') }}">
-                            <i class="bi bi-smartwatch me-1"></i>{{ _('Device List') }}
+                            <i class="bi bi-smartwatch me-1"></i>{{ _('Device Management') }}
                         </a>
                     </li>
                     {% endif %}
@@ -79,7 +79,7 @@
                     {% if session.get('role') == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_care_providers') }}">
-                            <i class="bi bi-building me-1"></i>{{ _('Care Providers') }}
+                            <i class="bi bi-building me-1"></i>{{ _('Care providers') }}
                         </a>
                     </li>
                     {% endif %}

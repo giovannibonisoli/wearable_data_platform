@@ -195,7 +195,7 @@
                 <i class="bi bi-smartwatch"></i>
             </div>
             <div>
-                <h1>{{ _('Welcome back') }}, {{ user_info.full_name }}</h1>
+                <h1>{{ _('Benvenuto') }}, {{ user_info.full_name }}</h1>
                 <p>
                     <span class="status-dot"></span>
                     {{ _('You are logged in and your session is active') }}
@@ -215,7 +215,7 @@
                         <i class="fas fa-hospital"></i>
                     </div>
                     <div>
-                        <div class="card-label">{{ _('Care Provider') }}</div>
+                        <div class="card-label">{{ _('ASP') }}</div>
                         <div class="card-value">{{ care_provider.full_name }}</div>
                     </div>
                 </div>
@@ -236,7 +236,7 @@
                         <i class="bi bi-smartwatch"></i>
                     </div>
                     <div>
-                        <div class="card-label">{{ _('Registered Devices') }}</div>
+                        <div class="card-label">{{ _('Dispositivi Registrati') }}</div>
                         <div class="card-value big-number">{{ device_count }}</div>
                     </div>
                 </div>
@@ -264,7 +264,7 @@
         </div>
         <a href="{{ url_for('device_list') }}" class="btn-device-list flex-shrink-0">
             <i class="fas fa-list-ul"></i>
-            {{ _('Go to Device List') }}
+            {{ _('Vai alla gestione dispositivi') }}
         </a>
     </div>
 
