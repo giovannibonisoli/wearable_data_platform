@@ -207,7 +207,7 @@ class DeviceRepository:
             for row in result
         ] if result else []
 
-    def get_all_authorized_by_user(self, care_provider_id: int) -> List[Device]:
+    def get_all_authorized_by_care_provider(self, care_provider_id: int) -> List[Device]:
         """
         Retrieve all authorized devices.
 

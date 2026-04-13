@@ -63,8 +63,8 @@ class DeviceService:
 
         return AddDeviceResult.ADDED if device_id else AddDeviceResult.ERROR
 
-    def update_devices_info_by_user(self, user_id: int) -> List[str]:
-        devices = self.device_repo.get_all_authorized_by_user(user_id)
+    def update_devices_info_by_care_provider(self, care_provider_id: int) -> List[str]:
+        devices = self.device_repo.get_all_authorized_by_care_provider(care_provider_id)
 
         errors = []
         for device in devices:

@@ -412,12 +412,15 @@ def update_devices_info():
     This retrieves device type and last sync time automatically.
     """
 
-    user_id = int(current_user.id)
-
     with ConnectionManager() as conn:
+        staff_user_service = StaffUserService(conn)
         device_service = DeviceService(conn)
 
-        errors = device_service.update_devices_info_by_user(user_id)
+        user_id = int(current_user.id)
+        user_info = staff_user_service.get_user_info(user_id)
+        care_provider_id = user_info['care_provider_id']
+
+        errors = device_service.update_devices_info_by_care_provider(care_provider_id)
 
         if len(errors) > 0:
             app.logger.error(f"Error while updating info for devices linked to {', '.join(errors)}")

@@ -153,12 +153,21 @@
                                     {% if device.auth_status == 'authorized' %}
                                         {% if device.data_reception_status == 'ok' %}
                                             {% if device.data_reception_details.sync_days > 0 %}
-                                                <div class="status-indicator status-success" style="min-width: 180px;"
-                                                    data-bs-toggle="tooltip" 
-                                                    title="{{ _('Data are updated to the last synchronization') }}">
-                                                    <i class="fas fa-check-circle status-icon"></i>
-                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
-                                                </div>
+                                                {% if device.data_reception_details.sync_days < 4 %}
+                                                    <div class="status-indicator status-success" style="min-width: 180px;"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="{{ _('Data are updated to the last synchronization') }}">
+                                                        <i class="fas fa-check-circle status-icon"></i>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="status-indicator status-warning" style="min-width: 180px;"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="{{ _('Data are updated to the last synchronization'): _('more than 4 days ago') }}">
+                                                        <i class="fa fa-warning status-icon"></i>
+                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                    </div>
+                                                {% endif %}
                                             {% else %}
                                                 {% if device.data_reception_details.sync_hours > 0 %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
