@@ -50,14 +50,14 @@ class DeviceService:
 
         return devices_data
 
-    def add_new_device(self, user_id: int, email_address: str) -> AddDeviceResult:
+    def add_new_device(self, care_provider_id: int, email_address: str) -> AddDeviceResult:
         existing = self.device_repo.get_by_email(email_address)
 
         if existing:
             return AddDeviceResult.ALREADY_EXISTS
 
         device_id = self.device_repo.create(
-            user_id=user_id,
+            care_provider_id=care_provider_id,
             email_address=email_address,
         )
 

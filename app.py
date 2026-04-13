@@ -1,6 +1,7 @@
 from logging.handlers import RotatingFileHandler
 from functools import wraps
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
+from database.repositories import staff_user_repository
 from rich import _console
 
 from flask_login import current_user, login_user, logout_user, login_required
@@ -376,12 +377,17 @@ def add_device():
     try:
         
         email_address = request.form['emailAddress']
-        user_id = int(current_user.id)
         
         with ConnectionManager() as conn:
+            staff_user_service = StaffUserService(conn)
             device_service = DeviceService(conn)
+
+            user_id = int(current_user.id)
+            user_info = staff_user_service.get_user_info(user_id)
+            care_provider_id = user_info['care_provider_id']
             
-            result = device_service.add_new_device(user_id, email_address)
+            result = device_service.add_new_device(care_provider_id, email_address)
+            
 
             if result == AddDeviceResult.ALREADY_EXISTS:
                 flash(gettext('This device is already registered.'), 'warning')
