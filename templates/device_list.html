@@ -163,7 +163,7 @@
                                                 {% else %}
                                                     <div class="status-indicator status-warning" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
-                                                        title="{{ _('Data are updated to the last synchronization'): _('more than 4 days ago') }}">
+                                                        title="{{ _('Data are updated to the last synchronization') }}: {{ _('more than 4 days ago') }}">
                                                         <i class="fa fa-warning status-icon"></i>
                                                         <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                                     </div>
@@ -247,15 +247,25 @@
                                 </td>
                                 <td>
                                     {% if device.auth_status == 'inserted' %}
-                                    <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
-                                        <button type="submit" 
-                                                class="btn btn-primary btn-sm action-btn" 
+                                    <div class="actions-container">
+                                        <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
+                                            <button type="submit" 
+                                                    class="btn btn-primary btn-sm action-btn" 
+                                                    data-bs-toggle="tooltip"
+                                                    title="{{ _('Send an email to request authorization to download the data collected by the wearable device') }}">
+                                                <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
+                                            </button>
+                                        </form>
+                                        <button type="button"
+                                                class="btn btn-warning btn-sm action-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#renameEmailModal{{ device.id }}"
                                                 data-bs-toggle="tooltip"
-                                                title="{{ _('Send an email to request authorization to download the data collected by the wearable device') }}">
-                                            <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
+                                                title="{{ _('Rename the email address associated with this device') }}">
+                                            <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email') }}
                                         </button>
-                                    </form>
+                                    </div>
                                     {% elif device.auth_status == 'authorized' %}
                        
                                     <a href=""
@@ -353,6 +363,51 @@
         </div>
     </div>
 </div>
+{% endfor %}
+
+<!-- Rename Email Modals -->
+{% for device in devices %}
+{% if device.auth_status == 'inserted' %}
+<div class="modal fade" id="renameEmailModal{{ device.id }}" tabindex="-1" aria-labelledby="renameEmailModalLabel{{ device.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-card">
+            <!-- Modal Header -->
+            <div class="modal-header modal-header-warning">
+                <h5 class="modal-title" id="renameEmailModalLabel{{ device.id }}">
+                    <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email Address') }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body modal-body-padded">
+                <form id="renameEmailForm{{ device.id }}" method="POST" action="{{ url_for('rename_device_email', device_id=device.id) }}">
+                    <div class="form-group">
+                        <label for="newEmailAddress{{ device.id }}" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>{{ _('New Email Address') }}
+                        </label>
+                        <input type="email" class="form-control" id="newEmailAddress{{ device.id }}"
+                            name="newEmailAddress" required placeholder="{{ _('Enter new email address') }}" value="{{ device.email_address }}">
+                        <small class="form-text text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle me-1"></i>{{ _('Enter a valid email address to replace the current one') }}
+                        </small>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer modal-footer-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>{{ _('Cancel') }}
+                </button>
+                <button type="submit" form="renameEmailForm{{ device.id }}" class="btn btn-warning">
+                    <i class="fas fa-save me-2"></i>{{ _('Save') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endfor %}
 
 

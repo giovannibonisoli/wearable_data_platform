@@ -348,6 +348,7 @@ def device_list():
                 elif device_data["auth_status"] == 'authorized':
                     data_reception_status, data_reception_details = device_stats_service.get_device_sync_data(device_data["id"])
                     device_usage_details = device_stats_service.get_last_device_usage_statistics(device_data["id"], timedelta(days=7))
+
                 
                 final_devices_data.append({
                         "id": device_data["id"],
@@ -530,6 +531,36 @@ def deactivate_device():
         device_service = DeviceService(conn)
         device_service.deactivate_device(device_id)
         app.logger.info(f"Device {device_id} deactivated.")
+
+    return redirect(url_for('device_list'))
+
+
+@app.route('/livelyageing/rename_device_email/<int:device_id>', methods=['POST'])
+@login_required
+@staff_user_required
+def rename_device_email(device_id):
+    """Rename the email address of an inserted (not yet authorized) device."""
+    new_email = (request.form.get('newEmailAddress') or '').strip()
+
+    if not new_email:
+        flash(gettext('Email address is required.'), 'danger')
+        return redirect(url_for('device_list'))
+
+    try:
+        with ConnectionManager() as conn:
+            device_service = DeviceService(conn)
+            result = device_service.rename_device_email(device_id, new_email)
+
+            if result:
+                app.logger.info(f"Device {device_id} email renamed to {new_email}.")
+                flash(gettext('Email address updated successfully.'), 'success')
+            else:
+                app.logger.error(f"Failed to rename email for device {device_id}.")
+                flash(gettext('Error updating email address.'), 'danger')
+
+    except Exception as e:
+        app.logger.error(f"Error renaming device email: {e}")
+        flash(gettext('An error occurred.'), 'danger')
 
     return redirect(url_for('device_list'))
 

@@ -20,7 +20,7 @@
     --gradient: linear-gradient(135deg, #2c5aa0 0%, #4a90a4 100%);
     --gradient-light: linear-gradient(135deg, #e8f4f8 0%, #f8f9fa 100%);
     --gradient-red: linear-gradient(135deg, #6a0000 0%, #fb2929 100%);
-
+    --gradient-yellow: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
     --gradient-green: linear-gradient(135deg, #1b5b04 0%, #44980c 100%);
 }
 
@@ -134,6 +134,14 @@ body {
 .btn-warning {
     background-color: var(--warning);
     border-color: var(--warning);
+    color: var(--dark);
+    background: var(--gradient-yellow);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
     color: var(--dark);
 }
 
@@ -861,6 +869,59 @@ main {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
 }
+
+/* ── Rename Email Modal ───────────────────────────────────────── */
+
+/* Warning-themed modal header, consistent with gradient-red / --gradient patterns */
+.modal-header-warning {
+    background: linear-gradient(135deg, var(--warning) 0%, #c78c0e 100%);
+    color: var(--dark);
+    border: none;
+    padding: 1.5rem;
+}
+
+.modal-header-warning .modal-title {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+/* Shared modal chrome */
+.modal-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    border: none;
+}
+
+.modal-body-padded {
+    padding: 2rem;
+}
+
+.modal-footer-light {
+    background: var(--light);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+}
+
+/* Email value inside the current-email alert */
+.modal-email-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #856404;
+}
+
+/* Warning button: icon must be dark since the background is light yellow */
+.btn-warning i {
+    color: var(--dark);
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+/* ── /Rename Email Modal ──────────────────────────────────────── */
 
 .empty-state-card {
     border-left: 4px solid var(--info);
