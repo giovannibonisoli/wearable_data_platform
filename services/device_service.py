@@ -173,7 +173,7 @@ class DeviceService:
             self.auth_repo.delete_by_state(state),
         ]
 
-        return AuthGrantResult.SUCCESS if all(results) else AuthGrantResult.ERROR_STATE_UPDATE
+        return (AuthGrantResult.SUCCESS, email_address) if all(results) else (AuthGrantResult.ERROR_STATE_UPDATE, email_address)
 
     def deactivate_device(self, device_id: int) -> None:
         self.device_repo.update_status(device_id, "non_active")

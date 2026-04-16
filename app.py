@@ -479,7 +479,7 @@ def callback():
     with ConnectionManager() as conn:
         try:
             device_service = DeviceService(conn)
-            message = device_service.handle_authorization_grant(code, state)
+            message, email_address = device_service.handle_authorization_grant(code, state)
 
             if message == AuthGrantResult.MISSING_AUTH_INFO:
                 app.logger.error("No code or state found")
@@ -509,8 +509,9 @@ def callback():
             else:
                 app.logger.info("Authorization obtained!")
                 return render_template('auth_confirmation.html',
-                                       success=True,
-                                       link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
+                                        email_address=email_address,
+                                        success=True,
+                                        link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
         except Exception as e:
             app.logger.error(f"Unexpected error: {e}")
