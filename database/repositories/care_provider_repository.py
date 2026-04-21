@@ -1,5 +1,5 @@
 from typing import Optional, List
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 
 from database.models import CareProvider
 
@@ -11,7 +11,7 @@ class CareProviderRepository:
     Handles care provider management queries.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         """

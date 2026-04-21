@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
-from database import ConnectionManager, DeviceRepository, AuthorizationRepository
+from database import DeviceRepository, AuthorizationRepository
+from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import (
     FitbitClient,
     generate_state,
@@ -26,10 +27,10 @@ class DeviceService:
     and retrieving device metadata from the Fitbit API.
     """
 
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Args:
-            connection_manager: Active ConnectionManager instance.
+            connection_manager: Active SqlalchemyConnection instance.
         """
         self.conn = connection_manager
         self.auth_repo = AuthorizationRepository(connection_manager)
@@ -177,3 +178,10 @@ class DeviceService:
 
     def deactivate_device(self, device_id: int) -> None:
         self.device_repo.update_status(device_id, "non_active")
+
+    def rename_device_email(self, device_id: int, new_email: str) -> bool:
+        """Rename device email when status is still 'inserted'."""
+        existing = self.device_repo.get_by_email(new_email)
+        if existing and existing.id != device_id:
+            return False
+        return self.device_repo.update_email_address(device_id, new_email)

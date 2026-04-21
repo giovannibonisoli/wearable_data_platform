@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any
 
-from database import ConnectionManager, CareProviderRepository, DeviceRepository, StaffUserRepository
+from database import CareProviderRepository, DeviceRepository, StaffUserRepository
+from database.connection import SqlalchemyConnection
 
 from services.result_enums import (
     AdminCreateCareProviderResult,
@@ -16,12 +17,12 @@ class CareProviderService:
 
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the service with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.conn = connection_manager
         self.care_provider_repo = CareProviderRepository(connection_manager)

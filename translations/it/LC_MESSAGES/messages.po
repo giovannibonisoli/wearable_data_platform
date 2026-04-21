@@ -116,11 +116,11 @@ msgstr "Errore nella modifica dell'indirizzo mail."
 
 #: app.py:591
 msgid "Care provider created."
-msgstr "ASP creato"
+msgstr "ASP creata."
 
 #: app.py:593
 msgid "Could not create care provider."
-msgstr "Non è stato possibile creare l'utente struttura"
+msgstr "Non è stato possibile creare questa ASP."
 
 #: app.py:605
 msgid "Full name is required."
@@ -128,15 +128,15 @@ msgstr "Username richiesto."
 
 #: app.py:613
 msgid "Care provider renamed."
-msgstr "Utente struttura creato"
+msgstr "ASP rinominata."
 
 #: app.py:615
 msgid "A care provider with that name already exists."
-msgstr ""
+msgstr "Esiste già una ASP con questo nome."
 
 #: app.py:617
 msgid "Could not rename care provider."
-msgstr "Non è stato possibile creare l'utente struttura"
+msgstr "Non è stato possibile rinominare l'ASP'."
 
 #: app.py:646
 msgid "Username is required."
@@ -148,7 +148,7 @@ msgstr "La nuova password deve contenere almeno 8 caratteri."
 
 #: app.py:660
 msgid "Staff user created."
-msgstr "Utente struttura creato"
+msgstr "Utente staff creato"
 
 #: app.py:662
 msgid "That username is already taken."
@@ -156,7 +156,7 @@ msgstr "Questo username è già stato preso"
 
 #: app.py:664
 msgid "Could not create staff user."
-msgstr "Non è stato possibile creare l'utente struttura"
+msgstr "Non è stato possibile creare l'utente staff."
 
 #: app.py:689
 msgid "Password updated."
@@ -177,7 +177,7 @@ msgstr "Modifica della password non riuscita."
 
 #: app.py:710
 msgid "Staff user deactivated."
-msgstr "Utente disattivato."
+msgstr "Utente staff disattivato."
 
 #: app.py:712
 msgid "Staff user not found."
@@ -244,7 +244,7 @@ msgstr "Azioni"
 #: templates/admin_care_providers.html:41
 #: utils/templates/admin_care_providers.html:41
 msgid "Rename this care provider"
-msgstr "Aggiungi struttura"
+msgstr "Aggiungi ASP"
 
 #: templates/admin_care_providers.html:42
 #: utils/templates/admin_care_providers.html:42
@@ -259,7 +259,7 @@ msgstr "Gestisci gli utenti staff per questa ASP"
 #: templates/admin_care_providers.html:53
 #: utils/templates/admin_care_providers.html:53
 msgid "No care providers yet."
-msgstr "Nessun utente struttura presente."
+msgstr "Nessun utente staff presente."
 
 #: templates/admin_care_providers.html:74
 #: templates/admin_care_providers.html:105 templates/admin_staff_users.html:102
@@ -343,7 +343,7 @@ msgstr "Disattiva"
 #: templates/admin_staff_users.html:70
 #: utils/templates/admin_staff_users.html:70
 msgid "No staff users yet."
-msgstr "Nessun utente struttura presente."
+msgstr "Nessun utente staff presente."
 
 #: templates/admin_staff_users.html:116 templates/login.html:57
 #: utils/templates/admin_staff_users.html:116

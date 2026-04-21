@@ -7,6 +7,10 @@ Runs continuously in background. Delegates to FitbitDailySummaryCollectorService
 import time
 import logging
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from database import ConnectionManager
 from services.collectors.fitbit_daily_summary_collector import FitbitDailySummaryCollectorService
 

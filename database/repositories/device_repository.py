@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple, Dict, Any
 from datetime import datetime, date
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 from database.models import Device
 from utils.encryption import encrypt_token, decrypt_token
 
@@ -12,12 +12,12 @@ class DeviceRepository:
     Handles device management, OAuth tokens, and authorization status.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.db = connection_manager
 
@@ -508,3 +508,16 @@ class DeviceRepository:
         """
         result = self.db.execute_query(query, (device_id,))
         return result[0][0] if result else None
+
+    def update_email_address(self, device_id: int, new_email: str) -> bool:
+        """
+        Update email for a device that is still in 'inserted' state (not yet authorized).
+        """
+        query = """
+            UPDATE devices
+            SET email_address = %s
+            WHERE id = %s AND authorization_status = 'inserted'
+            RETURNING id
+        """
+        result = self.db.execute_query(query, (new_email, device_id))
+        return bool(result)

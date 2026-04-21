@@ -9,6 +9,10 @@ import sys
 import time
 import logging
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from database import ConnectionManager
 from services.collectors.fitbit_intraday_collector import FitbitIntradayCollectorService
 

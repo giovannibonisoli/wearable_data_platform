@@ -9,7 +9,8 @@ import logging
 import requests
 from datetime import datetime, timedelta
 
-from database import ConnectionManager, DeviceRepository, MetricsRepository, Device
+from database import DeviceRepository, MetricsRepository, Device
+from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
@@ -23,7 +24,7 @@ DEFAULT_START_DATE = datetime(2025, 11, 18).date()
 class FitbitIntradayCollectorService(BaseFitbitCollector):
     """Collects intraday (minute-level) metrics from Fitbit API."""
 
-    def __init__(self, conn: ConnectionManager):
+    def __init__(self, conn: SqlalchemyConnection):
         super().__init__(conn)
         self.metrics_repo = MetricsRepository(conn)
 

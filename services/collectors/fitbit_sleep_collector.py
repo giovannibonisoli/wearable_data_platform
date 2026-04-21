@@ -9,7 +9,8 @@ import time
 import logging
 from datetime import datetime, timedelta
 
-from database import ConnectionManager, SleepRepository, Device
+from database import SleepRepository, Device
+from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
@@ -23,7 +24,7 @@ DEFAULT_START_DATE = datetime(2025, 1, 24).date()
 class FitbitSleepCollectorService(BaseFitbitCollector):
     """Collects sleep session data from Fitbit API."""
 
-    def __init__(self, conn: ConnectionManager):
+    def __init__(self, conn: SqlalchemyConnection):
         super().__init__(conn)
         self.sleep_repo = SleepRepository(conn)
 

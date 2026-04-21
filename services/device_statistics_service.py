@@ -15,7 +15,8 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Any
 
-from database import ConnectionManager, DeviceRepository, MetricsRepository
+from database import DeviceRepository, MetricsRepository
+from database.connection import SqlalchemyConnection
 
 
 class DeviceStatisticsService:
@@ -26,12 +27,12 @@ class DeviceStatisticsService:
     patterns, sync status, and data gaps.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the service with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.conn = connection_manager
         self.device_repo = DeviceRepository(connection_manager)

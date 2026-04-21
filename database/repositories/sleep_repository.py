@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 from database.models import SleepSession, SleepLog, SleepLevel
 
 
@@ -11,12 +11,12 @@ class SleepRepository:
     Handles sleep sessions, logs, levels, and short levels.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.db = connection_manager
 

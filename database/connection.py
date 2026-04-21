@@ -1,146 +1,177 @@
-import psycopg2
-from typing import Any, Optional, Union, List, Tuple
-from config import DB_CONFIG
+"""
+Database access via SQLAlchemy.
+
+Repositories use SqlalchemyConnection.execute_query(), which mirrors the legacy
+psycopg2 API (percent-style placeholders) while running through SQLAlchemy 2.
+"""
+
+from __future__ import annotations
+
+from typing import Any, List, Optional, Tuple, Union
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session, sessionmaker
+
+RowList = List[Tuple[Any, ...]]
+
+
+def _percent_to_named(query: str, params: Tuple[Any, ...]) -> Tuple[Any, dict]:
+    parts = query.split("%s")
+    if len(parts) - 1 != len(params):
+        raise ValueError(
+            f"Placeholder count ({len(parts) - 1}) does not match "
+            f"parameter count ({len(params)})"
+        )
+    bind: dict = {}
+    fragments: List[str] = []
+    for i, param in enumerate(params):
+        key = f"p{i}"
+        bind[key] = param
+        fragments.append(parts[i])
+        fragments.append(f":{key}")
+    fragments.append(parts[-1])
+    return text("".join(fragments)), bind
+
+
+class _CursorDescription:
+    """Mimic psycopg2 cursor.description for repositories that read column names."""
+
+    def __init__(self, keys: List[str]) -> None:
+        self.description = [(k,) for k in keys]
+
+
+class SqlalchemyConnection:
+    """
+    Connection wrapper passed to repositories (legacy execute_query surface).
+
+    Attributes:
+        session: Active SQLAlchemy Session.
+        cursor: Set after SELECT/RETURNING queries to expose .description.
+    """
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+        self.cursor: Optional[_CursorDescription] = None
+
+    def execute_query(
+        self,
+        query: str,
+        params: Optional[Tuple[Any, ...]] = None,
+    ) -> Union[RowList, bool, None]:
+        params = params or ()
+        self.cursor = None
+        try:
+            if "%s" in query:
+                stmt, bind = _percent_to_named(query, params)
+            else:
+                stmt = text(query)
+                bind = {}
+
+            result = self.session.execute(stmt, bind)
+
+            if result.returns_rows:
+                keys = list(result.keys())
+                self.cursor = _CursorDescription(keys)
+                rows = result.fetchall()
+                self.session.commit()
+                return [tuple(row) for row in rows]
+
+            self.session.commit()
+            return True
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error executing query: {e}")
+            return None
+
+    def execute_many(self, query: str, params_list: List[Tuple[Any, ...]]) -> bool:
+        try:
+            for params in params_list:
+                if "%s" in query:
+                    stmt, bind = _percent_to_named(query, params)
+                else:
+                    stmt = text(query)
+                    bind = {}
+                self.session.execute(stmt, bind)
+            self.session.commit()
+            return True
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error executing multiple queries: {e}")
+            return False
+
+
+_engine = None
+_SessionFactory: Optional[sessionmaker] = None
+
+
+def _get_script_session() -> Session:
+    """Session for standalone scripts (no Flask app context)."""
+    global _engine, _SessionFactory
+    if _engine is None:
+        from urllib.parse import quote_plus
+
+        from config import DB_CONFIG
+
+        url = (
+            f"postgresql+psycopg2://{DB_CONFIG['user']}:{quote_plus(DB_CONFIG['password'])}"
+            f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+        )
+        _engine = create_engine(
+            url,
+            pool_pre_ping=True,
+            connect_args={"sslmode": DB_CONFIG.get("sslmode", "require")},
+        )
+        _SessionFactory = sessionmaker(bind=_engine, autoflush=False, autocommit=False)
+    assert _SessionFactory is not None
+    return _SessionFactory()
 
 
 class ConnectionManager:
     """
-    Manages PostgreSQL database connections and provides low-level query execution.
-    
-    This class handles connection lifecycle, transaction management, and basic
-    query execution. Domain-specific logic should be implemented in repositories.
+    Context manager yielding SqlalchemyConnection.
+
+    Inside a Flask application context, uses ``db.session``.
+    Outside Flask (e.g. legacy scripts), creates a dedicated SQLAlchemy session
+    using ``config.DB_CONFIG`` (call ``load_dotenv()`` before importing config).
     """
-    
+
     def __init__(self) -> None:
-        """Initialize a ConnectionManager instance."""
-        self.connection = None
-        self.cursor = None
+        self._script_session: Optional[Session] = None
+        self._owns_script_session = False
 
-    def connect(self) -> bool:
-        """
-        Open a connection to the PostgreSQL database.
-
-        Uses credentials from config.DB_CONFIG. On success,
-        initializes a cursor for query execution.
-
-        Returns:
-            bool: True if connection succeeded, False otherwise.
-        """
+    def __enter__(self) -> SqlalchemyConnection:
         try:
-            self.connection = psycopg2.connect(
-                host=DB_CONFIG["host"],
-                database=DB_CONFIG["database"],
-                user=DB_CONFIG["user"],
-                password=DB_CONFIG["password"],
-                port=DB_CONFIG["port"],
-            )
-            self.cursor = self.connection.cursor()
-            return True
-        except Exception as e:
-            print(f"Error connecting to the database: {e}")
-            return False
+            from flask import has_app_context
 
-    def close(self) -> None:
-        """
-        Close the open database cursor and connection.
+            if has_app_context():
+                from extensions import db
 
-        Ensures cleanup of resources. Safe to call even if
-        connection was never established.
-        """
+                return SqlalchemyConnection(db.session)
+        except Exception:
+            pass
+
+        self._script_session = _get_script_session()
+        self._owns_script_session = True
+        return SqlalchemyConnection(self._script_session)
+
+    def __exit__(self, exc_type, exc, exc_tb) -> None:
         try:
-            if self.cursor:
-                self.cursor.close()
-            if self.connection:
-                self.connection.close()
-        except Exception as e:
-            print(f"Error closing the connection to the database: {e}")
-        finally:
-            self.cursor = None
-            self.connection = None
+            from flask import has_app_context
 
-    def commit(self) -> None:
-        """
-        Commit the current database transaction.
+            if has_app_context():
+                from extensions import db
 
-        No-op if there is no active connection. Should be
-        called after INSERT/UPDATE/DELETE operations.
-        """
-        if self.connection:
-            self.connection.commit()
+                if exc_type is not None:
+                    db.session.rollback()
+                return
+        except Exception:
+            pass
 
-    def rollback(self) -> None:
-        """
-        Roll back the current transaction.
-
-        Useful to undo the last operation that raised an error.
-        """
-        if self.connection:
-            self.connection.rollback()
-
-    def execute_query(
-        self, 
-        query: str, 
-        params: Optional[Tuple[Any, ...]] = None
-    ) -> Union[List[Tuple[Any, ...]], bool, None]:
-        """
-        Execute any SQL query with optional parameters.
-
-        This method handles execution, commits on success, and
-        returns fetched results if present.
-
-        Args:
-            query (str): A SQL query to execute.
-            params (tuple | list): Parameter values for parametric queries.
-
-        Returns:
-            list | bool | None: Fetched rows for SELECT,
-                                 True for successful DDL/DML,
-                                 None on failure.
-        """
-        try:
-            self.cursor.execute(query, params or ())
-            if self.cursor.description:  # If the query returns results
-                result = self.cursor.fetchall()
-                self.commit()
-                return result
-            self.commit()
-            return True
-        except Exception as e:
-            print(f"Error executing query: {e}")
-            self.rollback()
-            return None
-
-    def execute_many(
-        self, 
-        query: str, 
-        params_list: List[Tuple[Any, ...]]
-    ) -> bool:
-        """
-        Run the same query multiple times with batch parameters.
-
-        Args:
-            query (str): A SQL query with placeholders.
-            params_list (list): A list of parameter tuples.
-
-        Returns:
-            bool: True if successful for all executions, False on any failure.
-        """
-        try:
-            self.cursor.executemany(query, params_list)
-            self.commit()
-            return True
-        except Exception as e:
-            print(f"Error executing multiple queries: {e}")
-            self.rollback()
-            return False
-
-    def __enter__(self):
-        """Context manager entry."""
-        self.connect()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit - handles cleanup."""
-        if exc_type is not None:
-            self.rollback()
-        self.close()
+        if self._owns_script_session and self._script_session is not None:
+            if exc_type is not None:
+                self._script_session.rollback()
+            else:
+                self._script_session.commit()
+            self._script_session.close()
+            self._script_session = None
+            self._owns_script_session = False

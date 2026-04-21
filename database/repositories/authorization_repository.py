@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 from datetime import datetime
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 
 
 class AuthorizationRepository:
@@ -10,12 +10,12 @@ class AuthorizationRepository:
     Handles pending authorizations for PKCE flow.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.db = connection_manager
 
@@ -121,13 +121,17 @@ class AuthorizationRepository:
         Returns:
             int: Number of records deleted
         """
-        query = "DELETE FROM pending_authorizations WHERE expires_at <= NOW()"
-        result = self.db.execute_query(query)
-        
-        # Get the number of rows affected
-        if result and hasattr(self.db.cursor, 'rowcount'):
-            return self.db.cursor.rowcount
-        return 0
+        from sqlalchemy import text
+
+        try:
+            result = self.db.session.execute(
+                text("DELETE FROM pending_authorizations WHERE expires_at <= NOW()")
+            )
+            self.db.session.commit()
+            return int(result.rowcount or 0)
+        except Exception:
+            self.db.session.rollback()
+            return 0
 
     def get_all_for_device(self, device_id: int) -> list:
         """

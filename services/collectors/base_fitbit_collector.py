@@ -9,7 +9,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from database import ConnectionManager, DeviceRepository, Device
+from database import DeviceRepository, Device
+from database.connection import SqlalchemyConnection
 from services.result_enums import CollectorResult
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class BaseFitbitCollector(ABC):
     Base collector for Fitbit data. Subclasses implement _process_one_device().
     """
 
-    def __init__(self, conn: ConnectionManager):
+    def __init__(self, conn: SqlalchemyConnection):
         self.conn = conn
         self.device_repo = DeviceRepository(conn)
 

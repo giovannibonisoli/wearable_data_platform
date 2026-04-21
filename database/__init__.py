@@ -42,7 +42,7 @@ Models:
 - Alert, PendingAuthorization
 """
 
-from database.connection import ConnectionManager
+from database.connection import ConnectionManager, SqlalchemyConnection
 
 # Import repositories for direct use
 from database.repositories.staff_user_repository import StaffUserRepository
@@ -73,7 +73,7 @@ from database.models import (
 __all__ = [
     # Core classes
     'ConnectionManager',
-    'Database',
+    'SqlalchemyConnection',
     
     # Repositories
     'CareProviderRepository',

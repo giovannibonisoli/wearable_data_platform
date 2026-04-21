@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone, time
 from flask_babel import Babel, get_locale, gettext
 
 from database import ConnectionManager
+from extensions import db, migrate
 from services import DeviceService, DeviceStatisticsService, StaffUserService, CareProviderService
 from services.result_enums import (
     ChangePasswordResult,
@@ -25,6 +26,7 @@ from services.result_enums import (
 
 import os
 import logging
+from urllib.parse import quote_plus
 
 
 # Initialize Flask app
@@ -34,6 +36,29 @@ app = Flask(__name__,
 
 
 app.secret_key = os.getenv('SECRET_KEY')
+
+_sqlalchemy_uri = os.getenv("SQLALCHEMY_DATABASE_URI")
+if not _sqlalchemy_uri:
+    _db_user = os.getenv("DB_USER")
+    _db_password = os.getenv("DB_PASSWORD")
+    _db_host = os.getenv("DB_HOST")
+    _db_port = os.getenv("DB_PORT")
+    _db_name = os.getenv("DB_NAME")
+    if all((_db_user, _db_password, _db_host, _db_port, _db_name)):
+        _sqlalchemy_uri = (
+            f"postgresql+psycopg2://{_db_user}:{quote_plus(_db_password)}"
+            f"@{_db_host}:{_db_port}/{_db_name}"
+        )
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {"sslmode": os.getenv("DB_SSLMODE", "require")}
+        }
+if _sqlalchemy_uri:
+    app.config["SQLALCHEMY_DATABASE_URI"] = _sqlalchemy_uri
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
+migrate.init_app(app, db)
+
+import database.orm_models  # noqa: F401  — register models for Flask-Migrate
 
 # Basic logging configuration
 logging.basicConfig(

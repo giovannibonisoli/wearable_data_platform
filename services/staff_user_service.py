@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional, List
 
-from database import ConnectionManager, StaffUserRepository, DeviceRepository
+from database import StaffUserRepository, DeviceRepository
+from database.connection import SqlalchemyConnection
 from database.models import USER_ROLE_STAFF
 from services.result_enums import (
     ChangePasswordResult,
@@ -14,12 +15,12 @@ class StaffUserService:
     Service for retrieving.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the service with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.conn = connection_manager
         self.staff_user_repo = StaffUserRepository(connection_manager)

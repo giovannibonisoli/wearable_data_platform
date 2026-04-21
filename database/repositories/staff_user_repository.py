@@ -1,6 +1,6 @@
 import bcrypt
 from typing import Optional, List
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 from database.models import StaffUser, USER_ROLE_ADMIN, USER_ROLE_STAFF
 
 
@@ -11,12 +11,12 @@ class StaffUserRepository:
     Handles authentication, user management queries.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.db = connection_manager
 

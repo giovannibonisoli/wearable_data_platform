@@ -1,7 +1,9 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
-from database.connection import ConnectionManager
+from database.connection import SqlalchemyConnection
 from database.models import DailySummary, IntradayMetric
+
+_INTRADAY_METRIC_COLUMNS = frozenset({"heart_rate", "steps", "calories", "distance"})
 
 
 class MetricsRepository:
@@ -11,12 +13,12 @@ class MetricsRepository:
     Handles daily summaries and intraday (time-series) health data.
     """
     
-    def __init__(self, connection_manager: ConnectionManager):
+    def __init__(self, connection_manager: SqlalchemyConnection):
         """
         Initialize the repository with a connection manager.
         
         Args:
-            connection_manager: Active ConnectionManager instance
+            connection_manager: Active SqlalchemyConnection instance
         """
         self.db = connection_manager
 
@@ -192,6 +194,9 @@ class MetricsRepository:
         Returns:
             List of (time, value) tuples for the requested metric.
         """
+        if metric_type not in _INTRADAY_METRIC_COLUMNS:
+            return []
+
         query = f"""
             SELECT time, {metric_type} 
             FROM intraday_metrics
@@ -257,6 +262,9 @@ class MetricsRepository:
         Returns:
             bool: True on success.
         """
+        if data_type not in _INTRADAY_METRIC_COLUMNS:
+            return False
+
         if self.check_intraday_timestamp_exists(device_id, timestamp):
             # Update existing record
             query = f"""

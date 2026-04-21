@@ -14,7 +14,7 @@ Services should:
 Example:
     from services import DeviceStatisticsService
     from database import ConnectionManager
-    
+
     with ConnectionManager() as conn:
         stats_service = DeviceStatisticsService(conn)
         usage = stats_service.get_last_device_usage_statistics(device_id, timedelta(days=7))
