@@ -1,7 +1,7 @@
 from typing import Optional, List, Tuple, Dict, Any
 from datetime import datetime, date
 from database.connection import SqlalchemyConnection
-from database.orm_models import DeviceModel
+from database.orm_models import DeviceModel, StatusType
 from utils.encryption import encrypt_token, decrypt_token
 
 
@@ -25,7 +25,7 @@ class DeviceRepository:
         device = DeviceModel(
             care_provider_id=care_provider_id,
             email_address=email_address,
-            authorization_status='inserted',
+            authorization_status=StatusType.INSERTED,
             access_token=encrypt_token(access_token) if access_token else None,
             refresh_token=encrypt_token(refresh_token) if refresh_token else None,
         )
@@ -56,7 +56,7 @@ class DeviceRepository:
     def get_all_authorized(self) -> List[DeviceModel]:
         return (
             self.db.session.query(DeviceModel)
-            .filter(DeviceModel.authorization_status == 'authorized')
+            .filter(DeviceModel.authorization_status == StatusType.AUTHORIZED)
             .order_by(DeviceModel.created_at.desc())
             .all()
         )
@@ -66,14 +66,14 @@ class DeviceRepository:
             self.db.session.query(DeviceModel)
             .filter(
                 DeviceModel.care_provider_id == care_provider_id,
-                DeviceModel.authorization_status == 'authorized'
+                DeviceModel.authorization_status == StatusType.AUTHORIZED
             )
             .order_by(DeviceModel.created_at.desc())
             .all()
         )
 
     def update_status(self, device_id: int, auth_status: str) -> bool:
-        assert auth_status in ['inserted', 'authorized', 'non_active'], \
+        assert auth_status in ['INSERTED', 'AUTHORIZED', 'NON_ACTIVE'], \
             f"Invalid status: {auth_status}"
         device = self.db.session.query(DeviceModel).get(device_id)
         if device:
@@ -160,7 +160,7 @@ class DeviceRepository:
 
     def update_email_address(self, device_id: int, new_email: str) -> bool:
         device = self.db.session.query(DeviceModel).get(device_id)
-        if device and device.authorization_status == 'inserted':
+        if device and device.authorization_status == StatusType.INSERTED:
             device.email_address = new_email
             self.db.session.commit()
             return True

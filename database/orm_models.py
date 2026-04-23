@@ -8,16 +8,16 @@ from enum import Enum as PyEnum
 
 class StatusType(PyEnum):
     """Stati per autorizzazione e device."""
-    INSERTED = 'inserted'
-    AUTHORIZED = 'authorized'
-    NON_ACTIVE = 'non_active'
+    INSERTED = 'INSERTED'
+    AUTHORIZED = 'AUTHORIZED'
+    NON_ACTIVE = 'NON_ACTIVE'
 
     def __str__(self):
         return self.value
 
 class UserRole(PyEnum):
-    ADMIN = 'admin'
-    STAFF = 'staff'
+    ADMIN = 'ADMIN'
+    STAFF = 'STAFF'
 
     def __str__(self):
         return self.value
@@ -30,10 +30,10 @@ class UserModel(db.Model):
     username = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
     full_name = db.Column(db.String(255), nullable=True)
-    role = role = db.Column(
+    role = db.Column(
         db.Enum(UserRole, name='user_role'),
         nullable=False,
-        server_default=UserRole.STAFF.name # Attenzione: usa .name per l'ENUM
+        server_default=UserRole.STAFF.value
     )
 
     created_at = db.Column(db.DateTime, nullable=True)
@@ -62,10 +62,10 @@ class DeviceModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     care_provider_id = db.Column(db.Integer, db.ForeignKey("care_providers.id"), nullable=False)
     email_address = db.Column(db.String(255), nullable=False)
-    authorization_status = authorization_status = db.Column(
+    authorization_status = db.Column(
         db.Enum(StatusType, name='status_type'),
         nullable=False,
-        server_default=StatusType.INSERTED.name # Attenzione: usa .name per l'ENUM
+        server_default=StatusType.INSERTED.value  # ← usa .value, non .name!
     )
     device_type = db.Column(db.String(128), nullable=True)
     created_at = db.Column(db.DateTime, nullable=True)

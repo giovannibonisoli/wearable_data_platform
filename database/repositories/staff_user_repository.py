@@ -2,10 +2,7 @@ import bcrypt
 from datetime import datetime
 from typing import Optional, List
 from database.connection import SqlalchemyConnection
-from database.orm_models import UserModel, StaffProfileModel
-
-USER_ROLE_ADMIN = "admin"
-USER_ROLE_STAFF = "staff"
+from database.orm_models import UserModel, StaffProfileModel, UserRole
 
 
 class StaffUserRepository:
@@ -21,7 +18,7 @@ class StaffUserRepository:
             )
             .first()
         )
-        if not user or user.role not in (USER_ROLE_ADMIN, USER_ROLE_STAFF):
+        if not user or user.role not in (UserRole.ADMIN, UserRole.STAFF):
             return None
         if bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
             user.last_login = datetime.utcnow()
@@ -30,7 +27,7 @@ class StaffUserRepository:
                 'id': user.id,
                 'username': user.username,
                 'full_name': user.full_name,
-                'role': user.role,
+                'role': user.role.value,
             }
         return None
 
@@ -60,12 +57,12 @@ class StaffUserRepository:
 
     def get_role(self, user_id: int) -> Optional[str]:
         user = self.db.session.query(UserModel).get(user_id)
-        return user.role if user else None
+        return user.role.value if user else None
 
     def update_password_for_staff_user(self, user_id: int, new_password: str) -> bool:
         user = (
             self.db.session.query(UserModel)
-            .filter(UserModel.id == user_id, UserModel.role == USER_ROLE_STAFF)
+            .filter(UserModel.id == user_id, UserModel.role == UserRole.STAFF)
             .first()
         )
         if user:
@@ -79,7 +76,7 @@ class StaffUserRepository:
     def deactivate_staff_user(self, user_id: int) -> bool:
         user = (
             self.db.session.query(UserModel)
-            .filter(UserModel.id == user_id, UserModel.role == USER_ROLE_STAFF)
+            .filter(UserModel.id == user_id, UserModel.role == UserRole.STAFF)
             .first()
         )
         if user:
@@ -107,7 +104,7 @@ class StaffUserRepository:
             username=username,
             password_hash=password_hash,
             full_name=full_name,
-            role=USER_ROLE_STAFF,
+            role=UserRole.STAFF,
         )
         self.db.session.add(user)
         self.db.session.flush()

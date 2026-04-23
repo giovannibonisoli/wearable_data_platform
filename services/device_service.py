@@ -45,7 +45,7 @@ class DeviceService:
                 "id": device.id,
                 "email_address": device.email_address,
                 "device_type": device.device_type if device.device_type else "",
-                "auth_status": device.authorization_status,
+                "auth_status": device.authorization_status.value,
                 "is_pending_auth": self.auth_repo.check_exists(device.id),
             })
 
@@ -170,14 +170,14 @@ class DeviceService:
 
         results = [
             self.device_repo.update_tokens(device.id, access_token, refresh_token),
-            self.device_repo.update_status(device.id, "authorized"),
+            self.device_repo.update_status(device.id, "AUTHORIZED"),
             self.auth_repo.delete_by_state(state),
         ]
 
         return (AuthGrantResult.SUCCESS, email_address) if all(results) else (AuthGrantResult.ERROR_STATE_UPDATE, email_address)
 
     def deactivate_device(self, device_id: int) -> None:
-        self.device_repo.update_status(device_id, "non_active")
+        self.device_repo.update_status(device_id, "NON_ACTIVE")
 
     def rename_device_email(self, device_id: int, new_email: str) -> bool:
         """Rename device email when status is still 'inserted'."""

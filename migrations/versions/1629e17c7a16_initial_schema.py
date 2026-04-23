@@ -1,8 +1,8 @@
 """Initial schema
 
-Revision ID: 6b2d15058568
+Revision ID: 1629e17c7a16
 Revises: 
-Create Date: 2026-04-23 19:39:04.579444
+Create Date: 2026-04-24 00:05:00.240848
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '6b2d15058568'
+revision = '1629e17c7a16'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -226,6 +226,7 @@ def upgrade():
             if_not_exists => TRUE
         );
     """)
+
     op.create_table('spo2_intraday',
     sa.Column('sleep_session_id', sa.Integer(), nullable=False),
     sa.Column('time', sa.DateTime(), nullable=False),
@@ -261,6 +262,7 @@ def downgrade():
     op.drop_table('devices')
     op.drop_table('users')
     op.drop_table('care_providers')
+
 
     op.execute("DROP TYPE IF EXISTS status_type CASCADE")
     op.execute("DROP TYPE IF EXISTS user_role CASCADE")

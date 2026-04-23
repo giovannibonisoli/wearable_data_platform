@@ -154,27 +154,34 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
 
         date_str = date_obj.strftime("%Y-%m-%d")
 
-        # Each tuple: (url, top-level response key, insert method)
+        # Each tuple: (url, response key, data key per metric, timestamp field name, insert method)
         # The /all.json variant returns timestamped intraday arrays.
+        # Per-metric structure (from Fitbit API docs):
+        #   SpO2:   { dateTime, minutes: [{value, minute}] }
+        #   HRV:    { dateTime, minutes: [{minute, value: {rmssd, lf, hf, coverage}}] }
+        #   BR:     { dateTime, value: {breathingRate} }  (each item in "br" array)
         endpoints = [
             (
                 f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}/all.json",
-                "minutes",
+                "minutes",   # response key → data points array
+                "minute",    # timestamp field inside each point
                 self.sleep_repo.insert_spo2,
             ),
             (
                 f"https://api.fitbit.com/1/user/-/hrv/date/{date_str}/all.json",
-                "hrv",
+                "minutes",   # points are nested inside hrv[0].minutes
+                "minute",    # timestamp field inside each point
                 self.sleep_repo.insert_hrv,
             ),
             (
                 f"https://api.fitbit.com/1/user/-/br/date/{date_str}/all.json",
-                "breathingRate",
+                "value",     # response key → each item has dateTime + value.breatingRate
+                "dateTime",  # timestamp field inside each point
                 self.sleep_repo.insert_breathing_rate,
             ),
         ]
 
-        for url, data_key, insert_fn in endpoints:
+        for url, data_key, ts_field, insert_fn in endpoints:
             data, rate_limited = client.get(url, optional=True)
             if rate_limited:
                 return False, True
@@ -186,7 +193,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
             skipped = 0
 
             for point in points:
-                raw_ts = point.get("dateTime") or point.get("timestamp")
+                raw_ts = point.get(ts_field)
                 if not raw_ts:
                     skipped += 1
                     continue

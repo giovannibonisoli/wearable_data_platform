@@ -1,9 +1,8 @@
 from typing import Dict, Any, Optional, List
 
 from database import StaffUserRepository, DeviceRepository
-from database.orm_models import UserModel, StaffProfileModel
+from database.orm_models import UserModel, StaffProfileModel, UserRole
 from database.connection import SqlalchemyConnection
-from database.repositories.staff_user_repository import USER_ROLE_STAFF
 from services.result_enums import (
     ChangePasswordResult,
     AdminCreateStaffUserResult,
@@ -40,7 +39,7 @@ class StaffUserService:
             'id': user_id,
             'username': user.username,
             'full_name': user.full_name,
-            'role': user.role,
+            'role': user.role.value,
             'created_at': user.created_at,
             'last_login': user.last_login,
             'care_provider_id': profile.care_provider_id if profile else None
@@ -52,7 +51,7 @@ class StaffUserService:
             "id": u.id,
             "username": u.username,
             "full_name": u.full_name,
-            "role": u.role,
+            "role": u.role.value,
             "created_at": u.created_at,
             "last_login": u.last_login,
             "is_active": u.is_active,
@@ -89,7 +88,7 @@ class StaffUserService:
 
         if role is None:
             return AdminResetPasswordResult.NOT_FOUND
-        if role != USER_ROLE_STAFF:
+        if role != UserRole.STAFF:
             return AdminResetPasswordResult.FORBIDDEN
         if self.staff_user_repo.update_password_for_staff_user(target_user_id, new_password):
             return AdminResetPasswordResult.SUCCESS
@@ -101,7 +100,7 @@ class StaffUserService:
         role = self.staff_user_repo.get_role(target_user_id)
         if role is None:
             return AdminDeactivateStaffUserResult.NOT_FOUND
-        if role != USER_ROLE_STAFF:
+        if role != UserRole.STAFF:
             return AdminDeactivateStaffUserResult.FORBIDDEN
         if self.staff_user_repo.deactivate_staff_user(target_user_id):
             return AdminDeactivateStaffUserResult.SUCCESS

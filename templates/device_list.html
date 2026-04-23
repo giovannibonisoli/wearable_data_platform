@@ -108,7 +108,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'authorized' %}
+                                    {% if device.auth_status == 'AUTHORIZED' %}
                                     <div>
                                         <strong class="text-primary">{{ device.device_type }}</strong>
                                         <br>
@@ -121,7 +121,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'inserted' %}
+                                    {% if device.auth_status == 'INSERTED' %}
                                         <div class="status-indicator status-warning"
                                             data-bs-toggle="tooltip" 
                                             title="{{ _('Authorization must be requested and granted before downloading data from the cloud') }}">
@@ -135,7 +135,7 @@
                                             <i class="fas fa-clock status-icon"></i>
                                             <span class="status-text">{{ _('Pending Request') }}</span>
                                         </div>
-                                    {% elif device.auth_status == 'authorized' %}
+                                    {% elif device.auth_status == 'AUTHORIZED' %}
                                         <div class="status-indicator status-success"
                                             data-bs-toggle="tooltip" 
                                             title="{{ _('Access authorization for data collected by this device has been obtained') }}">
@@ -150,9 +150,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'authorized' %}
+                                    {% if device.auth_status == 'AUTHORIZED' %}
                                         {% if device.data_reception_status == 'ok' %}
-                                            {% if device.data_reception_details.sync_days > 0 %}
+                                            {% if device.data_reception_details and device.data_reception_details.sync_days > 0 %}
                                                 {% if device.data_reception_details.sync_days < 4 %}
                                                     <div class="status-indicator status-success" style="min-width: 180px;"
                                                         data-bs-toggle="tooltip" 
@@ -168,22 +168,25 @@
                                                         <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
                                                     </div>
                                                 {% endif %}
+                                            {% elif device.data_reception_details and device.data_reception_details.sync_hours > 0 %}
+                                                <div class="status-indicator status-success" style="min-width: 180px;"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="{{ _('Data are updated to the last synchronization') }}">
+                                                    <i class="fas fa-check-circle status-icon"></i>
+                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
+                                                </div>
+                                            {% elif device.data_reception_details and device.data_reception_details.sync_minutes is defined %}
+                                                <div class="status-indicator status-success" style="min-width: 180px;"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="{{ _('Data are updated to the last synchronization') }}">
+                                                    <i class="fas fa-check-circle status-icon"></i>
+                                                    <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
+                                                </div>
                                             {% else %}
-                                                {% if device.data_reception_details.sync_hours > 0 %}
-                                                    <div class="status-indicator status-success" style="min-width: 180px;"
-                                                        data-bs-toggle="tooltip" 
-                                                        title="{{ _('Data are updated to the last synchronization') }}">
-                                                        <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_hours }} {{ _('hours ago') }}</span>
-                                                    </div>
-                                                {% else %}
-                                                    <div class="status-indicator status-success" style="min-width: 180px;"
-                                                        data-bs-toggle="tooltip" 
-                                                        title="{{ _('Data are updated to the last synchronization') }}">
-                                                        <i class="fas fa-check-circle status-icon"></i>
-                                                        <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_minutes }} {{ _('minutes ago') }}</span>
-                                                    </div>
-                                                {% endif %}
+                                                <div class="status-indicator status-info" style="min-width: 180px;">
+                                                    <i class="fas fa-info-circle status-icon"></i>
+                                                    <span class="status-text">{{ _('Checking...') }}</span>
+                                                </div>
                                             {% endif %}
                                         
                                         {% elif device.data_reception_status == 'sync_warning' %}
@@ -191,7 +194,11 @@
                                                  data-bs-toggle="tooltip" 
                                                  title="{{ _('Resync with the cloud to avoid data loss') }}">
                                                 <i class="fa fa-warning status-icon"></i>
+                                                {% if device.data_reception_details and device.data_reception_details.sync_days is defined %}
                                                 <span class="status-text">{{ _('last_sync') }}:<br>{{ device.data_reception_details.sync_days }} {{ _('days ago') }}</span>
+                                                {% else %}
+                                                <span class="status-text">{{ _('Sync warning') }}</span>
+                                                {% endif %}
                                             </div>
                                         
                                         {% elif device.data_reception_status == 'gap_warning' %}
@@ -222,8 +229,8 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'authorized' %}
-                                        {% if device.device_usage_details.average_hours_per_day > 8 %}
+                                    {% if device.auth_status == 'AUTHORIZED' %}
+                                        {% if device.device_usage_details and device.device_usage_details.average_hours_per_day > 8 %}
                                             <div class="status-indicator status-success" style="min-width: 180px;"
                                                 data-bs-toggle="tooltip" 
                                                 title="{{ _('The patient has used the device for more than 8 hours a day over the past week') }}">
@@ -246,7 +253,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'inserted' %}
+                                    {% if device.auth_status == 'INSERTED' %}
                                     <div class="actions-container">
                                         <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
                                             <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
@@ -266,7 +273,7 @@
                                             <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email') }}
                                         </button>
                                     </div>
-                                    {% elif device.auth_status == 'authorized' %}
+                                    {% elif device.auth_status == 'AUTHORIZED' %}
                        
                                     <a href=""
                                         class="btn btn-info btn-sm action-btn"
@@ -367,7 +374,7 @@
 
 <!-- Rename Email Modals -->
 {% for device in devices %}
-{% if device.auth_status == 'inserted' %}
+{% if device.auth_status == 'INSERTED' %}
 <div class="modal fade" id="renameEmailModal{{ device.id }}" tabindex="-1" aria-labelledby="renameEmailModalLabel{{ device.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content modal-card">

@@ -149,7 +149,7 @@ class SleepRepository:
     def insert_spo2(self, sleep_session_id: int, data: Dict[str, Any]) -> bool:
         spo2 = SpO2IntradayModel(
             sleep_session_id=sleep_session_id,
-            timestamp=datetime.fromisoformat(data['dateTime']),
+            time=datetime.fromisoformat(data['minute']),
             spo2_value=float(data['value'])
         )
         self.db.session.add(spo2)
@@ -160,7 +160,7 @@ class SleepRepository:
         value = data.get('value', {})
         hrv = HRVIntradayModel(
             sleep_session_id=sleep_session_id,
-            timestamp=datetime.fromisoformat(data['dateTime']),
+            time=datetime.fromisoformat(data['dateTime']),
             rmssd=float(value.get('rmssd', 0)),
             lf=float(value.get('lf')) if value.get('lf') else None,
             hf=float(value.get('hf')) if value.get('hf') else None,
@@ -173,8 +173,8 @@ class SleepRepository:
     def insert_breathing_rate(self, sleep_session_id: int, data: Dict[str, Any]) -> bool:
         br = BreathingRateIntradayModel(
             sleep_session_id=sleep_session_id,
-            timestamp=datetime.fromisoformat(data['dateTime']),
-            breathing_rate=float(data['value'])
+            time=datetime.fromisoformat(data['dateTime']),
+            breathing_rate=float(data['value']['breathingRate'])
         )
         self.db.session.add(br)
         self.db.session.commit()

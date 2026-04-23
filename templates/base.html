@@ -67,7 +67,7 @@
                         </a>
                     </li>
 
-                    {% if session.get('role') == 'staff' %}
+                    {% if session.get('role') == 'STAFF' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('device_list') }}">
                             <i class="bi bi-smartwatch me-1"></i>{{ _('Device Management') }}
@@ -76,7 +76,7 @@
                     {% endif %}
                     
                     <!-- Show Care Providers management for admin users only -->
-                    {% if session.get('role') == 'admin' %}
+                    {% if session.get('role') == 'ADMIN' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_care_providers') }}">
                             <i class="bi bi-building me-1"></i>{{ _('Care providers') }}

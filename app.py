@@ -102,7 +102,7 @@ babel.init_app(app, locale_selector=get_locale)
 def inject_globals():
     """Make common variables available to all templates."""
     def home_url():
-        if session.get('role') == 'admin':
+        if session.get('role') == 'ADMIN':
             return url_for('admin_care_providers')
         return url_for('home')
 
@@ -151,7 +151,7 @@ def admin_required(view):
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for('login'))
-        if session.get('role') != 'admin':
+        if session.get('role') != 'ADMIN':
             flash(gettext('Access denied.'), 'danger')
             return redirect(url_for('home'))
         return view(*args, **kwargs)
@@ -163,7 +163,7 @@ def staff_user_required(view):
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for('login'))
-        if session.get('role') != 'staff':
+        if session.get('role') != 'STAFF':
             flash(gettext('This area is only available to staff user accounts.'), 'info')
             return redirect(url_for('admin_care_providers'))
         return view(*args, **kwargs)
@@ -173,7 +173,7 @@ def staff_user_required(view):
 @app.route('/livelyageing/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        if session.get('role') == 'admin':
+        if session.get('role') == 'ADMIN':
             return redirect(url_for('admin_care_providers'))
         return redirect(url_for('home'))
 
@@ -196,7 +196,7 @@ def login():
                     
                 name = user_data["full_name"] or username
                 flash(gettext('Welcome, %(name)s!', name=name), 'success')
-                if user_data['role'] == 'admin':
+                if user_data['role'] == 'ADMIN':
                     return redirect(url_for('admin_care_providers'))
                 return redirect(url_for('home'))
             else:
@@ -248,7 +248,7 @@ def root():
     Redirect from root URL to the home page or admin dashboard.
     """
     if current_user.is_authenticated:
-        if session.get('role') == 'admin':
+        if session.get('role') == 'ADMIN':
             return redirect(url_for('admin_care_providers'))
         return redirect(url_for('home'))
     return redirect(url_for('login'))
@@ -260,7 +260,7 @@ def index():
     """
     Redirect to home page or admin dashboard.
     """
-    if session.get('role') == 'admin':
+    if session.get('role') == 'ADMIN':
         return redirect(url_for('admin_care_providers'))
     return redirect(url_for('home'))
 
@@ -359,6 +359,7 @@ def device_list():
             user_info = staff_user_service.get_user_info(user_id)
             devices_data = device_service.get_devices_by_care_provider(user_info['care_provider_id'])
             
+            
             final_devices_data = []
             for device_data in devices_data:
 
@@ -372,8 +373,8 @@ def device_list():
                 elif device_data["auth_status"] == 'authorized':
                     data_reception_status, data_reception_details = device_stats_service.get_device_sync_data(device_data["id"])
                     device_usage_details = device_stats_service.get_last_device_usage_statistics(device_data["id"], timedelta(days=7))
+                    device_data["auth_status"] = "AUTHORIZED"
 
-                
                 final_devices_data.append({
                         "id": device_data["id"],
                         "email_address": device_data["email_address"],
