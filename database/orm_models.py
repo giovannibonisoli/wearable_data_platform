@@ -3,6 +3,24 @@ SQLAlchemy ORM models mapped to PostgreSQL tables.
 """
 
 from extensions import db
+from sqlalchemy import TIMESTAMP
+from enum import Enum as PyEnum
+
+class StatusType(PyEnum):
+    """Stati per autorizzazione e device."""
+    INSERTED = 'inserted'
+    AUTHORIZED = 'authorized'
+    NON_ACTIVE = 'non_active'
+
+    def __str__(self):
+        return self.value
+
+class UserRole(PyEnum):
+    ADMIN = 'admin'
+    STAFF = 'staff'
+
+    def __str__(self):
+        return self.value
 
 
 class UserModel(db.Model):
@@ -12,7 +30,12 @@ class UserModel(db.Model):
     username = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
     full_name = db.Column(db.String(255), nullable=True)
-    role = db.Column(db.String(20), nullable=False)
+    role = role = db.Column(
+        db.Enum(UserRole, name='user_role'),
+        nullable=False,
+        server_default=UserRole.STAFF.name # Attenzione: usa .name per l'ENUM
+    )
+
     created_at = db.Column(db.DateTime, nullable=True)
     last_login = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -39,7 +62,11 @@ class DeviceModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     care_provider_id = db.Column(db.Integer, db.ForeignKey("care_providers.id"), nullable=False)
     email_address = db.Column(db.String(255), nullable=False)
-    authorization_status = db.Column(db.String(32), nullable=False)
+    authorization_status = authorization_status = db.Column(
+        db.Enum(StatusType, name='status_type'),
+        nullable=False,
+        server_default=StatusType.INSERTED.name # Attenzione: usa .name per l'ENUM
+    )
     device_type = db.Column(db.String(128), nullable=True)
     created_at = db.Column(db.DateTime, nullable=True)
     last_synch = db.Column(db.DateTime, nullable=True)
@@ -63,13 +90,10 @@ class PendingAuthorizationModel(db.Model):
 
 class DailySummaryModel(db.Model):
     __tablename__ = "daily_summaries"
-    __table_args__ = (
-        db.UniqueConstraint('device_id', 'date', name='uq_daily_summaries_device_date'),
-    )
 
-    id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), primary_key=True)
+    date = db.Column(db.Date, primary_key=True)
+    
     steps = db.Column(db.Integer, nullable=True)
     heart_rate = db.Column(db.Float, nullable=True)
     sleep_minutes = db.Column(db.Integer, nullable=True)
@@ -89,12 +113,12 @@ class DailySummaryModel(db.Model):
     temperature = db.Column(db.Float, nullable=True)
 
 
+
 class IntradayMetricModel(db.Model):
     __tablename__ = "intraday_metrics"
 
-    id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), primary_key=True)
+    time = db.Column(TIMESTAMP(timezone=True), primary_key=True) 
     heart_rate = db.Column(db.Float, nullable=True)
     steps = db.Column(db.Integer, nullable=True)
     calories = db.Column(db.Float, nullable=True)
@@ -106,15 +130,13 @@ class SleepSessionModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=True)
 
 
 class SleepLogModel(db.Model):
     __tablename__ = "sleep_logs"
 
-    id = db.Column(db.Integer, primary_key=True)
-    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    start_time = db.Column(db.DateTime, primary_key=True)
     end_time = db.Column(db.DateTime, nullable=False)
     is_main_sleep = db.Column(db.Boolean, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
@@ -128,9 +150,8 @@ class SleepLogModel(db.Model):
 class SleepLevelModel(db.Model):
     __tablename__ = "sleep_levels"
 
-    id = db.Column(db.Integer, primary_key=True)
-    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    time = db.Column(db.DateTime, primary_key=True)
     level = db.Column(db.String(32), nullable=False)
     seconds = db.Column(db.Integer, nullable=False)
 
@@ -138,7 +159,33 @@ class SleepLevelModel(db.Model):
 class SleepShortLevelModel(db.Model):
     __tablename__ = "sleep_short_levels"
 
-    id = db.Column(db.Integer, primary_key=True)
-    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    time = db.Column(db.DateTime, primary_key=True)
     seconds = db.Column(db.Integer, nullable=False)
+
+
+class BreathingRateIntradayModel(db.Model):
+    __tablename__ = "breathing_rate_intraday"
+    
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    time = db.Column(db.DateTime, primary_key=True)
+    breathing_rate = db.Column(db.Float, nullable=False)
+
+
+class SpO2IntradayModel(db.Model):
+    __tablename__ = "spo2_intraday"
+    
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    time = db.Column(db.DateTime, primary_key=True)
+    spo2_value = db.Column(db.Float, nullable=False)
+
+
+class HRVIntradayModel(db.Model):
+    __tablename__ = "hrv_intraday"
+    
+    sleep_session_id = db.Column(db.Integer, db.ForeignKey("sleep_sessions.id"), primary_key=True)
+    time = db.Column(db.DateTime, primary_key=True)
+    rmssd = db.Column(db.Float, nullable=False)
+    lf = db.Column(db.Float, nullable=True)
+    hf = db.Column(db.Float, nullable=True)
+    coverage = db.Column(db.Float, nullable=True)

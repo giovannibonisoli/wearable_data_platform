@@ -2,7 +2,9 @@
 Fitbit Sleep Collector Service.
 
 Collects detailed sleep sessions (logs, levels, short levels) from Fitbit API
-for authorized devices.
+for authorized devices. Also collects physiological metrics tied to sleep:
+SpO2 intraday, HRV intraday, and breathing rate intraday — each data point
+is matched to the correct sleep session by timestamp overlap.
 """
 
 import time
@@ -23,42 +25,195 @@ DEFAULT_START_DATE = datetime(2025, 1, 24).date()
 
 
 class FitbitSleepCollectorService(BaseFitbitCollector):
-    """Collects sleep session data from Fitbit API."""
+    """Collects sleep session data from Fitbit API.
+
+    For each date, collects:
+    - Sleep logs, levels, and short levels (one SleepSession per log).
+    - SpO2 intraday, HRV intraday, and breathing rate intraday — each point
+      is assigned to the sleep session whose window contains its timestamp.
+    """
 
     def __init__(self, conn: SqlalchemyConnection):
         super().__init__(conn)
         self.sleep_repo = SleepRepository(conn)
 
+    # ------------------------------------------------------------------
+    # Sleep logs
+    # ------------------------------------------------------------------
+
     def _fetch_and_store_sleep_logs(
         self, client: FitbitClient, device_id: int, date_obj
-    ) -> tuple[bool, bool]:
-        """Fetch and store sleep logs for one date. Returns (success, rate_limited)."""
+    ) -> tuple[bool, bool, list[dict]]:
+        """Fetch and store sleep logs for one date.
+
+        Returns:
+            (success, rate_limited, sessions_for_date)
+
+        sessions_for_date is a list of dicts used downstream to assign
+        physiological metric points to the correct sleep session:
+            {
+                "sleep_session_id": int,
+                "start_time": datetime,
+                "end_time": datetime,
+                "is_main_sleep": bool,
+            }
+        """
         date_str = date_obj.strftime("%Y-%m-%d")
         url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
 
         data, rate_limited = client.get(url, optional=False)
         if rate_limited:
-            return False, True
+            return False, True, []
 
         if not data or "sleep" not in data:
-            return True, False
+            return True, False, []
+
+        sessions_for_date = []
 
         for sleep_log in data["sleep"]:
             sleep_session_id = self.sleep_repo.create_session(device_id)
-            if sleep_session_id:
-                self.sleep_repo.insert_sleep_log(sleep_session_id, sleep_log)
+            if not sleep_session_id:
+                continue
 
-                for level in sleep_log.get("levels", {}).get("data", []):
-                    self.sleep_repo.insert_sleep_level(sleep_session_id, level)
+            self.sleep_repo.insert_sleep_log(sleep_session_id, sleep_log)
 
-                if sleep_log.get("type") == "stages":
-                    for short_data in sleep_log.get("levels", {}).get("shortData", []):
-                        self.sleep_repo.insert_sleep_short_level(sleep_session_id, short_data)
+            for level in sleep_log.get("levels", {}).get("data", []):
+                self.sleep_repo.insert_sleep_level(sleep_session_id, level)
 
-        if len(data["sleep"]) == 0:
+            if sleep_log.get("type") == "stages":
+                for short_data in sleep_log.get("levels", {}).get("shortData", []):
+                    self.sleep_repo.insert_sleep_short_level(sleep_session_id, short_data)
+
+            # Collect session window metadata for downstream timestamp matching.
+            try:
+                start_time = datetime.fromisoformat(sleep_log["startTime"])
+                end_time = datetime.fromisoformat(sleep_log["endTime"])
+            except (KeyError, ValueError) as e:
+                logger.warning(
+                    f"Could not parse sleep log timestamps for session {sleep_session_id}: {e}"
+                )
+                continue
+
+            sessions_for_date.append(
+                {
+                    "sleep_session_id": sleep_session_id,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "is_main_sleep": sleep_log.get("isMainSleep", False),
+                }
+            )
+
+        if not data["sleep"]:
             logger.info(f"No sleep logs found for device {device_id} on {date_obj}")
 
+        return True, False, sessions_for_date
+
+    # ------------------------------------------------------------------
+    # Physiological metrics (SpO2 / HRV / Breathing Rate)
+    # ------------------------------------------------------------------
+
+    def _match_session_for_timestamp(
+        self, timestamp: datetime, sessions_for_date: list[dict]
+    ) -> int | None:
+        """Return the sleep_session_id whose log window contains this timestamp.
+
+        Falls back to the main sleep session when no exact overlap is found
+        (e.g. a metric point recorded just outside the logged sleep window).
+        Returns None if sessions_for_date is empty.
+        """
+        for s in sessions_for_date:
+            if s["start_time"] <= timestamp <= s["end_time"]:
+                return s["sleep_session_id"]
+        # Fallback: main sleep session
+        for s in sessions_for_date:
+            if s["is_main_sleep"]:
+                return s["sleep_session_id"]
+        return None
+
+    def _fetch_and_store_sleep_physio(
+        self,
+        client: FitbitClient,
+        device_id: int,
+        date_obj,
+        sessions_for_date: list[dict],
+    ) -> tuple[bool, bool]:
+        """Fetch SpO2, HRV, and breathing rate intraday for a date.
+
+        Each data point is matched to the correct SleepSession by timestamp
+        overlap using _match_session_for_timestamp(). Points that cannot be
+        matched are discarded with a warning.
+
+        Returns:
+            (success, rate_limited)
+
+        Failures on individual endpoints are non-fatal (optional=True):
+        not all Fitbit devices support all three metrics.
+        """
+        if not sessions_for_date:
+            return True, False
+
+        date_str = date_obj.strftime("%Y-%m-%d")
+
+        # Each tuple: (url, top-level response key, insert method)
+        # The /all.json variant returns timestamped intraday arrays.
+        endpoints = [
+            (
+                f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}/all.json",
+                "minutes",
+                self.sleep_repo.insert_spo2,
+            ),
+            (
+                f"https://api.fitbit.com/1/user/-/hrv/date/{date_str}/all.json",
+                "hrv",
+                self.sleep_repo.insert_hrv,
+            ),
+            (
+                f"https://api.fitbit.com/1/user/-/br/date/{date_str}/all.json",
+                "breathingRate",
+                self.sleep_repo.insert_breathing_rate,
+            ),
+        ]
+
+        for url, data_key, insert_fn in endpoints:
+            data, rate_limited = client.get(url, optional=True)
+            if rate_limited:
+                return False, True
+            if not data:
+                continue
+
+            points = data.get(data_key, [])
+            matched = 0
+            skipped = 0
+
+            for point in points:
+                raw_ts = point.get("dateTime") or point.get("timestamp")
+                if not raw_ts:
+                    skipped += 1
+                    continue
+                try:
+                    ts = datetime.fromisoformat(raw_ts)
+                except ValueError:
+                    skipped += 1
+                    continue
+
+                session_id = self._match_session_for_timestamp(ts, sessions_for_date)
+                if session_id is None:
+                    skipped += 1
+                    continue
+
+                insert_fn(session_id, point)
+                matched += 1
+
+            logger.debug(
+                f"[{data_key}] device {device_id} on {date_str}: "
+                f"{matched} matched, {skipped} skipped"
+            )
+
         return True, False
+
+    # ------------------------------------------------------------------
+    # Device processing
+    # ------------------------------------------------------------------
 
     def _process_one_device(self, device: DeviceModel) -> str:
         device_id = device.id
@@ -87,7 +242,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
             logger.info(f"Device {device_id} ({email_address}) is up to date for sleep")
             return CollectorResult.SUCCESS.value
 
-        # One client per device: auto-refreshes and persists tokens on 401
+        # One client per device: auto-refreshes and persists tokens on 401.
         client = FitbitClient(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -98,7 +253,8 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
 
         while current_date <= end_date:
             try:
-                success, rate_limited = self._fetch_and_store_sleep_logs(
+                # --- Sleep logs ---
+                success, rate_limited, sessions_for_date = self._fetch_and_store_sleep_logs(
                     client, device_id, current_date
                 )
 
@@ -113,13 +269,34 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
                     current_date += timedelta(days=1)
                     continue
 
+                # --- Physiological metrics (non-fatal) ---
+                physio_success, physio_rate_limited = self._fetch_and_store_sleep_physio(
+                    client, device_id, current_date, sessions_for_date
+                )
+
+                if physio_rate_limited:
+                    logger.info(
+                        f"Rate limit on physio metrics for device {device_id} on {current_date}"
+                    )
+                    return CollectorResult.RATE_LIMITED.value
+
+                if not physio_success:
+                    logger.warning(
+                        f"Physio metrics incomplete for device {device_id} on {current_date}, continuing..."
+                    )
+
                 self.device_repo.update_sleep_checkpoint(device_id, current_date)
                 current_date += timedelta(days=1)
                 time.sleep(1)
 
             except Exception as e:
-                logger.error(f"Unexpected error for device {device_id} on {current_date}: {e}")
+                logger.error(
+                    f"Unexpected error for device {device_id} on {current_date}: {e}",
+                    exc_info=True,
+                )
                 return CollectorResult.ERROR.value
 
-        logger.info(f"Completed sleep for device {device_id} ({email_address}) up to {end_date}")
+        logger.info(
+            f"Completed sleep for device {device_id} ({email_address}) up to {end_date}"
+        )
         return CollectorResult.SUCCESS.value

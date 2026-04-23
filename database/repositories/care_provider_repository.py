@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from database.connection import SqlalchemyConnection
 from database.orm_models import CareProviderModel
@@ -14,7 +15,7 @@ class CareProviderRepository:
         return self.db.session.query(CareProviderModel).all()
 
     def create(self, full_name: str) -> Optional[int]:
-        care_provider = CareProviderModel(full_name=full_name)
+        care_provider = CareProviderModel(full_name=full_name, created_at=datetime.now())
         self.db.session.add(care_provider)
         self.db.session.commit()
         return care_provider.id

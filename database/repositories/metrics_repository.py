@@ -87,6 +87,11 @@ class MetricsRepository:
         if data_type not in _INTRADAY_METRIC_COLUMNS:
             return False
 
+        is_update = self.db.session.query(IntradayMetricModel).filter(
+            IntradayMetricModel.device_id == device_id,
+            IntradayMetricModel.time == timestamp
+        ).first() is not None
+
         metric = self.db.session.query(IntradayMetricModel).filter(
             IntradayMetricModel.device_id == device_id,
             IntradayMetricModel.time == timestamp
@@ -99,7 +104,7 @@ class MetricsRepository:
             self.db.session.add(metric)
 
         self.db.session.commit()
-        print(f"Intraday {data_type} data for device {device_id} successfully {'updated' if metric.id else 'inserted'}.")
+        print(f"Intraday {data_type} data for device {device_id} successfully {'updated' if is_update else 'inserted'}.")
         return True
 
     def get_intraday_timestamps_by_range(

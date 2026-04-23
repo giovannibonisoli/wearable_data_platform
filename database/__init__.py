@@ -21,7 +21,10 @@ from database.orm_models import (
     SleepSessionModel,
     SleepLogModel,
     SleepLevelModel,
-    SleepShortLevelModel
+    SleepShortLevelModel,
+    SpO2IntradayModel,
+    HRVIntradayModel,
+    BreathingRateIntradayModel
 )
 
 __all__ = [
@@ -43,5 +46,9 @@ __all__ = [
     'SleepSessionModel',
     'SleepLogModel',
     'SleepLevelModel',
-    'SleepShortLevelModel'
+    'SleepShortLevelModel',
+    'SpO2IntradayModel',
+    'HRVIntradayModel',
+    'BreathingRateIntradayModel',
+    'AlertModel',
 ]
