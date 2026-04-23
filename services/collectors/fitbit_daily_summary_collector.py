@@ -10,7 +10,8 @@ import logging
 import requests
 from datetime import datetime, timedelta
 
-from database import DeviceRepository, MetricsRepository, Device
+from database import DeviceRepository, MetricsRepository
+from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
@@ -151,7 +152,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
             logger.error(f"Unexpected error fetching summary for device {device_id} on {date_str}: {e}")
             return False, False
 
-    def _process_one_device(self, device: Device) -> str:
+    def _process_one_device(self, device: DeviceModel) -> str:
         device_id = device.id
         email_address = device.email_address
 

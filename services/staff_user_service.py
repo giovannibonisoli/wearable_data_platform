@@ -1,8 +1,9 @@
 from typing import Dict, Any, Optional, List
 
 from database import StaffUserRepository, DeviceRepository
+from database.orm_models import UserModel, StaffProfileModel
 from database.connection import SqlalchemyConnection
-from database.models import USER_ROLE_STAFF
+from database.repositories.staff_user_repository import USER_ROLE_STAFF
 from services.result_enums import (
     ChangePasswordResult,
     AdminCreateStaffUserResult,
@@ -33,40 +34,30 @@ class StaffUserService:
         return self.staff_user_repo.verify_credentials(username, password)
 
     def get_user_info(self, user_id: int) -> Dict[str, Any]:
-
         user = self.staff_user_repo.get_by_id(user_id)
-            
-        user = {
-                        'id': user_id,
-                        'username': user.username,
-                        'full_name': user.full_name,
-                        'role': user.role,
-                        'created_at': user.created_at,
-                        'last_login': user.last_login,
-                        'care_provider_id': user.care_provider_id
-                    }
-
-        return user
+        profile = self.conn.session.query(StaffProfileModel).get(user_id)
+        return {
+            'id': user_id,
+            'username': user.username,
+            'full_name': user.full_name,
+            'role': user.role,
+            'created_at': user.created_at,
+            'last_login': user.last_login,
+            'care_provider_id': profile.care_provider_id if profile else None
+        }
 
     def get_staff_users_by_care_provider(self, care_provider_id: int) -> List[Dict]:
-        staff_users_data = []
-
         staff_users = self.staff_user_repo.get_by_care_provider(care_provider_id)
-
-        for staff_user in staff_users:
-
-            staff_users_data.append({
-                "id": staff_user.id,
-                "username": staff_user.username,
-                "full_name": staff_user.full_name,
-                "role": staff_user.role,
-                "created_at": staff_user.created_at,
-                "last_login": staff_user.last_login,
-                "is_active": staff_user.is_active,
-                "care_provider_id": staff_user.care_provider_id,
-            })
-
-        return staff_users_data
+        return [{
+            "id": u.id,
+            "username": u.username,
+            "full_name": u.full_name,
+            "role": u.role,
+            "created_at": u.created_at,
+            "last_login": u.last_login,
+            "is_active": u.is_active,
+            "care_provider_id": care_provider_id,
+        } for u in staff_users]
 
 
     def check_and_change_password(self, user_id: int, current_password: str, new_password: str) -> ChangePasswordResult:

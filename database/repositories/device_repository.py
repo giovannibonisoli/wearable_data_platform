@@ -1,7 +1,7 @@
 from typing import Optional, List, Tuple, Dict, Any
 from datetime import datetime, date
 from database.connection import SqlalchemyConnection
-from database.models import Device
+from database.orm_models import DeviceModel
 from utils.encryption import encrypt_token, decrypt_token
 
 
@@ -13,12 +13,6 @@ class DeviceRepository:
     """
     
     def __init__(self, connection_manager: SqlalchemyConnection):
-        """
-        Initialize the repository with a connection manager.
-        
-        Args:
-            connection_manager: Active SqlalchemyConnection instance
-        """
         self.db = connection_manager
 
     def create(
@@ -28,496 +22,146 @@ class DeviceRepository:
         access_token: Optional[str] = None,
         refresh_token: Optional[str] = None,
     ) -> Optional[int]:
-        """
-        Insert a new device for a care provider.
+        device = DeviceModel(
+            care_provider_id=care_provider_id,
+            email_address=email_address,
+            authorization_status='inserted',
+            access_token=encrypt_token(access_token) if access_token else None,
+            refresh_token=encrypt_token(refresh_token) if refresh_token else None,
+        )
+        self.db.session.add(device)
+        self.db.session.flush()
+        self.db.session.commit()
+        return device.id
 
-        Tokens are encrypted if provided.
+    def get_by_id(self, device_id: int) -> Optional[DeviceModel]:
+        return self.db.session.query(DeviceModel).get(device_id)
 
-        Args:
-            care_provider_id: Care provider id.
-            email_address: Unique identifier for the device.
-            access_token: Token returned from an external provider.
-            refresh_token: Token used to refresh the access_token.
-
-        Returns:
-            int: The new device's id if successful, None otherwise.
-        """
-        if access_token and refresh_token:
-            encrypted_access_token = encrypt_token(access_token)
-            encrypted_refresh_token = encrypt_token(refresh_token)
-        else:
-            encrypted_access_token = None
-            encrypted_refresh_token = None
-
-        query = """
-            INSERT INTO devices (care_provider_id, email_address, authorization_status, device_type, 
-                                    daily_summaries_checkpoint, intraday_checkpoint, sleep_checkpoint, 
-                                    last_synch, access_token, refresh_token)
-            VALUES (%s, %s,'inserted', NULL, NULL, NULL, NULL, NULL, %s, %s)
-            RETURNING id
-        """
-
-        result = self.db.execute_query(
-            query, 
-            (care_provider_id, email_address, encrypted_access_token, encrypted_refresh_token)
+    def get_by_email(self, email_address: str) -> Optional[DeviceModel]:
+        return (
+            self.db.session.query(DeviceModel)
+            .filter(DeviceModel.email_address == email_address)
+            .order_by(DeviceModel.created_at.desc())
+            .first()
         )
 
-        return result[0][0] if result else None
+    def get_by_care_provider(self, care_provider_id: int) -> List[DeviceModel]:
+        return (
+            self.db.session.query(DeviceModel)
+            .filter(DeviceModel.care_provider_id == care_provider_id)
+            .order_by(DeviceModel.created_at.desc())
+            .all()
+        )
 
-    def get_by_id(self, device_id: int) -> Optional[Device]:
-        """
-        Fetch a device by ID.
+    def get_all_authorized(self) -> List[DeviceModel]:
+        return (
+            self.db.session.query(DeviceModel)
+            .filter(DeviceModel.authorization_status == 'authorized')
+            .order_by(DeviceModel.created_at.desc())
+            .all()
+        )
 
-        Args:
-            device_id: The device identifier.
-
-        Returns:
-            Device object or None if not found.
-        """
-        query = """
-            SELECT id, email_address, authorization_status, care_provider_id, device_type,
-                   created_at, last_synch, daily_summaries_checkpoint, 
-                   intraday_checkpoint, sleep_checkpoint
-            FROM devices
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_id,))
-        
-        if result:
-            row = result[0]
-            return Device(
-                id=row[0],
-                email_address=row[1],
-                authorization_status=row[2],
-                care_provider_id=row[3],
-                device_type=row[4],
-                created_at=row[5],
-                last_synch=row[6],
-                daily_summaries_checkpoint=row[7],
-                intraday_checkpoint=row[8],
-                sleep_checkpoint=row[9]
+    def get_all_authorized_by_care_provider(self, care_provider_id: int) -> List[DeviceModel]:
+        return (
+            self.db.session.query(DeviceModel)
+            .filter(
+                DeviceModel.care_provider_id == care_provider_id,
+                DeviceModel.authorization_status == 'authorized'
             )
-        return None
-
-    def get_by_email(self, email_address: str) -> Optional[Device]:
-        """
-        Find the latest device record associated with an email.
-
-        Args:
-            email_address: The address identifier.
-
-        Returns:
-            Device object if found, None otherwise.
-        """
-        query = """
-            SELECT id, email_address, authorization_status, care_provider_id, device_type,
-                   created_at, last_synch, daily_summaries_checkpoint, 
-                   intraday_checkpoint, sleep_checkpoint
-            FROM devices
-            WHERE email_address = %s
-            ORDER BY created_at DESC
-            LIMIT 1
-        """
-        result = self.db.execute_query(query, (email_address,))
-        
-        if result:
-            row = result[0]
-            return Device(
-                id=row[0],
-                email_address=row[1],
-                authorization_status=row[2],
-                care_provider_id=row[3],
-                device_type=row[4],
-                created_at=row[5],
-                last_synch=row[6],
-                daily_summaries_checkpoint=row[7],
-                intraday_checkpoint=row[8],
-                sleep_checkpoint=row[9]
-            )
-        return None
-
-    def get_by_care_provider(self, care_provider_id: int) -> List[Device]:
-        """
-        List all devices linked to a particular user.
-
-        Args:
-            care_provider_id: The care provider's primary key.
-
-        Returns:
-            List of Device objects sorted by creation date descending.
-        """
-        query = """
-            SELECT id, email_address, authorization_status, care_provider_id, device_type,
-                   created_at, last_synch, daily_summaries_checkpoint, 
-                   intraday_checkpoint, sleep_checkpoint
-            FROM devices
-            WHERE care_provider_id = %s
-            ORDER BY created_at DESC
-        """
-        result = self.db.execute_query(query, (care_provider_id,))
-        
-        if result:
-            return [
-                Device(
-                    id=row[0],
-                    email_address=row[1],
-                    authorization_status=row[2],
-                    care_provider_id=row[3],
-                    device_type=row[4],
-                    created_at=row[5],
-                    last_synch=row[6],
-                    daily_summaries_checkpoint=row[7],
-                    intraday_checkpoint=row[8],
-                    sleep_checkpoint=row[9]
-                )
-                for row in result
-            ]
-        return []
-
-    def get_all_authorized(self) -> List[Device]:
-        """
-        Retrieve all authorized devices (regardless of user).
-
-        Returns:
-            List of Device objects with authorization_status 'authorized'.
-        """
-        query = """
-            SELECT id, email_address, authorization_status, care_provider_id, device_type,
-                   created_at, last_synch, daily_summaries_checkpoint,
-                   intraday_checkpoint, sleep_checkpoint
-            FROM devices
-            WHERE authorization_status = 'authorized'
-            ORDER BY created_at DESC
-        """
-        result = self.db.execute_query(query, ())
-
-        return [
-            Device(
-                id=row[0],
-                email_address=row[1],
-                authorization_status=row[2],
-                care_provider_id=row[3],
-                device_type=row[4],
-                created_at=row[5],
-                last_synch=row[6],
-                daily_summaries_checkpoint=row[7],
-                intraday_checkpoint=row[8],
-                sleep_checkpoint=row[9]
-            )
-            for row in result
-        ] if result else []
-
-    def get_all_authorized_by_care_provider(self, care_provider_id: int) -> List[Device]:
-        """
-        Retrieve all authorized devices.
-
-        Returns:
-            List of dicts with id and email_address for authorized devices.
-        """
-        query = """
-            SELECT id, email_address, authorization_status, care_provider_id, device_type,
-                   created_at, last_synch, daily_summaries_checkpoint, 
-                   intraday_checkpoint, sleep_checkpoint
-            FROM devices
-            WHERE care_provider_id = %s
-            ORDER BY created_at DESC
-        """
-        result = self.db.execute_query(query, (care_provider_id,))
-        
-        return [
-            Device(
-                    id=row[0],
-                    email_address=row[1],
-                    authorization_status=row[2],
-                    care_provider_id=row[3],
-                    device_type=row[4],
-                    created_at=row[5],
-                    last_synch=row[6],
-                    daily_summaries_checkpoint=row[7],
-                    intraday_checkpoint=row[8],
-                    sleep_checkpoint=row[9]
-                )
-            for row in result if row[2] == 'authorized'
-        ] if result else []
+            .order_by(DeviceModel.created_at.desc())
+            .all()
+        )
 
     def update_status(self, device_id: int, auth_status: str) -> bool:
-        """
-        Update the authorization status of a specific device.
-
-        Valid statuses: 'inserted', 'authorized', 'non_active'
-
-        Args:
-            device_id: The primary key of the device to update.
-            auth_status: The new authorization status.
-
-        Returns:
-            bool: True if update succeeded.
-
-        Raises:
-            AssertionError: If auth_status is not a permitted value.
-        """
         assert auth_status in ['inserted', 'authorized', 'non_active'], \
             f"Invalid status: {auth_status}"
-
-        query = """
-            UPDATE devices
-            SET authorization_status = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (auth_status, device_id))
-        
-        if result:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.authorization_status = auth_status
+            self.db.session.commit()
             print(f"Status changed to {auth_status} for device {device_id}.")
-        return bool(result)
+            return True
+        return False
 
     def update_device_type(self, device_id: int, device_type: str) -> bool:
-        """
-        Assign or update the device_type (source platform) of a device.
-
-        Args:
-            device_id: The device identifier.
-            device_type: A descriptive type identifier.
-
-        Returns:
-            bool: True on success.
-        """
-        query = """
-            UPDATE devices
-            SET device_type = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_type, device_id))
-        return bool(result)
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.device_type = device_type
+            self.db.session.commit()
+            return True
+        return False
 
     def get_tokens(self, device_id: int) -> Tuple[Optional[str], Optional[str]]:
-        """
-        Fetch and decrypt stored access/refresh tokens.
-
-        Args:
-            device_id: The device identifier.
-
-        Returns:
-            Tuple of (access_token, refresh_token), both may be None
-        """
-        query = """
-            SELECT access_token, refresh_token
-            FROM devices
-            WHERE id = %s
-            ORDER BY created_at DESC, id DESC
-            LIMIT 1
-        """
-        result = self.db.execute_query(query, (device_id,))
-        
-        if result:
-            encrypted_access_token, encrypted_refresh_token = result[0]
-            
-            if encrypted_access_token and encrypted_refresh_token:
-                access_token = decrypt_token(encrypted_access_token)
-                refresh_token = decrypt_token(encrypted_refresh_token)
-                return access_token, refresh_token
-                
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device and device.access_token and device.refresh_token:
+            return decrypt_token(device.access_token), decrypt_token(device.refresh_token)
         return None, None
 
-    def update_tokens(
-        self, 
-        device_id: int, 
-        access_token: str, 
-        refresh_token: str
-    ) -> bool:
-        """
-        Encrypt and store new OAuth tokens for a device.
-
-        Args:
-            device_id: The device to update.
-            access_token: New access token.
-            refresh_token: New refresh token.
-
-        Returns:
-            bool: True on success.
-        """
-        encrypted_access_token = encrypt_token(access_token)
-        encrypted_refresh_token = encrypt_token(refresh_token)
-
-        query = """
-            UPDATE devices
-            SET access_token = %s, refresh_token = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(
-            query, 
-            (encrypted_access_token, encrypted_refresh_token, device_id)
-        )
-        return bool(result)
+    def update_tokens(self, device_id: int, access_token: str, refresh_token: str) -> bool:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.access_token = encrypt_token(access_token)
+            device.refresh_token = encrypt_token(refresh_token)
+            self.db.session.commit()
+            return True
+        return False
 
     def update_last_synch(self, device_id: int, timestamp: datetime) -> bool:
-        """
-        Save a new last-synch timestamp for a device.
-
-        Args:
-            device_id: The device identifier.
-            timestamp: The new synchronization timestamp.
-
-        Returns:
-            bool: True if the update succeeded.
-        """
-        query = """
-            UPDATE devices
-            SET last_synch = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (timestamp, device_id))
-        
-        if result:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.last_synch = timestamp
+            self.db.session.commit()
             print(f"Last synch date {timestamp} for device_id {device_id} successfully updated.")
-        return bool(result)
+            return True
+        return False
 
     def update_daily_summaries_checkpoint(self, device_id: int, date_value: date) -> bool:
-        """
-        Update the daily summary sync checkpoint.
-
-        Args:
-            device_id: The device identifier.
-            date_value: The date up to which daily summaries are collected.
-
-        Returns:
-            bool: True on success.
-        """
-        query = """
-            UPDATE devices
-            SET daily_summaries_checkpoint = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (date_value, device_id))
-        
-        if result:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.daily_summaries_checkpoint = date_value
+            self.db.session.commit()
             print(f"Daily summaries checkpoint {date_value} for device_id {device_id} successfully updated.")
-        return bool(result)
+            return True
+        return False
 
     def update_intraday_checkpoint(self, device_id: int, timestamp: datetime) -> bool:
-        """
-        Update the intraday metrics checkpoint for a given device.
-
-        Args:
-            device_id: Device identifier.
-            timestamp: Timestamp of the newest intraday data collected.
-
-        Returns:
-            bool: True on success.
-        """
-        query = """
-            UPDATE devices
-            SET intraday_checkpoint = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (timestamp, device_id))
-        
-        if result:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.intraday_checkpoint = timestamp
+            self.db.session.commit()
             print(f"Intraday checkpoint {timestamp} for device_id {device_id} successfully updated.")
-        return bool(result)
+            return True
+        return False
 
     def update_sleep_checkpoint(self, device_id: int, date_value: date) -> bool:
-        """
-        Update the checkpoint for sleep data collection.
-
-        Args:
-            device_id: The device identifier.
-            date_value: The new sleep checkpoint date.
-
-        Returns:
-            bool: True on success.
-        """
-        query = """
-            UPDATE devices
-            SET sleep_checkpoint = %s
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (date_value, device_id))
-        
-        if result:
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.sleep_checkpoint = date_value
+            self.db.session.commit()
             print(f"Sleep checkpoint {date_value} for device_id {device_id} successfully updated.")
-        return bool(result)
+            return True
+        return False
 
     def get_last_synch(self, device_id: int) -> Optional[datetime]:
-        """
-        Return the most recent successful sync timestamp for a device.
-
-        Args:
-            device_id: The device to check.
-
-        Returns:
-            datetime or None if unavailable.
-        """
-        query = """
-            SELECT last_synch
-            FROM devices
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_id,))
-        return result[0][0] if result else None
+        device = self.db.session.query(DeviceModel).get(device_id)
+        return device.last_synch if device else None
 
     def get_daily_summary_checkpoint(self, device_id: int) -> Optional[date]:
-        """
-        Return the checkpoint date up to which daily summaries have been collected.
-
-        Args:
-            device_id: The corresponding device.
-
-        Returns:
-            date or None if none exists.
-        """
-        query = """
-            SELECT daily_summaries_checkpoint
-            FROM devices
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_id,))
-        return result[0][0] if result else None
+        device = self.db.session.query(DeviceModel).get(device_id)
+        return device.daily_summaries_checkpoint if device else None
 
     def get_intraday_checkpoint(self, device_id: int) -> Optional[datetime]:
-        """
-        Return the checkpoint timestamp up to which intraday metrics have been collected.
-
-        Args:
-            device_id: The corresponding device.
-
-        Returns:
-            datetime or None.
-        """
-        query = """
-            SELECT intraday_checkpoint
-            FROM devices
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_id,))
-        return result[0][0] if result else None
+        device = self.db.session.query(DeviceModel).get(device_id)
+        return device.intraday_checkpoint if device else None
 
     def get_sleep_checkpoint(self, device_id: int) -> Optional[date]:
-        """
-        Return the checkpoint date up to which sleep data has been collected.
-
-        Args:
-            device_id: The corresponding device.
-
-        Returns:
-            date or None.
-        """
-        query = """
-            SELECT sleep_checkpoint
-            FROM devices
-            WHERE id = %s
-        """
-        result = self.db.execute_query(query, (device_id,))
-        return result[0][0] if result else None
+        device = self.db.session.query(DeviceModel).get(device_id)
+        return device.sleep_checkpoint if device else None
 
     def update_email_address(self, device_id: int, new_email: str) -> bool:
-        """
-        Update email for a device that is still in 'inserted' state (not yet authorized).
-        """
-        query = """
-            UPDATE devices
-            SET email_address = %s
-            WHERE id = %s AND authorization_status = 'inserted'
-            RETURNING id
-        """
-        result = self.db.execute_query(query, (new_email, device_id))
-        return bool(result)
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device and device.authorization_status == 'inserted':
+            device.email_address = new_email
+            self.db.session.commit()
+            return True
+        return False

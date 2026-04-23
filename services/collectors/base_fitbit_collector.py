@@ -9,7 +9,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from database import DeviceRepository, Device
+from database import DeviceRepository
+from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
 from services.result_enums import CollectorResult
 
@@ -26,7 +27,7 @@ class BaseFitbitCollector(ABC):
         self.device_repo = DeviceRepository(conn)
 
     @abstractmethod
-    def _process_one_device(self, device: Device) -> str:
+    def _process_one_device(self, device: DeviceModel) -> str:
         """
         Process one device. Must return 'success', 'rate_limited', or 'error'.
         """

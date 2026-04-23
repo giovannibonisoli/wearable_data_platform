@@ -1,8 +1,5 @@
 """
-SQLAlchemy ORM models mapped to existing PostgreSQL tables.
-
-Repositories use raw SQL via SqlalchemyConnection; these models exist for
-schema metadata and Flask-Migrate.
+SQLAlchemy ORM models mapped to PostgreSQL tables.
 """
 
 from extensions import db
@@ -66,6 +63,9 @@ class PendingAuthorizationModel(db.Model):
 
 class DailySummaryModel(db.Model):
     __tablename__ = "daily_summaries"
+    __table_args__ = (
+        db.UniqueConstraint('device_id', 'date', name='uq_daily_summaries_device_date'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=False)

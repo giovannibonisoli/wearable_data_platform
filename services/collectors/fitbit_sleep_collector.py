@@ -9,7 +9,8 @@ import time
 import logging
 from datetime import datetime, timedelta
 
-from database import SleepRepository, Device
+from database import SleepRepository
+from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import FitbitClient
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
@@ -59,7 +60,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
 
         return True, False
 
-    def _process_one_device(self, device: Device) -> str:
+    def _process_one_device(self, device: DeviceModel) -> str:
         device_id = device.id
         email_address = device.email_address
 
