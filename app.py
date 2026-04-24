@@ -367,13 +367,13 @@ def device_list():
                 data_reception_details = {}
                 device_usage_details = {}
 
-                if device_data["auth_status"] == 'inserted' and device_data["is_pending_auth"]:
+                if device_data["auth_status"] == 'INSERTED' and device_data["is_pending_auth"]:
                     device_data["auth_status"] = "pending_auth_request"
                     
-                elif device_data["auth_status"] == 'authorized':
+                elif device_data["auth_status"] == 'AUTHORIZED':
                     data_reception_status, data_reception_details = device_stats_service.get_device_sync_data(device_data["id"])
                     device_usage_details = device_stats_service.get_last_device_usage_statistics(device_data["id"], timedelta(days=7))
-                    device_data["auth_status"] = "AUTHORIZED"
+
 
                 final_devices_data.append({
                         "id": device_data["id"],

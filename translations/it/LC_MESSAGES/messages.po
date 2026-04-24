@@ -391,7 +391,6 @@ msgid "Authorization Successful!"
 msgstr "Autorizzazione riuscita!"
 
 #: templates/auth_confirmation.html:36
-#, fuzzy, python-format
 msgid "Wearable data access has been successfully obtained for %(email_address)s"
 msgstr ""
 "L'accesso ai dati del wearable è stato ottenuto con successo per "
