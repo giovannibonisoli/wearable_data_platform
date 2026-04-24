@@ -796,4 +796,11 @@ def change_language():
 
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(host=HOST, port=PORT, debug=DEBUG)
+    # This only runs with 'python app.py'
+    if DEBUG:
+        # Development: Use Flask's server
+        app.run(host=HOST, port=PORT, debug=DEBUG)
+    else:
+        # Production: Warn the user
+        print("For production, use: gunicorn -b 0.0.0.0:5000 app:app")
+        app.run(host=HOST, port=PORT, debug=DEBUG)
