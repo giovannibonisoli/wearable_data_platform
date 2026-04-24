@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    {# ── Back button ── #}
+    <div class="mb-3">
+        <a href="{{ url_for('video_tutorials') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{{ _('All tutorials') }}
+        </a>
+    </div>
+
+    {# ── Video player ── #}
+    <div class="card shadow-sm">
+        <div class="card-body p-2 p-sm-3">
+            <h5 class="card-title mb-2 mb-sm-3">{{ video.title }}</h5>
+            {% if video.description %}
+            <p class="text-muted mb-3">{{ video.description }}</p>
+            {% endif %}
+            <div class="video-container">
+                <iframe
+                    src="https://www.youtube.com/embed/{{ video.youtube_id }}?autoplay=1"
+                    title="{{ video.title }}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

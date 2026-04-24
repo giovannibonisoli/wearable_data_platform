@@ -855,6 +855,19 @@ main {
 }
 
 
+.btn-secondary {
+    background: #6c757d;
+    color: var(--white);
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    color: var(--white);
+}
+
 .btn-secondary i {
     color: var(--white);
 }
@@ -1205,5 +1218,37 @@ main {
         top: 30px;
         right: 6px;
         width: 38px;
+    }
+}
+
+/* ── Responsive Video / iFrame Embed ─────────────────────────── */
+
+/*
+ * Intrinsic-ratio technique: the padding-top on the wrapper reserves
+ * exactly 56.25% (= 9/16) of the element's width as vertical space,
+ * so the iframe always fills it perfectly at 16:9 — on any screen size,
+ * without horizontal or vertical scrollbars.
+ */
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-container iframe {
+    position: absolute;
+    inset: 0;          /* shorthand for top/right/bottom/left: 0 */
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* On very small phones give a touch of breathing room */
+@media (max-width: 576px) {
+    .video-container {
+        border-radius: 0.25rem;
     }
 }

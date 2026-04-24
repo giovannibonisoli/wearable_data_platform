@@ -341,6 +341,73 @@ def home():
         return redirect(url_for('login'))
 
 
+import json
+import os
+
+VIDEO_TUTORIALS_FILE = os.path.join(os.path.dirname(__file__), 'video_tutorials.json')
+
+
+def load_video_tutorials(locale=None):
+    """Load video tutorials from external JSON file and localize descriptions."""
+    try:
+        with open(VIDEO_TUTORIALS_FILE, 'r', encoding='utf-8') as f:
+            videos = json.load(f)
+    except FileNotFoundError:
+        app.logger.warning(f"Video tutorials file not found: {VIDEO_TUTORIALS_FILE}")
+        return []
+    except json.JSONDecodeError as e:
+        app.logger.error(f"Invalid JSON in video tutorials file: {e}")
+        return []
+
+    if locale is None:
+        locale = get_locale()
+
+    localized_videos = []
+    for video in videos:
+        localized_videos.append({
+            'id': video['id'],
+            'title': video.get('title', {}).get(locale, video.get('title', {}).get('en', '')),
+            'description': video.get('description', {}).get(locale, video.get('description', {}).get('en', '')),
+            'youtube_id': video['youtube_id'],
+        })
+    return localized_videos
+
+
+@app.route('/livelyageing/video_tutorials')
+@login_required
+@staff_user_required
+def video_tutorials():
+    """
+    Display list of video tutorials for staff users.
+    The list is loaded from video_tutorials.json file.
+    """
+    videos = load_video_tutorials(get_locale())
+    return render_template(
+        'video_tutorials.html',
+        videos=videos,
+    )
+
+
+@app.route('/livelyageing/video_tutorials/<int:video_id>')
+@login_required
+@staff_user_required
+def video_tutorial_detail(video_id):
+    """
+    Display a single video tutorial.
+    """
+    videos = load_video_tutorials(get_locale())
+    video = next((v for v in videos if v['id'] == video_id), None)
+    
+    if not video:
+        flash(gettext('Video not found.'), 'warning')
+        return redirect(url_for('video_tutorials'))
+    
+    return render_template(
+        'video_tutorial_detail.html',
+        video=video,
+    )
+
+
 @app.route('/livelyageing/device_list')
 @login_required
 @staff_user_required
