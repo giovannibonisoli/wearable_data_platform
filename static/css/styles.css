@@ -872,6 +872,19 @@ main {
     color: var(--white);
 }
 
+.tutorial-icon {
+    color: var(--primary);
+    font-size: 1.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.tutorial-icon:hover {
+    color: var(--secondary);
+    transform: scale(1.1);
+}
+
 .btn-info i {
     color: var(--white);
 }

@@ -347,29 +347,35 @@ import os
 VIDEO_TUTORIALS_FILE = os.path.join(os.path.dirname(__file__), 'video_tutorials.json')
 
 
-def load_video_tutorials(locale=None):
+def load_video_tutorials(locale=None, context=None):
     """Load video tutorials from external JSON file and localize descriptions."""
     try:
         with open(VIDEO_TUTORIALS_FILE, 'r', encoding='utf-8') as f:
             videos = json.load(f)
     except FileNotFoundError:
         app.logger.warning(f"Video tutorials file not found: {VIDEO_TUTORIALS_FILE}")
-        return []
+        return {}
     except json.JSONDecodeError as e:
         app.logger.error(f"Invalid JSON in video tutorials file: {e}")
-        return []
+        return {}
 
     if locale is None:
         locale = get_locale()
 
-    localized_videos = []
+    localized_videos = {}
     for video in videos:
-        localized_videos.append({
-            'id': video['id'],
-            'title': video.get('title', {}).get(locale, video.get('title', {}).get('en', '')),
-            'description': video.get('description', {}).get(locale, video.get('description', {}).get('en', '')),
-            'youtube_id': video['youtube_id'],
-        })
+        video_context = video.get('context', '')
+        if context and video_context != context and video_context:
+            continue
+        topic = video.get('topic')
+        if topic:
+            localized_videos[topic] = {
+                'id': video['id'],
+                'title': video.get('title', {}).get(locale, video.get('title', {}).get('en', '')),
+                'description': video.get('description', {}).get(locale, video.get('description', {}).get('en', '')),
+                'youtube_id': video['youtube_id'],
+                'context': video_context,
+            }
     return localized_videos
 
 
@@ -381,7 +387,8 @@ def video_tutorials():
     Display list of video tutorials for staff users.
     The list is loaded from video_tutorials.json file.
     """
-    videos = load_video_tutorials(get_locale())
+    videos_dict = load_video_tutorials(get_locale())
+    videos = list(videos_dict.values())
     return render_template(
         'video_tutorials.html',
         videos=videos,
@@ -395,7 +402,8 @@ def video_tutorial_detail(video_id):
     """
     Display a single video tutorial.
     """
-    videos = load_video_tutorials(get_locale())
+    videos_dict = load_video_tutorials(get_locale())
+    videos = list(videos_dict.values())
     video = next((v for v in videos if v['id'] == video_id), None)
     
     if not video:
@@ -452,10 +460,12 @@ def device_list():
                         "device_usage_details": device_usage_details
                     })
                 
-            return render_template('device_list.html', devices=final_devices_data)
+            return render_template('device_list.html', devices=final_devices_data, tutorial_videos=load_video_tutorials(get_locale(), 'device_list'))
                 
         except Exception as e:
             app.logger.error(f"Error retrieving devices: {e}")
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
 
