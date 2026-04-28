@@ -262,52 +262,61 @@
                                 </td>
                                 <td>
                                     {% if device.auth_status == 'INSERTED' %}
-                                    <div class="actions-container">
-                                        <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
-                                            <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
-                                            <button type="submit" 
-                                                    class="btn btn-primary btn-sm action-btn" 
+                                        <div class="actions-container">
+                                            <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
+                                                <button type="submit" 
+                                                        class="btn btn-primary btn-sm action-btn" 
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ _('Send an email to request authorization to download the data collected by the wearable device') }}">
+                                                    <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
+                                                </button>
+                                            </form>
+                                            <button type="button"
+                                                    class="btn btn-warning btn-sm action-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#renameEmailModal{{ device.id }}"
                                                     data-bs-toggle="tooltip"
-                                                    title="{{ _('Send an email to request authorization to download the data collected by the wearable device') }}">
-                                                <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
+                                                    title="{{ _('Rename the email address associated with this device') }}">
+                                                <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email') }}
                                             </button>
-                                        </form>
-                                        <button type="button"
-                                                class="btn btn-warning btn-sm action-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#renameEmailModal{{ device.id }}"
-                                                data-bs-toggle="tooltip"
-                                                title="{{ _('Rename the email address associated with this device') }}">
-                                            <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email') }}
-                                        </button>
-                                        {% if tutorial_videos and tutorial_videos.get('insert_new_device') %}
-                                        <a href="{{ url_for('video_tutorial_detail', video_id=tutorial_videos.get('get_device_auth').id) }}" 
-                                           class="tutorial-icon ms-1"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-original-title="{{ tutorial_videos.get('get_device_auth').title }}">
-                                            <i class="fas fa-question-circle"></i>
-                                        </a>
-                                        {% endif %}
-                                    </div>
+                                            {% if tutorial_videos and tutorial_videos.get('get_device_auth') %}
+                                            <a href="{{ url_for('video_tutorial_detail', video_id=tutorial_videos.get('get_device_auth').id) }}" 
+                                            class="tutorial-icon ms-1"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-original-title="{{ tutorial_videos.get('get_device_auth').title }}">
+                                                <i class="fas fa-question-circle"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
                                     {% elif device.auth_status == 'AUTHORIZED' %}
                        
-                                    <a href=""
-                                        class="btn btn-info btn-sm action-btn"
-                                        data-bs-toggle="tooltip"
-                                        title="{{ _('View detailed device information') }}">
-                                            <i class="bi bi-info-circle me-2"></i>{{ _('Device Details') }}
-                                    </a>                         
-                                    <button type="button" class="btn btn-danger btn-sm action-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deactivateModal{{ device.id }}">
-                                        <i class="far fa-times-circle me-2"></i>{{ _('Disable') }}
-                                    </button>
+                                        <a href=""
+                                            class="btn btn-info btn-sm action-btn"
+                                            data-bs-toggle="tooltip"
+                                            title="{{ _('View detailed device information') }}">
+                                                <i class="bi bi-info-circle me-2"></i>{{ _('Device Details') }}
+                                        </a>                         
+                                        <button type="button" class="btn btn-danger btn-sm action-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deactivateModal{{ device.id }}">
+                                            <i class="far fa-times-circle me-2"></i>{{ _('Disable') }}
+                                        </button>
+
+                                        {% if tutorial_videos and tutorial_videos.get('disable_device') %}
+                                            <a href="{{ url_for('video_tutorial_detail', video_id=tutorial_videos.get('disable_device').id) }}" 
+                                            class="tutorial-icon ms-1"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-original-title="{{ tutorial_videos.get('disable_device').title }}">
+                                                <i class="fas fa-question-circle"></i>
+                                            </a>
+                                        {% endif %}
                                 
                                     {% else %}
-                                    <div class="no-action-indicator">
-                                        <i class="fas fa-ban me-2"></i>
-                                        <span>{{ _('No action allowed') }}</span>
-                                    </div>
+                                        <div class="no-action-indicator">
+                                            <i class="fas fa-ban me-2"></i>
+                                            <span>{{ _('No action allowed') }}</span>
+                                        </div>
                                     {% endif %}
                                 </td>
                             </tr>
