@@ -11,6 +11,7 @@ from flask_babel import Babel, get_locale, gettext
 from database import ConnectionManager
 from extensions import db, migrate
 from services import DeviceService, DeviceStatisticsService, StaffUserService, CareProviderService
+from services.audit_service import AuditService
 from services.result_enums import (
     ChangePasswordResult,
     AddDeviceResult,
@@ -170,6 +171,47 @@ def staff_user_required(view):
     return wrapped
 
 
+def audit_log(action, resource_type):
+    def decorator(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            result = view(*args, **kwargs)
+
+            if not current_user.is_authenticated:
+                return result
+
+            actor_id = int(current_user.id)
+            actor_role = session.get('role', 'UNKNOWN')
+            resource_id = kwargs.get('device_id') or kwargs.get('care_provider_id') or kwargs.get('user_id')
+
+            outcome = 'success'
+            if hasattr(result, 'status_code'):
+                outcome = 'success' if result.status_code < 400 else 'failure'
+
+            details = {
+                'path': request.path,
+                'method': request.method
+            }
+
+            with ConnectionManager() as conn:
+                audit_service = AuditService(conn)
+                audit_service.log_event(
+                    actor_id=actor_id,
+                    actor_role=actor_role,
+                    action=action,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    outcome=outcome,
+                    details=details,
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get('User-Agent')
+                )
+
+            return result
+        return wrapped
+    return decorator
+
+
 @app.route('/livelyageing/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -188,18 +230,43 @@ def login():
             if user_data:
                 user = User(user_data['id'])
                 login_user(user)
-                    
-                # Store user info in session for easy access
+
                 session['user_id'] = user_data['id']
                 session['username'] = user_data['username']
                 session['role'] = user_data['role']
-                    
+
+                with ConnectionManager() as conn:
+                    audit_service = AuditService(conn)
+                    audit_service.log_event(
+                        actor_id=user_data['id'],
+                        actor_role=user_data['role'],
+                        action='LOGIN',
+                        resource_type='session',
+                        resource_id=user_data['id'],
+                        outcome='success',
+                        details={'username': username},
+                        ip_address=request.remote_addr,
+                        user_agent=request.headers.get('User-Agent')
+                    )
+
                 name = user_data["full_name"] or username
                 flash(gettext('Welcome, %(name)s!', name=name), 'success')
                 if user_data['role'] == 'ADMIN':
                     return redirect(url_for('admin_care_providers'))
                 return redirect(url_for('home'))
             else:
+                with ConnectionManager() as conn:
+                    audit_service = AuditService(conn)
+                    audit_service.log_event(
+                        actor_id=0,
+                        actor_role='UNKNOWN',
+                        action='LOGIN',
+                        resource_type='session',
+                        outcome='failure',
+                        details={'username': username, 'reason': 'invalid_credentials'},
+                        ip_address=request.remote_addr,
+                        user_agent=request.headers.get('User-Agent')
+                    )
                 flash(gettext('Incorrect username or password.'), 'danger')
     
     return render_template('login.html')
@@ -210,6 +277,23 @@ def login():
 @app.route('/livelyageing/logout')
 @login_required
 def logout():
+    user_id = session.get('user_id')
+    user_role = session.get('role', 'UNKNOWN')
+
+    with ConnectionManager() as conn:
+        audit_service = AuditService(conn)
+        audit_service.log_event(
+            actor_id=user_id or 0,
+            actor_role=user_role,
+            action='LOGOUT',
+            resource_type='session',
+            resource_id=user_id,
+            outcome='success',
+            details={'method': 'user_initiated'},
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+
     logout_user()
     for k in ('user_id', 'username', 'role'):
         session.pop(k, None)
@@ -283,7 +367,7 @@ def user_profile_info():
 @app.route('/livelyageing/change_password', methods=['POST'])
 @login_required
 def change_password():
-    
+
     current_password = request.form['current_password']
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
@@ -296,17 +380,36 @@ def change_password():
                 staff_user_service = StaffUserService(conn)
                 result = staff_user_service.check_and_change_password(user_id, current_password, new_password)
 
+                audit_service = AuditService(conn)
+                outcome = 'failure'
+                reason = None
+
                 if result == ChangePasswordResult.SUCCESS:
                     flash(gettext('Password changed successfully.'), 'success')
+                    outcome = 'success'
                 elif result == ChangePasswordResult.NO_CURRENT_PASSWORD:
                     flash(gettext('The current password is wrong.'), 'danger')
+                    reason = 'invalid_current_password'
                 else:
                     flash(gettext('Password change failed.'), 'danger')
+                    reason = 'unknown_error'
+
+                audit_service.log_event(
+                    actor_id=user_id,
+                    actor_role=session.get('role', 'UNKNOWN'),
+                    action='PASSWORD_CHANGE',
+                    resource_type='user',
+                    resource_id=user_id,
+                    outcome=outcome,
+                    details={'reason': reason},
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get('User-Agent')
+                )
         else:
             flash(gettext('The new password must be at least 8 characters.'), 'danger')
     else:
         flash(gettext('Passwords do not match.'), 'danger')
-    
+
     return redirect(url_for('user_profile_info'))
 
 
@@ -473,6 +576,7 @@ def device_list():
 @app.route('/livelyageing/add_device', methods=['POST'])
 @login_required
 @staff_user_required
+@audit_log('CREATE', 'device')
 def add_device():
     """
     Add a new device for the logged-in user.
@@ -626,6 +730,7 @@ def callback():
 @app.route('/livelyageing/deactivate_device', methods=['POST'])
 @login_required
 @staff_user_required
+@audit_log('DEACTIVATE', 'device')
 def deactivate_device():
     """ Deactivate authorized device"""
     device_id = request.form.get('DeactivateId')
@@ -641,6 +746,7 @@ def deactivate_device():
 @app.route('/livelyageing/rename_device_email/<int:device_id>', methods=['POST'])
 @login_required
 @staff_user_required
+@audit_log('UPDATE', 'device')
 def rename_device_email(device_id):
     """Rename the email address of an inserted (not yet authorized) device."""
     new_email = (request.form.get('newEmailAddress') or '').strip()
@@ -682,6 +788,7 @@ def admin_care_providers():
 @app.route('/livelyageing/admin/care_providers/add', methods=['POST'])
 @login_required
 @admin_required
+@audit_log('CREATE', 'care_provider')
 def admin_add_care_provider():
     full_name = (request.form.get('full_name') or '').strip()
 
@@ -700,6 +807,7 @@ def admin_add_care_provider():
 @app.route('/livelyageing/admin/<int:care_provider_id>/rename', methods=['POST'])
 @login_required
 @admin_required
+@audit_log('UPDATE', 'care_provider')
 def admin_rename_care_provider(care_provider_id):
     full_name = (request.form.get('full_name') or '').strip()
  
@@ -738,6 +846,7 @@ def admin_staff_users(care_provider_id):
 @app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/add', methods=['POST'])
 @login_required
 @admin_required
+@audit_log('CREATE', 'staff_user')
 def admin_add_staff_user(care_provider_id):
     username = (request.form.get('username') or '').strip()
     full_name = (request.form.get('full_name') or '').strip()
@@ -771,6 +880,7 @@ def admin_add_staff_user(care_provider_id):
 @app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/reset_password', methods=['POST'])
 @login_required
 @admin_required
+@audit_log('PASSWORD_RESET', 'staff_user')
 def admin_reset_staff_user_password(care_provider_id, user_id):
     new_password = request.form.get('new_password') or ''
     confirm = request.form.get('confirm_password') or ''
@@ -802,6 +912,7 @@ def admin_reset_staff_user_password(care_provider_id, user_id):
 @app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/deactivate', methods=['POST'])
 @login_required
 @admin_required
+@audit_log('DEACTIVATE', 'staff_user')
 def admin_deactivate_staff_user(care_provider_id, user_id):
     admin_id = int(current_user.id)
     with ConnectionManager() as conn:

@@ -5,6 +5,7 @@ SQLAlchemy ORM models mapped to PostgreSQL tables.
 from extensions import db
 from sqlalchemy import TIMESTAMP
 from enum import Enum as PyEnum
+from datetime import datetime, timezone
 
 class StatusType(PyEnum):
     """Stati per autorizzazione e device."""
@@ -189,3 +190,20 @@ class HRVIntradayModel(db.Model):
     lf = db.Column(db.Float, nullable=True)
     hf = db.Column(db.Float, nullable=True)
     coverage = db.Column(db.Float, nullable=True)
+
+
+class AuditLogModel(db.Model):
+    __tablename__ = "audit_logs"
+
+    id = db.Column(db.BigInteger, primary_key=True)
+    actor_id = db.Column(db.Integer, nullable=False)
+    actor_role = db.Column(db.String(32), nullable=False)
+    action = db.Column(db.String(64), nullable=False)
+    resource_type = db.Column(db.String(64), nullable=False)
+    resource_id = db.Column(db.Integer, nullable=True)
+    details = db.Column(db.JSON, nullable=True)
+    ip_address = db.Column(db.String(45), nullable=True)
+    user_agent = db.Column(db.String(512), nullable=True)
+    outcome = db.Column(db.String(16), nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    previous_hash = db.Column(db.String(64), nullable=True)
