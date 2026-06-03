@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from services.integrations.fitbit import FitbitClient
+from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
 
@@ -31,7 +31,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
 
     def _fetch_and_store_intraday_day(
         self,
-        client: FitbitClient,
+        client,
         device: DeviceModel,
         date_str: str,
         window_start: datetime,
@@ -150,8 +150,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             logger.warning(f"No tokens for device {device_id} ({email_address})")
             return CollectorResult.ERROR.value
 
-        # One client per device: auto-refreshes and persists tokens on 401
-        client = FitbitClient(
+        client = create_api_client(
             access_token=access_token,
             refresh_token=refresh_token,
             on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),

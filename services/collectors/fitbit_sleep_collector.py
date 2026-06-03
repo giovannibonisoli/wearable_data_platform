@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from database import SleepRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from services.integrations.fitbit import FitbitClient
+from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
 
@@ -42,7 +42,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
     # ------------------------------------------------------------------
 
     def _fetch_and_store_sleep_logs(
-        self, client: FitbitClient, device_id: int, date_obj
+        self, client, device_id: int, date_obj
     ) -> tuple[bool, bool, list[dict]]:
         """Fetch and store sleep logs for one date.
 
@@ -132,7 +132,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
 
     def _fetch_and_store_sleep_physio(
         self,
-        client: FitbitClient,
+        client,
         device_id: int,
         date_obj,
         sessions_for_date: list[dict],
@@ -249,8 +249,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
             logger.info(f"Device {device_id} ({email_address}) is up to date for sleep")
             return CollectorResult.SUCCESS.value
 
-        # One client per device: auto-refreshes and persists tokens on 401.
-        client = FitbitClient(
+        client = create_api_client(
             access_token=access_token,
             refresh_token=refresh_token,
             on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),

@@ -50,17 +50,35 @@ def get_optional_env(var_name: str, default: str) -> str:
 
 
 # =============================================================================
-# OAuth Configuration (Fitbit)
+# OAuth Provider Selection
+# =============================================================================
+# 'fitbit' (default) or 'google' — switch this when ready to migrate
+OAUTH_PROVIDER = get_optional_env("OAUTH_PROVIDER", "fitbit")
+
+# =============================================================================
+# OAuth Configuration (Fitbit — Legacy)
 # =============================================================================
 CLIENT_ID = get_required_env("CLIENT_ID")
 CLIENT_SECRET = get_required_env("CLIENT_SECRET")
 
 # Environment-based redirect URL (different for dev/staging/prod)
-REDIRECT_URI = get_optional_env("REDIRECT_URI", "http://localhost:5000/")
+REDIRECT_URI = get_optional_env("REDIRECT_URI", "http://localhost:5000/callback")
 
 # Fitbit API URLs (constants - these don't change)
 AUTH_URL = "https://www.fitbit.com/oauth2/authorize"
 TOKEN_URL = "https://api.fitbit.com/oauth2/token"
+
+
+# =============================================================================
+# OAuth Configuration (Google Health API)
+# =============================================================================
+GOOGLE_CLIENT_ID = get_required_env("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = get_required_env("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = get_optional_env("GOOGLE_REDIRECT_URI", "http://localhost:5000/callback")
+
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+HEALTH_API_BASE = "https://health.googleapis.com/v4"
 
 
 # =============================================================================

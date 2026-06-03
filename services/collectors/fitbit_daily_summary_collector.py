@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from services.integrations.fitbit import FitbitClient
+from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_fitbit_collector import BaseFitbitCollector
 from services.result_enums import CollectorResult
 
@@ -31,7 +31,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
         self.metrics_repo = MetricsRepository(conn)
 
     def _fetch_and_store_daily_summary(
-        self, client: FitbitClient, device_id: int, email_address: str, date_obj
+        self, client, device_id: int, email_address: str, date_obj
     ) -> tuple[bool, bool]:
         """Fetch and store one day's summary. Returns (success, rate_limited)."""
         date_str = date_obj.strftime("%Y-%m-%d")
@@ -179,8 +179,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
             logger.info(f"Device {device_id} ({email_address}) is up to date for summaries")
             return CollectorResult.SUCCESS.value
 
-        # One client per device: auto-refreshes and persists tokens on 401
-        client = FitbitClient(
+        client = create_api_client(
             access_token=access_token,
             refresh_token=refresh_token,
             on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),

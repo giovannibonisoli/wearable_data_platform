@@ -5,12 +5,14 @@ from typing import Dict, List, Any, Optional
 from database import DeviceRepository, AuthorizationRepository
 from database.connection import SqlalchemyConnection
 from services.integrations.fitbit import (
-    FitbitClient,
     generate_state,
-    get_tokens,
     generate_code_verifier,
     generate_code_challenge,
+)
+from services.integrations.oauth_provider import (
+    create_api_client,
     generate_auth_url,
+    exchange_code,
 )
 from services.integrations.emails import send_email
 from services.result_enums import AddDeviceResult, SendAuthEmailResult, AuthGrantResult
@@ -72,8 +74,7 @@ class DeviceService:
             try:
                 access_token, refresh_token = self.device_repo.get_tokens(device.id)
 
-                # One client per device: auto-refreshes and persists tokens on 401
-                client = FitbitClient(
+                client = create_api_client(
                     access_token=access_token,
                     refresh_token=refresh_token,
                     on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device.id, a, r),
@@ -106,17 +107,19 @@ class DeviceService:
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
         code_challenge = generate_code_challenge(code_verifier)
-        auth_url = generate_auth_url(code_challenge, state)
+        auth_url = generate_auth_url(state, code_challenge)
 
-        email_subject = "Autorizzazione Fitbit - Lively Ageing"
+        from config import OAUTH_PROVIDER
+        provider_label = "Google Health" if OAUTH_PROVIDER == "google" else "Fitbit"
+        email_subject = f"Autorizzazione {provider_label} - Lively Ageing"
 
         email_html = f"""
             <html>
             <body>
-                <h2>Autorizzazione Fitbit</h2>
+                <h2>Autorizzazione {provider_label}</h2>
                 <p>Ciao,</p>
-                <p>Per autorizzare l'accesso ai tuoi dati Fitbit, clicca sul link qui sotto:</p>
-                <p><a href="{auth_url}">Autorizza Fitbit</a></p>
+                <p>Per autorizzare l'accesso ai tuoi dati {provider_label}, clicca sul link qui sotto:</p>
+                <p><a href="{auth_url}">Autorizza {provider_label}</a></p>
                 <p>Oppure copia e incolla questo link nel tuo browser:</p>
                 <p>{auth_url}</p>
                 <br>
@@ -126,11 +129,11 @@ class DeviceService:
             """
 
         email_text = f"""
-            Autorizzazione Fitbit
+            Autorizzazione {provider_label}
 
             Ciao,
 
-            Per autorizzare l'accesso ai tuoi dati Fitbit, copia e incolla questo link nel tuo browser:
+            Per autorizzare l'accesso ai tuoi dati {provider_label}, copia e incolla questo link nel tuo browser:
 
             {auth_url}
 
@@ -162,7 +165,7 @@ class DeviceService:
 
         code_verifier = pending_auth["code_verifier"]
 
-        access_token, refresh_token = get_tokens(code, code_verifier)
+        access_token, refresh_token = exchange_code(code, code_verifier)
         if not access_token or not refresh_token:
             return AuthGrantResult.ERROR_RETRIEVE_TOKENS
 
