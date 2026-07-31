@@ -60,13 +60,15 @@ migrate.init_app(app, db)
 
 import database.orm_models  # noqa: F401  — register models for Flask-Migrate
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_FILE = os.path.join(BASE_DIR, 'app.log')
 # Basic logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]',
     handlers=[
         logging.StreamHandler(),  # Log on console
-        logging.FileHandler('app.log', mode='w')  # Log on a file
+        logging.FileHandler(LOG_FILE, mode='w')  # Log on a file
     ]
 )
 
@@ -128,7 +130,7 @@ if FLASK_ENV == 'production':
     #     os.getenv('SSL_CERT'),  # Path to the certificate.
     #     os.getenv('SSL_KEY')     # Path to the private key.
     # )
-    DEBUG = True
+    DEBUG = False
 else:
     # Development mode: use localhost and HTTP
     HOST = os.getenv('HOST')
