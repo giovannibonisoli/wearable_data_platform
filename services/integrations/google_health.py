@@ -243,14 +243,15 @@ class GoogleHealthClient:
 
     def _do_refresh(self) -> None:
         new_access, new_refresh = refresh_google_tokens(self.refresh_token)
-        if not new_access or not new_refresh:
-            raise Exception("Google token refresh failed: no tokens returned.")
+        if not new_access:
+            raise Exception("Google token refresh failed: no access token returned.")
         self.access_token = new_access
-        self.refresh_token = new_refresh
+        if new_refresh:
+            self.refresh_token = new_refresh
         logger.info("Google token refreshed successfully.")
         if self.on_tokens_updated:
             try:
-                self.on_tokens_updated(new_access, new_refresh)
+                self.on_tokens_updated(new_access, self.refresh_token)
             except Exception as e:
                 logger.error(f"on_tokens_updated callback failed: {e}")
 
