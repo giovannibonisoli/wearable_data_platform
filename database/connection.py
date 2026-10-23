@@ -132,7 +132,8 @@ class ConnectionManager:
 
     Inside a Flask application context, uses ``db.session``.
     Outside Flask (e.g. legacy scripts), creates a dedicated SQLAlchemy session
-    using ``config.DB_CONFIG`` (call ``load_dotenv()`` before importing config).
+    using ``config.DB_CONFIG``; the required environment variables must be set
+    in the process before importing config.
     """
 
     def __init__(self) -> None:

@@ -9,9 +9,6 @@ Usage:
 import sys
 import bcrypt
 from datetime import datetime
-from dotenv import load_dotenv
-
-load_dotenv()
 
 from database.connection import ConnectionManager
 from database.orm_models import UserModel, UserRole
