@@ -201,15 +201,19 @@ class GoogleHealthClient:
                 f"Google Health API error {resp.status_code}: {resp.text}"
             )
 
-        devices = resp.json().get("devices", [])
+        devices = resp.json().get("pairedDevices", [])
         if not devices:
             raise Exception("No paired devices found")
 
         d = devices[0]
+        last_sync = d.get("lastSyncTime")
+        if not last_sync:
+            raise Exception("Paired device has no lastSyncTime")
+
         return {
-            "deviceVersion": d.get("displayName", "Unknown"),
+            "deviceVersion": d.get("deviceVersion", "Unknown"),
             "lastSyncTime": datetime.fromisoformat(
-                d.get("lastSyncedTime", "").replace("Z", "+00:00")
+                last_sync.replace("Z", "+00:00")
             ),
         }
 
@@ -541,37 +545,63 @@ class GoogleHealthClient:
         if not resp:
             return {"sleep": []}, False
 
+        level_map = {
+            "AWAKE": "wake",
+            "LIGHT": "light",
+            "DEEP": "deep",
+            "REM": "rem",
+            "RESTLESS": "restless",
+            "ASLEEP": "asleep",
+        }
+
         sleep_logs = []
         for dp in resp.get("dataPoints", []):
             s = dp.get("sleep", {})
             summary = s.get("summary", {})
             metadata = s.get("metadata", {})
-            total_asleep = int(summary.get("minutesAsleep", 0))
+            interval = s.get("interval", {})
+            minutes_in_bed = int(summary.get("minutesInSleepPeriod", 0))
             log = {
                 "dateOfSleep": date_str,
-                "minutesAsleep": total_asleep,
+                "duration": minutes_in_bed * 60 * 1000,
+                "minutesAsleep": int(summary.get("minutesAsleep", 0)),
                 "minutesAwake": int(summary.get("minutesAwake", 0)),
-                "minutesInTheBed": int(summary.get("minutesInSleepPeriod", 0)),
-                "startTime": s.get("interval", {}).get("startTime", ""),
-                "endTime": s.get("interval", {}).get("endTime", ""),
+                "timeInBed": minutes_in_bed,
+                "startTime": interval.get("startTime", ""),
+                "endTime": interval.get("endTime", ""),
                 "isMainSleep": metadata.get("main", False),
+                "logType": "manual" if metadata.get("manuallyEdited") else "auto_detected",
                 "type": "stages" if s.get("type") == "STAGES" else "classic",
                 "levels": {},
             }
+
             stages = s.get("stages", [])
             if stages:
-                level_data = []
-                for st in stages:
-                    level_data.append({
+                log["levels"]["data"] = [
+                    {
                         "dateTime": st.get("startTime", ""),
-                        "level": st.get("type", "").lower(),
+                        "level": level_map.get(
+                            st.get("type", "").upper(), st.get("type", "").lower()
+                        ),
                         "seconds": self._duration_seconds(
                             st.get("startTime"), st.get("endTime")
                         ),
-                    })
-                    short_data = []
-                log["levels"]["data"] = level_data
-                log["levels"]["shortData"] = level_data
+                    }
+                    for st in stages
+                ]
+
+            short_awakenings = s.get("shortAwakenings", [])
+            if short_awakenings:
+                log["levels"]["shortData"] = [
+                    {
+                        "dateTime": st.get("startTime", ""),
+                        "level": "wake",
+                        "seconds": self._duration_seconds(
+                            st.get("startTime"), st.get("endTime")
+                        ),
+                    }
+                    for st in short_awakenings
+                ]
 
             sleep_logs.append(log)
 
@@ -652,6 +682,7 @@ class GoogleHealthClient:
             hf_val = hrv.get("hfPower", {})
             cov = hrv.get("coverage", {})
             minutes.append({
+                "dateTime": ts,
                 "minute": ts,
                 "value": {
                     "rmssd": float(rmssd),

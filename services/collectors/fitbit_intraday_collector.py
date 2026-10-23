@@ -7,7 +7,7 @@ from Fitbit API for authorized devices. Processes one date per device per cycle.
 
 import logging
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
@@ -161,8 +161,13 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             try:
                 device_data = client.get_device_info()
                 new_last_synch = device_data["lastSyncTime"]
-                if last_synch.tzinfo:
+                if last_synch.tzinfo is None:
+                    if new_last_synch.tzinfo is not None:
+                        new_last_synch = new_last_synch.astimezone(timezone.utc).replace(tzinfo=None)
+                elif new_last_synch.tzinfo is None:
                     new_last_synch = new_last_synch.replace(tzinfo=last_synch.tzinfo)
+                else:
+                    new_last_synch = new_last_synch.astimezone(last_synch.tzinfo)
                 # Never move last_synch backwards if provider returns stale metadata.
                 if new_last_synch > last_synch:
                     self.device_repo.update_last_synch(
