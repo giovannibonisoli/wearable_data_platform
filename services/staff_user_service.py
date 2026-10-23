@@ -88,7 +88,7 @@ class StaffUserService:
 
         if role is None:
             return AdminResetPasswordResult.NOT_FOUND
-        if role != UserRole.STAFF:
+        if role != UserRole.STAFF.value:
             return AdminResetPasswordResult.FORBIDDEN
         if self.staff_user_repo.update_password_for_staff_user(target_user_id, new_password):
             return AdminResetPasswordResult.SUCCESS
@@ -100,7 +100,7 @@ class StaffUserService:
         role = self.staff_user_repo.get_role(target_user_id)
         if role is None:
             return AdminDeactivateStaffUserResult.NOT_FOUND
-        if role != UserRole.STAFF:
+        if role != UserRole.STAFF.value:
             return AdminDeactivateStaffUserResult.FORBIDDEN
         if self.staff_user_repo.deactivate_staff_user(target_user_id):
             return AdminDeactivateStaffUserResult.SUCCESS

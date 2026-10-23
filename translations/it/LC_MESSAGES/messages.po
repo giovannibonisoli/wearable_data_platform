@@ -165,15 +165,15 @@ msgstr "Non è stato possibile creare l'utente staff."
 
 #: app.py:781
 msgid "Password updated."
-msgstr "Le password non corrispondono."
+msgstr "Password aggiornata."
 
 #: app.py:783
 msgid "User not found."
-msgstr "Email non trovata."
+msgstr "Utente non trovato."
 
 #: app.py:785
 msgid "You cannot change that password."
-msgstr "Cambia password"
+msgstr "Non puoi modificare quella password."
 
 #: app.py:787
 msgid "Password update failed."
@@ -185,15 +185,15 @@ msgstr "Utente staff disattivato."
 
 #: app.py:804
 msgid "Staff user not found."
-msgstr "Email non trovata."
+msgstr "Utente staff non trovato."
 
 #: app.py:806
 msgid "You cannot deactivate this staff user."
-msgstr "Non è possibile disattivare l'utente."
+msgstr "Non puoi disattivare questo utente staff."
 
 #: app.py:808
 msgid "Deactivation failed."
-msgstr "Conferma disattivazione"
+msgstr "Disattivazione non riuscita."
 
 #: templates/admin_care_providers.html:3 templates/admin_care_providers.html:9
 #: templates/admin_staff_users.html:82 templates/base.html:87
@@ -932,8 +932,8 @@ msgstr "Torna alla home"
 
 #: utils/templates/auth_confirmation.html:36
 #, python-format
-msgid "Wearable data access has been successfully obtained for %(address_name)s"
+msgid "Wearable data access has been successfully obtained for %(email_address)s"
 msgstr ""
 "L'accesso ai dati del wearable è stato ottenuto con successo per "
-"\"%(address_name)s"
+"\"%(email_address)s"
 

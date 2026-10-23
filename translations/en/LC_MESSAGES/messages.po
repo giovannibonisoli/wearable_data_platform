@@ -169,42 +169,36 @@ msgid "Could not create staff user."
 msgstr ""
 
 #: app.py:781
-#, fuzzy
 msgid "Password updated."
-msgstr "Passwords do not match."
+msgstr "Password updated."
 
 #: app.py:783
-#, fuzzy
 msgid "User not found."
-msgstr "Email not found."
+msgstr "User not found."
 
 #: app.py:785
-#, fuzzy
 msgid "You cannot change that password."
-msgstr "Change Password"
+msgstr "You cannot change that password."
 
 #: app.py:787
-#, fuzzy
 msgid "Password update failed."
-msgstr "Password change failed."
+msgstr "Password update failed."
 
 #: app.py:802
 msgid "Staff user deactivated."
 msgstr ""
 
 #: app.py:804
-#, fuzzy
 msgid "Staff user not found."
-msgstr "Email not found."
+msgstr "Staff user not found."
 
 #: app.py:806
 msgid "You cannot deactivate this staff user."
-msgstr ""
+msgstr "You cannot deactivate this staff user."
 
 #: app.py:808
-#, fuzzy
 msgid "Deactivation failed."
-msgstr "Confirm Deactivation"
+msgstr "Deactivation failed."
 
 #: templates/admin_care_providers.html:3 templates/admin_care_providers.html:9
 #: templates/admin_staff_users.html:82 templates/base.html:87
