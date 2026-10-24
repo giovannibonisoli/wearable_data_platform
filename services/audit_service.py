@@ -1,5 +1,4 @@
 import hashlib
-import json
 from datetime import datetime, timezone
 from database.orm_models import AuditLogModel
 

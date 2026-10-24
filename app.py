@@ -5,7 +5,7 @@ from rich import _console
 
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
-from datetime import datetime, timedelta, timezone, time
+from datetime import datetime, timedelta
 from flask_babel import Babel, get_locale, gettext
 
 from database import ConnectionManager

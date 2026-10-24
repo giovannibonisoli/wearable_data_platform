@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta
-from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, List
 
 from database import CareProviderRepository, DeviceRepository, StaffUserRepository
 from database.connection import SqlalchemyConnection
