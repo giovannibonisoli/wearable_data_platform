@@ -6,13 +6,11 @@ from the Google Health API for authorized devices. Processes one date per device
 """
 
 import logging
-import requests
 from datetime import datetime, timedelta, timezone
 
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
@@ -39,35 +37,53 @@ class IntradayCollectorService(BaseCollector):
         last_synch_date: datetime,
     ) -> tuple[bool, bool]:
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
-        detail_level = "1min"
         metrics_config = [
-            ("heart_rate", f"{HEALTH_API_BASE}/users/me/activities/heart/date/{date_str}/1d/{detail_level}.json", "activities-heart-intraday"),
-            ("steps", f"{HEALTH_API_BASE}/users/me/activities/steps/date/{date_str}/1d/{detail_level}.json", "activities-steps-intraday"),
-            ("calories", f"{HEALTH_API_BASE}/users/me/activities/calories/date/{date_str}/1d/{detail_level}.json", "activities-calories-intraday"),
-            ("distance", f"{HEALTH_API_BASE}/users/me/activities/distance/date/{date_str}/1d/{detail_level}.json", "activities-distance-intraday"),
-            ("floors", f"{HEALTH_API_BASE}/users/me/activities/floors/date/{date_str}/1d/{detail_level}.json", "activities-floors-intraday"),
-            ("elevation", f"{HEALTH_API_BASE}/users/me/activities/elevation/date/{date_str}/1d/{detail_level}.json", "activities-elevation-intraday"),
+            # (internal data type, Google Health dataType, value field, kind)
+            # kind: "sample" -> filtered via sample physical time
+            #      "interval" -> filtered via interval civil start time
+            #      "reconcile" -> reconciled endpoint (no `list` action)
+            ("heart_rate", "heart-rate", "beatsPerMinute", "sample"),
+            ("steps", "steps", "count", "interval"),
+            ("calories", "active-energy-burned", "kilocalories", "interval"),
+            ("distance", "distance", "meters", "interval"),
+            ("floors", "floors", "count", "reconcile"),
+            ("elevation", "altitude", "meters", "interval"),
         ]
 
         data_points: dict = {}
-        for data_type, url, key in metrics_config:
-            data, rate_limited = client.get(url, optional=False)
+        for data_type, gtype, value_field, kind in metrics_config:
+            if kind == "sample":
+                start_time = f"{date_str}T00:00:00Z"
+                end_time = f"{date_str}T23:59:59Z"
+                resp, rate_limited = client._list_data_points(
+                    gtype, date_str, optional=False, start_time=start_time, end_time=end_time
+                )
+            elif kind == "reconcile":
+                filter_expr = f'{gtype.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
+                resp, rate_limited = client._list_data_points(
+                    gtype, date_str, optional=False, filter_expr=filter_expr, action="reconcile"
+                )
+            else:
+                filter_expr = f'{gtype.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
+                resp, rate_limited = client._list_data_points(
+                    gtype, date_str, optional=False, filter_expr=filter_expr
+                )
+
             if rate_limited:
                 logger.warning(f"Rate limit hit for {device.email_address} on {data_type}")
                 return False, True
 
-            if data and key in data:
-                dataset = data[key].get("dataset", [])
-                for point in dataset:
-                    time_str = point.get("time")
-                    value = point.get("value")
-                    if time_str and value is not None:
-                        timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
-                        if last_synch_date.tzinfo:
-                            timestamp = timestamp.replace(tzinfo=last_synch_date.tzinfo)
-                        if timestamp not in data_points:
-                            data_points[timestamp] = {}
-                        data_points[timestamp][data_type] = value
+            dataset = client._to_intraday_dataset(resp, gtype, value_field)
+            for point in dataset:
+                time_str = point.get("time")
+                value = point.get("value")
+                if time_str and value is not None:
+                    timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+                    if last_synch_date.tzinfo:
+                        timestamp = timestamp.replace(tzinfo=last_synch_date.tzinfo)
+                    if timestamp not in data_points:
+                        data_points[timestamp] = {}
+                    data_points[timestamp][data_type] = value
 
         day_end = datetime.strptime(f"{date_str} 23:59:00", "%Y-%m-%d %H:%M:%S")
         if last_synch_date.tzinfo:

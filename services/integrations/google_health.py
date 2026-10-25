@@ -188,13 +188,13 @@ class GoogleHealthClient:
     def get_device_info(self) -> dict:
         """Fetch paired devices — returns the first paired device."""
         url = f"{HEALTH_API_BASE}/users/me/pairedDevices"
-        headers = {"Authorization": f"Bearer {self.access_token}"}
+        headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
         resp = requests.get(url, headers=headers)
 
         if resp.status_code == 401:
             logger.warning("Token expired fetching device info, refreshing…")
             self._do_refresh()
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+            headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
             resp = requests.get(url, headers=headers)
 
         if resp.status_code != 200:
@@ -225,7 +225,7 @@ class GoogleHealthClient:
     def _request(
         self, url: str, token: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        headers = {"Authorization": f"Bearer {token}"}
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
         resp = requests.get(url, headers=headers)
 
         if resp.status_code == 200:
@@ -235,7 +235,7 @@ class GoogleHealthClient:
         if resp.status_code == 401:
             logger.warning(f"Token expired for {url}, refreshing…")
             self._do_refresh()
-            headers = {"Authorization": f"Bearer {self.access_token}"}
+            headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
             resp = requests.get(url, headers=headers)
             if resp.status_code == 200:
                 return resp.json(), False
@@ -387,6 +387,7 @@ class GoogleHealthClient:
 
         headers = {
             "Authorization": f"Bearer {self.access_token}",
+            "Accept": "application/json",
             "Content-Type": "application/json",
         }
         resp = requests.post(url, json=body, headers=headers)
@@ -412,18 +413,28 @@ class GoogleHealthClient:
         date_str: str,
         optional: bool = False,
         filter_expr: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        action: str = "list",
     ) -> tuple[dict | None, bool]:
-        """Call the Google Health API list endpoint."""
+        """Call the Google Health API list (or reconcile) endpoint."""
         url = f"{HEALTH_API_BASE}/users/me/dataTypes/{data_type}/dataPoints"
+        if action == "reconcile":
+            url = url + ":reconcile"
         params = {}
         if filter_expr:
             params["filter"] = filter_expr
+        elif start_time and end_time:
+            # Sample-based data types (heart rate, SpO2, HRV, …) must be
+            # filtered via the sample physical time (startTime/endTime are not
+            # bindable query parameters for these data types).
+            params["filter"] = f'{data_type.replace("-", "_")}.sample_time.physical_time >= "{start_time}"'
         else:
             params["filter"] = (
                 f'{data_type.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
             )
 
-        headers = {"Authorization": f"Bearer {self.access_token}"}
+        headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
         resp = requests.get(url, headers=headers, params=params)
 
         if resp.status_code == 429:
@@ -523,10 +534,16 @@ class GoogleHealthClient:
     def _translate_intraday_heart(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points("heart-rate", date_str, optional=True)
+        resp, limited = self._list_data_points(
+            "heart-rate",
+            date_str,
+            optional=True,
+            start_time=f"{date_str}T00:00:00Z",
+            end_time=f"{date_str}T23:59:59Z",
+        )
         if limited:
             return None, True
-        dataset = self._to_intraday_dataset(resp, "heart-rate", "bpm")
+        dataset = self._to_intraday_dataset(resp, "heart-rate", "beatsPerMinute")
         return {"activities-heart-intraday": {"dataset": dataset}}, False
 
     def _translate_intraday_metric(
@@ -540,7 +557,10 @@ class GoogleHealthClient:
             "elevation": ("altitude", "meters"),
         }
         gtype, field = dt_map.get(metric, (metric, "floatVal"))
-        resp, limited = self._list_data_points(gtype, date_str, optional=True)
+        # Google does not support the `list` action for all data types
+        # (e.g. `floors` only supports reconcile / rollup / dailyRollUp).
+        action = "reconcile" if gtype == "floors" else "list"
+        resp, limited = self._list_data_points(gtype, date_str, optional=True, action=action)
         if limited:
             return None, True
         dataset = self._to_intraday_dataset(resp, gtype, field)
@@ -653,7 +673,13 @@ class GoogleHealthClient:
     def _translate_spo2_intraday(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points("oxygen-saturation", date_str, optional=True)
+        resp, limited = self._list_data_points(
+            "oxygen-saturation",
+            date_str,
+            optional=True,
+            start_time=f"{date_str}T00:00:00Z",
+            end_time=f"{date_str}T23:59:59Z",
+        )
         if limited:
             return None, True
         if not resp:
@@ -680,7 +706,13 @@ class GoogleHealthClient:
     def _translate_hrv_intraday(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points("heart-rate-variability", date_str, optional=True)
+        resp, limited = self._list_data_points(
+            "heart-rate-variability",
+            date_str,
+            optional=True,
+            start_time=f"{date_str}T00:00:00Z",
+            end_time=f"{date_str}T23:59:59Z",
+        )
         if limited:
             return None, True
         if not resp:
@@ -776,29 +808,43 @@ class GoogleHealthClient:
     def _to_intraday_dataset(
         resp: dict | None, data_type: str, value_field: str
     ) -> list[dict]:
-        """Convert Google Health API list response → intraday dataset."""
+        """Convert Google Health API list response → intraday dataset.
+
+        Google data points nest the measurement under a camelCase data-type
+        key (e.g. ``steps``, ``heartRate``) which wraps either an ``interval``
+        (interval types) or a ``sampleTime`` (sample types).
+        """
         dataset = []
         if not resp:
             return dataset
         for dp in resp.get("dataPoints", []):
-            ts = dp.get("startTime", "")
-            if ts:
-                try:
-                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                    time_str = dt.strftime("%H:%M:%S")
-                except ValueError:
-                    continue
+            obj = None
+            target = data_type.replace("-", "").lower()
+            for key, val in dp.items():
+                if isinstance(val, dict) and key.lower().replace("_", "") == target:
+                    obj = val
+                    break
+            if not obj:
+                continue
 
-                obj = dp.get(data_type.replace("-", "_"), dp.get(data_type, {}))
-                val = 0
-                if isinstance(obj, dict):
-                    val = obj.get(value_field, 0)
-                elif isinstance(obj, (int, float)):
-                    val = obj
-                else:
-                    val = obj or 0
+            interval = obj.get("interval") or {}
+            sample_time = obj.get("sampleTime") or {}
+            ts = interval.get("startTime") or sample_time.get("physicalTime") or ""
+            if not ts:
+                continue
+            try:
+                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+                time_str = dt.strftime("%H:%M:%S")
+            except ValueError:
+                continue
 
-                dataset.append({"time": time_str, "value": int(val) if isinstance(val, (int, float)) and not isinstance(val, bool) else val})
+            val = obj.get(value_field)
+            try:
+                val = float(str(val)) if val is not None else 0.0
+            except (TypeError, ValueError):
+                val = 0.0
+
+            dataset.append({"time": time_str, "value": int(val) if val.is_integer() else val})
         return dataset
 
     @staticmethod
