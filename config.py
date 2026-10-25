@@ -50,26 +50,6 @@ def get_optional_env(var_name: str, default: str) -> str:
 
 
 # =============================================================================
-# OAuth Provider Selection
-# =============================================================================
-# 'fitbit' (default) or 'google' — switch this when ready to migrate
-OAUTH_PROVIDER = get_optional_env("OAUTH_PROVIDER", "fitbit")
-
-# =============================================================================
-# OAuth Configuration (Fitbit — Legacy)
-# =============================================================================
-CLIENT_ID = get_required_env("CLIENT_ID")
-CLIENT_SECRET = get_required_env("CLIENT_SECRET")
-
-# Environment-based redirect URL (different for dev/staging/prod)
-REDIRECT_URI = get_optional_env("REDIRECT_URI", "http://localhost:5000/callback")
-
-# Fitbit API URLs (constants - these don't change)
-AUTH_URL = "https://www.fitbit.com/oauth2/authorize"
-TOKEN_URL = "https://api.fitbit.com/oauth2/token"
-
-
-# =============================================================================
 # OAuth Configuration (Google Health API)
 # =============================================================================
 GOOGLE_CLIENT_ID = get_required_env("GOOGLE_CLIENT_ID")
@@ -168,9 +148,9 @@ def print_config(hide_secrets: bool = True):
     print(f"Port: {PORT}")
     print()
     print("OAuth:")
-    print(f"  CLIENT_ID: {mask(CLIENT_ID)}")
-    print(f"  CLIENT_SECRET: {mask(CLIENT_SECRET)}")
-    print(f"  REDIRECT_URI: {REDIRECT_URI}")
+    print(f"  GOOGLE_CLIENT_ID: {mask(GOOGLE_CLIENT_ID)}")
+    print(f"  GOOGLE_CLIENT_SECRET: {mask(GOOGLE_CLIENT_SECRET)}")
+    print(f"  GOOGLE_REDIRECT_URI: {GOOGLE_REDIRECT_URI}")
     print()
     print("Database:")
     print(f"  Host: {DB_CONFIG['host']}")

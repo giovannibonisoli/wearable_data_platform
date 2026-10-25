@@ -33,7 +33,7 @@ class AuthGrantResult(Enum):
 
 
 class CollectorResult(Enum):
-    """Result of a Fitbit data collection run for one device."""
+    """Result of a Google Health data collection run for one device."""
     SUCCESS = "success"
     UP_TO_DATE = "up_to_date"
     RATE_LIMITED = "rate_limited"

@@ -1,5 +1,5 @@
 """
-Base class for Fitbit data collectors.
+Base class for health data collectors.
 
 Provides common logic: device iteration, result aggregation.
 Subclasses implement _process_one_device() with collection-specific logic.
@@ -17,9 +17,9 @@ from services.result_enums import CollectorResult
 logger = logging.getLogger(__name__)
 
 
-class BaseFitbitCollector(ABC):
+class BaseCollector(ABC):
     """
-    Base collector for Fitbit data. Subclasses implement _process_one_device().
+    Base collector for health data. Subclasses implement _process_one_device().
     """
 
     def __init__(self, conn: SqlalchemyConnection):

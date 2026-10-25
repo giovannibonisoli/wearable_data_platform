@@ -1,10 +1,10 @@
 # LivelyAging Wearable Data Platform
 
-A Flask-based platform for collecting and managing wearable health data from Fitbit devices.
+A Flask-based platform for collecting and managing wearable health data from wearable devices via the Google Health API.
 
 ## Features
 
-- Fitbit OAuth 2.0 integration for user authentication
+- Google Health API integration for user authentication
 - Staff user and care provider management
 - Device pairing via QR codes
 - Data collectors (intraday activities, daily summaries, sleep)
@@ -15,7 +15,7 @@ A Flask-based platform for collecting and managing wearable health data from Fit
 
 - Python 3.9+
 - PostgreSQL database
-- Fitbit Developer account (CLIENT_ID, CLIENT_SECRET)
+- Google Health API credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - SMTP server for emails
 
 ## Installation
@@ -40,9 +40,9 @@ DB_NAME=livelyageing
 DB_USER=your-db-user
 DB_PASSWORD=your-db-password
 
-# Fitbit OAuth
-CLIENT_ID=your-fitbit-client-id
-CLIENT_SECRET=your-fitbit-client-secret
+# Google Health API OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 REDIRECT_URI=http://localhost:5000/
 
 # Email (SMTP)
@@ -88,8 +88,8 @@ flask db upgrade
 │   ├── device_service.py
 │   ├── staff_user_service.py
 │   ├── care_provider_service.py
-│   ├── collectors/     # Fitbit data collectors
-│   └── integrations/   # Fitbit API, emails
+│   ├── collectors/     # Google Health data collectors
+│   └── integrations/   # Google Health API, emails
 ├── templates/           # Jinja2 templates
 ├── static/             # CSS, JS, images
 ├── translations/       # i18n message files

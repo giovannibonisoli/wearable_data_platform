@@ -1,7 +1,7 @@
 """
-Fitbit Sleep Collector Service.
+Sleep Collector Service.
 
-Collects detailed sleep sessions (logs, levels, short levels) from Fitbit API
+Collects detailed sleep sessions (logs, levels, short levels) from the Google Health API
 for authorized devices. Also collects physiological metrics tied to sleep:
 SpO2 intraday, HRV intraday, and breathing rate intraday — each data point
 is matched to the correct sleep session by timestamp overlap.
@@ -14,8 +14,9 @@ from datetime import datetime, timedelta
 from database import SleepRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
+from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
-from services.collectors.base_fitbit_collector import BaseFitbitCollector
+from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
 
 logger = logging.getLogger(__name__)
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_START_DATE = datetime(2025, 1, 24).date()
 
 
-class FitbitSleepCollectorService(BaseFitbitCollector):
-    """Collects sleep session data from Fitbit API.
+class SleepCollectorService(BaseCollector):
+    """Collects sleep session data from the Google Health API.
 
     For each date, collects:
     - Sleep logs, levels, and short levels (one SleepSession per log).
@@ -59,7 +60,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
             }
         """
         date_str = date_obj.strftime("%Y-%m-%d")
-        url = f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json"
+        url = f"{HEALTH_API_BASE}/users/me/sleep/date/{date_str}.json"
 
         data, rate_limited = client.get(url, optional=False)
         if rate_limited:
@@ -147,7 +148,7 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
             (success, rate_limited)
 
         Failures on individual endpoints are non-fatal (optional=True):
-        not all Fitbit devices support all three metrics.
+        not all devices support all three metrics.
         """
         if not sessions_for_date:
             return True, False
@@ -156,25 +157,25 @@ class FitbitSleepCollectorService(BaseFitbitCollector):
 
         # Each tuple: (url, response key, data key per metric, timestamp field name, insert method)
         # The /all.json variant returns timestamped intraday arrays.
-        # Per-metric structure (from Fitbit API docs):
+        # Per-metric structure (from the provider API docs):
         #   SpO2:   { dateTime, minutes: [{value, minute}] }
         #   HRV:    { dateTime, minutes: [{minute, value: {rmssd, lf, hf, coverage}}] }
         #   BR:     { dateTime, value: {breathingRate} }  (each item in "br" array)
         endpoints = [
             (
-                f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}/all.json",
+                f"{HEALTH_API_BASE}/users/me/spo2/date/{date_str}/all.json",
                 "minutes",   # response key → data points array
                 "minute",    # timestamp field inside each point
                 self.sleep_repo.insert_spo2,
             ),
             (
-                f"https://api.fitbit.com/1/user/-/hrv/date/{date_str}/all.json",
+                f"{HEALTH_API_BASE}/users/me/hrv/date/{date_str}/all.json",
                 "minutes",   # points are nested inside hrv[0].minutes
                 "minute",    # timestamp field inside each point
                 self.sleep_repo.insert_hrv,
             ),
             (
-                f"https://api.fitbit.com/1/user/-/br/date/{date_str}/all.json",
+                f"{HEALTH_API_BASE}/users/me/br/date/{date_str}/all.json",
                 "value",     # response key → each item has dateTime + value.breatingRate
                 "dateTime",  # timestamp field inside each point
                 self.sleep_repo.insert_breathing_rate,

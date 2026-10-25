@@ -1,17 +1,17 @@
 """
-Fitbit data collector services.
+Health data collector services.
 
 These services encapsulate the logic for collecting different types of
-Fitbit metrics for authorized devices. They are designed to be used by
+health metrics for authorized devices. They are designed to be used by
 thin runner scripts or by an orchestrator.
 """
 
-from services.collectors.fitbit_daily_summary_collector import FitbitDailySummaryCollectorService
-from services.collectors.fitbit_sleep_collector import FitbitSleepCollectorService
-from services.collectors.fitbit_intraday_collector import FitbitIntradayCollectorService
+from services.collectors.daily_summary_collector import DailySummaryCollectorService
+from services.collectors.sleep_collector import SleepCollectorService
+from services.collectors.intraday_collector import IntradayCollectorService
 
 __all__ = [
-    "FitbitDailySummaryCollectorService",
-    "FitbitSleepCollectorService",
-    "FitbitIntradayCollectorService",
+    "DailySummaryCollectorService",
+    "SleepCollectorService",
+    "IntradayCollectorService",
 ]

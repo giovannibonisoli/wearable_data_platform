@@ -1,8 +1,8 @@
 """
-Fitbit Daily Summary Collector Service.
+Daily Summary Collector Service.
 
 Collects daily aggregate metrics (steps, heart rate, sleep, nutrition, etc.)
-from Fitbit API for authorized devices.
+from the Google Health API for authorized devices.
 """
 
 import time
@@ -13,8 +13,9 @@ from datetime import datetime, timedelta
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
+from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
-from services.collectors.base_fitbit_collector import BaseFitbitCollector
+from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_START_DATE = datetime(2025, 1, 21).date()
 
 
-class FitbitDailySummaryCollectorService(BaseFitbitCollector):
-    """Collects daily summary metrics from Fitbit API."""
+class DailySummaryCollectorService(BaseCollector):
+    """Collects daily summary metrics from the Google Health API."""
 
     def __init__(self, conn: SqlalchemyConnection):
         super().__init__(conn)
@@ -38,7 +39,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
 
         endpoints = [
             (
-                f"https://api.fitbit.com/1/user/-/activities/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/activities/date/{date_str}.json",
                 False,
                 lambda d: {
                     "steps": d.get("summary", {}).get("steps", 0),
@@ -51,31 +52,31 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
                 },
             ),
             (
-                f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d.json",
+                f"{HEALTH_API_BASE}/users/me/activities/heart/date/{date_str}/1d.json",
                 False,
                 lambda d: {
                     "heart_rate": d.get("activities-heart", [{}])[0].get("value", {}).get("restingHeartRate", 0)
                 },
             ),
             (
-                f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/sleep/date/{date_str}.json",
                 False,
                 lambda d: {
                     "sleep_minutes": sum(log.get("minutesAsleep", 0) for log in d.get("sleep", [])),
                 },
             ),
             (
-                f"https://api.fitbit.com/1/user/-/foods/log/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/foods/log/date/{date_str}.json",
                 False,
                 lambda d: {"nutrition_calories": d.get("summary", {}).get("calories", 0)},
             ),
             (
-                f"https://api.fitbit.com/1/user/-/foods/log/water/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/foods/log/water/date/{date_str}.json",
                 False,
                 lambda d: {"water": d.get("summary", {}).get("water", 0)},
             ),
             (
-                f"https://api.fitbit.com/1/user/-/spo2/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/spo2/date/{date_str}.json",
                 True,
                 lambda d: {
                     "oxygen_saturation": float(
@@ -86,7 +87,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
                 },
             ),
             (
-                f"https://api.fitbit.com/1/user/-/br/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/br/date/{date_str}.json",
                 True,
                 lambda d: {
                     "respiratory_rate": float(
@@ -97,7 +98,7 @@ class FitbitDailySummaryCollectorService(BaseFitbitCollector):
                 },
             ),
             (
-                f"https://api.fitbit.com/1/user/-/temp/core/date/{date_str}.json",
+                f"{HEALTH_API_BASE}/users/me/temp/core/date/{date_str}.json",
                 True,
                 lambda d: {"temperature": d.get("value", 0)},
             ),

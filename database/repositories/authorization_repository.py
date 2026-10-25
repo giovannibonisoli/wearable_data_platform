@@ -7,7 +7,7 @@ class AuthorizationRepository:
     """
     Repository for OAuth authorization operations.
     
-    Handles pending authorizations for PKCE flow.
+    Handles pending authorizations.
     """
     
     def __init__(self, connection_manager: SqlalchemyConnection):
@@ -31,7 +31,7 @@ class AuthorizationRepository:
         Args:
             device_id: The device requesting OAuth/consent.
             state: A unique state value for callback correlation.
-            code_verifier: Challenge for PKCE flow.
+            code_verifier: OAuth code verifier.
 
         Returns:
             bool: True on success.
@@ -48,7 +48,7 @@ class AuthorizationRepository:
         Fetch an unexpired pending authorization by state.
 
         Args:
-            state: The PKCE callback state.
+            state: The callback state.
 
         Returns:
             dict with 'code_verifier' and 'device_id', or None if not found/expired.

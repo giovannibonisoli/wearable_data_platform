@@ -1,9 +1,10 @@
 """
 Google Health API client and OAuth helpers.
 
-Mirrors the ``FitbitClient`` interface so callers can switch providers
-transparently.  Accepts Fitbit‑style URLs and translates them to the
-corresponding Google Health API calls, synthesizing a Fitbit‑shaped response.
+Exposes the same public interface as the provider client so callers can
+fetch data from the Google Health API.  Accepts wearable data URLs and
+translates them to the corresponding Google Health API calls, synthesizing
+a Google Health API-shaped response.
 """
 
 import logging
@@ -92,7 +93,7 @@ def refresh_google_tokens(refresh_token: str) -> tuple[str | None, str | None]:
 
 
 # ===================================================================
-# URL pattern matching — translate Fitbit URLs → Google Health API
+# URL pattern matching — route data URLs → Google Health API
 # ===================================================================
 
 # Pattern: .../activities/date/{date}.json
@@ -160,8 +161,8 @@ class GoogleHealthClient:
     """
     Stateful Google Health API client scoped to a single device.
 
-    Exposes the same public interface as ``FitbitClient`` so callers
-    remain unchanged when the provider is switched.
+    Exposes the same public interface as the provider client so callers
+    can fetch data from the Google Health API.
     """
 
     def __init__(
@@ -175,17 +176,17 @@ class GoogleHealthClient:
         self.on_tokens_updated = on_tokens_updated
 
     # ------------------------------------------------------------------
-    # Public interface  (mirrors FitbitClient)
+    # Public interface  (mirrors the provider client)
     # ------------------------------------------------------------------
 
     def get(self, url: str, optional: bool = False) -> tuple[dict | None, bool]:
-        """Translate a Fitbit‑style URL → Google Health API call."""
-        if self._is_fitbit_url(url):
-            return self._handle_fitbit_url(url, optional)
+        """Route a wearable data URL → the appropriate Google Health API call."""
+        if self._is_data_url(url):
+            return self._handle_data_url(url, optional)
         return self._request(url, self.access_token, optional)
 
     def get_device_info(self) -> dict:
-        """Fetch paired devices — returns first device in Fitbit shape."""
+        """Fetch paired devices — returns the first paired device."""
         url = f"{HEALTH_API_BASE}/users/me/pairedDevices"
         headers = {"Authorization": f"Bearer {self.access_token}"}
         resp = requests.get(url, headers=headers)
@@ -260,17 +261,30 @@ class GoogleHealthClient:
                 logger.error(f"on_tokens_updated callback failed: {e}")
 
     # ------------------------------------------------------------------
-    # Fitbit URL translation
+    # Data URL translation
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _is_fitbit_url(url: str) -> bool:
-        return "api.fitbit.com" in url
+    def _is_data_url(url: str) -> bool:
+        """Return True if the URL points at a wearable data endpoint."""
+        return any(
+            marker in url
+            for marker in (
+                "/activities/",
+                "/sleep/",
+                "/foods/",
+                "/spo2/",
+                "/br/",
+                "/hrv/",
+                "/temp/",
+                "/devices",
+            )
+        )
 
-    def _handle_fitbit_url(
+    def _handle_data_url(
         self, url: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        """Route a Fitbit‑style URL → the appropriate Google Health API call."""
+        """Route a wearable data URL → the appropriate Google Health API call."""
 
         # --- Daily activity summary ---
         m = _RE_ACTIVITY_SUMMARY.search(url)
@@ -343,10 +357,8 @@ class GoogleHealthClient:
             return self._translate_devices(optional)
 
         # Fallback: try raw GET
-        logger.warning(f"Unrecognised Fitbit URL pattern, falling back: {url}")
-        google_url = url.replace("https://api.fitbit.com/1/user/-", HEALTH_API_BASE + "/users/me")
-        google_url = google_url.replace("https://api.fitbit.com/1.2/user/-", HEALTH_API_BASE + "/users/me")
-        return self._request(google_url, self.access_token, optional)
+        logger.warning(f"Unrecognised data URL pattern, falling back: {url}")
+        return self._request(url, self.access_token, optional)
 
     # ------------------------------------------------------------------
     # POST helper for dailyRollUp
@@ -430,7 +442,7 @@ class GoogleHealthClient:
         return None, False
 
     # ------------------------------------------------------------------
-    # Translation methods — each one synthesises a Fitbit‑shaped response
+    # Translation methods — each one synthesises a Google Health API-shaped response
     # ------------------------------------------------------------------
 
     def _translate_activity_summary(
@@ -514,7 +526,7 @@ class GoogleHealthClient:
         resp, limited = self._list_data_points("heart-rate", date_str, optional=True)
         if limited:
             return None, True
-        dataset = self._to_fitbit_dataset(resp, "heart-rate", "bpm")
+        dataset = self._to_intraday_dataset(resp, "heart-rate", "bpm")
         return {"activities-heart-intraday": {"dataset": dataset}}, False
 
     def _translate_intraday_metric(
@@ -531,7 +543,7 @@ class GoogleHealthClient:
         resp, limited = self._list_data_points(gtype, date_str, optional=True)
         if limited:
             return None, True
-        dataset = self._to_fitbit_dataset(resp, gtype, field)
+        dataset = self._to_intraday_dataset(resp, gtype, field)
         key = f"activities-{metric}-intraday"
         return {key: {"dataset": dataset}}, False
 
@@ -761,10 +773,10 @@ class GoogleHealthClient:
         return very_active, sedentary
 
     @staticmethod
-    def _to_fitbit_dataset(
+    def _to_intraday_dataset(
         resp: dict | None, data_type: str, value_field: str
     ) -> list[dict]:
-        """Convert Google Health API list response → Fitbit intraday dataset."""
+        """Convert Google Health API list response → intraday dataset."""
         dataset = []
         if not resp:
             return dataset

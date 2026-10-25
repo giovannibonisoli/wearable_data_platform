@@ -617,7 +617,7 @@ def add_device():
 @staff_user_required
 def update_devices_info():
     """
-    Fetch device information from Fitbit and update database.
+    Fetch device information from the Google Health API and update database.
     This retrieves device type and last sync time automatically.
     """
 
@@ -671,7 +671,7 @@ def send_auth_request():
 @app.route('/livelyageing/callback')
 def callback():
     """
-    Handle the callback from Fitbit after the user authorizes the app.
+    Handle the callback from the Google Health API after the user authorizes the app.
     """
     app.logger.info("Callback route accessed")
 

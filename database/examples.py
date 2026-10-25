@@ -193,8 +193,8 @@ def example_device_management():
         print(f"✓ Updated device status to 'authorized'")
         
         # Update device type
-        device_repo.update_device_type(device_id, 'fitbit')
-        print(f"✓ Set device type to 'fitbit'")
+        device_repo.update_device_type(device_id, 'google')
+        print(f"✓ Set device type to 'google'")
         
         # Get device details
         device = device_repo.get_by_id(device_id)

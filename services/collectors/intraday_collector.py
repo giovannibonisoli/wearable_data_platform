@@ -1,8 +1,8 @@
 """
-Fitbit Intraday Collector Service.
+Intraday Collector Service.
 
 Collects minute-level intraday metrics (heart rate, steps, calories, distance, etc.)
-from Fitbit API for authorized devices. Processes one date per device per cycle.
+from the Google Health API for authorized devices. Processes one date per device per cycle.
 """
 
 import logging
@@ -12,8 +12,9 @@ from datetime import datetime, timedelta, timezone
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
+from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
-from services.collectors.base_fitbit_collector import BaseFitbitCollector
+from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_START_DATE = datetime(2025, 11, 18).date()
 
 
-class FitbitIntradayCollectorService(BaseFitbitCollector):
-    """Collects intraday (minute-level) metrics from Fitbit API."""
+class IntradayCollectorService(BaseCollector):
+    """Collects intraday (minute-level) metrics from the Google Health API."""
 
     def __init__(self, conn: SqlalchemyConnection):
         super().__init__(conn)
@@ -40,12 +41,12 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
         detail_level = "1min"
         metrics_config = [
-            ("heart_rate", f"https://api.fitbit.com/1/user/-/activities/heart/date/{date_str}/1d/{detail_level}.json", "activities-heart-intraday"),
-            ("steps", f"https://api.fitbit.com/1/user/-/activities/steps/date/{date_str}/1d/{detail_level}.json", "activities-steps-intraday"),
-            ("calories", f"https://api.fitbit.com/1/user/-/activities/calories/date/{date_str}/1d/{detail_level}.json", "activities-calories-intraday"),
-            ("distance", f"https://api.fitbit.com/1/user/-/activities/distance/date/{date_str}/1d/{detail_level}.json", "activities-distance-intraday"),
-            ("floors", f"https://api.fitbit.com/1/user/-/activities/floors/date/{date_str}/1d/{detail_level}.json", "activities-floors-intraday"),
-            ("elevation", f"https://api.fitbit.com/1/user/-/activities/elevation/date/{date_str}/1d/{detail_level}.json", "activities-elevation-intraday"),
+            ("heart_rate", f"{HEALTH_API_BASE}/users/me/activities/heart/date/{date_str}/1d/{detail_level}.json", "activities-heart-intraday"),
+            ("steps", f"{HEALTH_API_BASE}/users/me/activities/steps/date/{date_str}/1d/{detail_level}.json", "activities-steps-intraday"),
+            ("calories", f"{HEALTH_API_BASE}/users/me/activities/calories/date/{date_str}/1d/{detail_level}.json", "activities-calories-intraday"),
+            ("distance", f"{HEALTH_API_BASE}/users/me/activities/distance/date/{date_str}/1d/{detail_level}.json", "activities-distance-intraday"),
+            ("floors", f"{HEALTH_API_BASE}/users/me/activities/floors/date/{date_str}/1d/{detail_level}.json", "activities-floors-intraday"),
+            ("elevation", f"{HEALTH_API_BASE}/users/me/activities/elevation/date/{date_str}/1d/{detail_level}.json", "activities-elevation-intraday"),
         ]
 
         data_points: dict = {}
@@ -111,7 +112,7 @@ class FitbitIntradayCollectorService(BaseFitbitCollector):
             logger.info(f"Collected {total_points} intraday points for {device.email_address} on {date_str}")
             return True, False
         else:
-            # Avoid getting stuck on the same day when Fitbit has no points in the
+            # Avoid getting stuck on the same day when the provider has no points in the
             # remaining time window (e.g., last value at 22:59). Move checkpoint to
             # the end of the current collection window so next cycle can advance.
             self.device_repo.update_intraday_checkpoint(device.id, window_end)

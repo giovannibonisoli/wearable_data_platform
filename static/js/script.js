@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset button state
                 submitBtn.disabled = false;
                 spinner.classList.add('d-none');
-                buttonText.textContent = 'Autorizar Fitbit';
+                buttonText.textContent = 'Autorizar con Google Health';
             });
         });
     }

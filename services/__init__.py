@@ -25,9 +25,9 @@ from services.device_service import DeviceService
 from services.device_statistics_service import DeviceStatisticsService
 from services.staff_user_service import StaffUserService
 from services.collectors import (
-    FitbitDailySummaryCollectorService,
-    FitbitSleepCollectorService,
-    FitbitIntradayCollectorService,
+    DailySummaryCollectorService,
+    SleepCollectorService,
+    IntradayCollectorService,
 )
 
 __all__ = [
@@ -35,7 +35,7 @@ __all__ = [
     'DeviceService',
     'DeviceStatisticsService',
     'StaffUserService',
-    'FitbitDailySummaryCollectorService',
-    'FitbitSleepCollectorService',
-    'FitbitIntradayCollectorService',
+    'DailySummaryCollectorService',
+    'SleepCollectorService',
+    'IntradayCollectorService',
 ]

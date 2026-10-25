@@ -447,8 +447,8 @@ msgstr "Richiesta di autorizzazione inviata"
 
 #: templates/auth_email_sent_confirmation.html:23
 #: utils/templates/auth_email_sent_confirmation.html:23
-msgid "We have sent the Fitbit authorization link to:"
-msgstr "Abbiamo inviato il link di autorizzazione Fitbit a:"
+msgid "We have sent the Google Health authorization link to:"
+msgstr "Abbiamo inviato il link di autorizzazione di Google Health a:"
 
 #: templates/auth_email_sent_confirmation.html:33
 #: utils/templates/auth_email_sent_confirmation.html:33
@@ -467,8 +467,8 @@ msgstr "Clicca sul link di autorizzazione"
 
 #: templates/auth_email_sent_confirmation.html:38
 #: utils/templates/auth_email_sent_confirmation.html:38
-msgid "Complete the Fitbit authorization process"
-msgstr "Completa il processo di autorizzazione Fitbit"
+msgid "Complete the Google Health authorization process"
+msgstr "Completa il processo di autorizzazione di Google Health"
 
 #: templates/auth_email_sent_confirmation.html:39
 #: utils/templates/auth_email_sent_confirmation.html:39

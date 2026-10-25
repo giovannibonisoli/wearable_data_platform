@@ -2,15 +2,11 @@ from typing import List
 
 from database import DeviceRepository, AuthorizationRepository
 from database.connection import SqlalchemyConnection
-from services.integrations.fitbit import (
-    generate_state,
-    generate_code_verifier,
-    generate_code_challenge,
-)
 from services.integrations.oauth_provider import (
     create_api_client,
-    generate_auth_url,
     exchange_code,
+    generate_auth_url,
+    generate_state,
 )
 from services.integrations.emails import send_email
 from services.result_enums import AddDeviceResult, SendAuthEmailResult, AuthGrantResult
@@ -24,7 +20,7 @@ class DeviceService:
     Service for device authorization and basic device info management.
 
     Encapsulates business logic for handling device authorization flows
-    and retrieving device metadata from the Fitbit API.
+    and retrieving device metadata from the Google Health API.
     """
 
     def __init__(self, connection_manager: SqlalchemyConnection):
@@ -96,19 +92,15 @@ class DeviceService:
         device = self.device_repo.get_by_id(device_id)
         email_address = device.email_address
 
-        code_verifier = generate_code_verifier()
-
         state_data = {
             "email_address": email_address,
             "random": generate_state(),
         }
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
 
-        code_challenge = generate_code_challenge(code_verifier)
-        auth_url = generate_auth_url(state, code_challenge)
+        auth_url = generate_auth_url(state)
 
-        from config import OAUTH_PROVIDER
-        provider_label = "Google Health" if OAUTH_PROVIDER == "google" else "Fitbit"
+        provider_label = "Google Health"
         email_subject = f"Autorizzazione {provider_label} - Lively Ageing"
 
         email_html = f"""
@@ -140,7 +132,7 @@ class DeviceService:
             """
 
         if send_email(email_address, email_subject, email_html, email_text):
-            if self.auth_repo.store_pending_auth(device_id, state, code_verifier):
+            if self.auth_repo.store_pending_auth(device_id, state, ""):
                 return email_address, SendAuthEmailResult.SUCCESS
             else:
                 return email_address, SendAuthEmailResult.ERROR_STORING_PENDING_AUTH
@@ -161,9 +153,7 @@ class DeviceService:
         if not pending_auth:
             return AuthGrantResult.INVALID_AUTH_LINK
 
-        code_verifier = pending_auth["code_verifier"]
-
-        access_token, refresh_token = exchange_code(code, code_verifier)
+        access_token, refresh_token = exchange_code(code)
         if not access_token or not refresh_token:
             return AuthGrantResult.ERROR_RETRIEVE_TOKENS
 
