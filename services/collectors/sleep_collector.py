@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 from database import SleepRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
@@ -60,9 +59,8 @@ class SleepCollectorService(BaseCollector):
             }
         """
         date_str = date_obj.strftime("%Y-%m-%d")
-        url = f"{HEALTH_API_BASE}/users/me/sleep/date/{date_str}.json"
 
-        data, rate_limited = client.get(url, optional=False)
+        data, rate_limited = client._translate_sleep(date_str, optional=False)
         if rate_limited:
             return False, True, []
 
@@ -155,46 +153,15 @@ class SleepCollectorService(BaseCollector):
 
         date_str = date_obj.strftime("%Y-%m-%d")
 
-        # Each tuple: (url, response key, data key per metric, timestamp field name, insert method)
-        # The /all.json variant returns timestamped intraday arrays.
-        # Per-metric structure (from the provider API docs):
-        #   SpO2:   { dateTime, minutes: [{value, minute}] }
-        #   HRV:    { dateTime, minutes: [{minute, value: {rmssd, lf, hf, coverage}}] }
-        #   BR:     { dateTime, value: {breathingRate} }  (each item in "br" array)
-        endpoints = [
-            (
-                f"{HEALTH_API_BASE}/users/me/spo2/date/{date_str}/all.json",
-                "minutes",   # response key → data points array
-                "minute",    # timestamp field inside each point
-                self.sleep_repo.insert_spo2,
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/hrv/date/{date_str}/all.json",
-                "minutes",   # points are nested inside hrv[0].minutes
-                "minute",    # timestamp field inside each point
-                self.sleep_repo.insert_hrv,
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/br/date/{date_str}/all.json",
-                "value",     # response key → each item has dateTime + value.breatingRate
-                "dateTime",  # timestamp field inside each point
-                self.sleep_repo.insert_breathing_rate,
-            ),
-        ]
-
-        for url, data_key, ts_field, insert_fn in endpoints:
-            data, rate_limited = client.get(url, optional=True)
-            if rate_limited:
-                return False, True
-            if not data:
-                continue
-
-            points = data.get(data_key, [])
+        # SpO2 intraday
+        data, rate_limited = client._translate_spo2_intraday(date_str, optional=True)
+        if rate_limited:
+            return False, True
+        if data:
             matched = 0
             skipped = 0
-
-            for point in points:
-                raw_ts = point.get(ts_field)
+            for point in data.get("minutes", []):
+                raw_ts = point.get("minute")
                 if not raw_ts:
                     skipped += 1
                     continue
@@ -209,13 +176,46 @@ class SleepCollectorService(BaseCollector):
                     skipped += 1
                     continue
 
-                insert_fn(session_id, point)
+                self.sleep_repo.insert_spo2(session_id, point)
                 matched += 1
 
             logger.debug(
-                f"[{data_key}] device {device_id} on {date_str}: "
+                f"[spo2] device {device_id} on {date_str}: "
                 f"{matched} matched, {skipped} skipped"
             )
+
+        # HRV intraday
+        data, rate_limited = client._translate_hrv_intraday(date_str, optional=True)
+        if rate_limited:
+            return False, True
+        if data:
+            matched = 0
+            skipped = 0
+            for point in data.get("minutes", []):
+                raw_ts = point.get("minute")
+                if not raw_ts:
+                    skipped += 1
+                    continue
+                try:
+                    ts = datetime.fromisoformat(raw_ts)
+                except ValueError:
+                    skipped += 1
+                    continue
+
+                session_id = self._match_session_for_timestamp(ts, sessions_for_date)
+                if session_id is None:
+                    skipped += 1
+                    continue
+
+                self.sleep_repo.insert_hrv(session_id, point)
+                matched += 1
+
+            logger.debug(
+                f"[hrv] device {device_id} on {date_str}: "
+                f"{matched} matched, {skipped} skipped"
+            )
+
+        # Breathing rate intraday — no data source configured yet (client translator is a stub).
 
         return True, False
 

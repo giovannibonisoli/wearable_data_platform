@@ -7,13 +7,11 @@ from the Google Health API for authorized devices.
 
 import time
 import logging
-import requests
 from datetime import datetime, timedelta
 
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from config import HEALTH_API_BASE
 from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
@@ -37,73 +35,6 @@ class DailySummaryCollectorService(BaseCollector):
         """Fetch and store one day's summary. Returns (success, rate_limited)."""
         date_str = date_obj.strftime("%Y-%m-%d")
 
-        endpoints = [
-            (
-                f"{HEALTH_API_BASE}/users/me/activities/date/{date_str}.json",
-                False,
-                lambda d: {
-                    "steps": d.get("summary", {}).get("steps", 0),
-                    "distance": d.get("summary", {}).get("distances", [{}])[0].get("distance", 0),
-                    "calories": d.get("summary", {}).get("caloriesOut", 0),
-                    "floors": d.get("summary", {}).get("floors", 0),
-                    "elevation": d.get("summary", {}).get("elevation", 0),
-                    "active_minutes": d.get("summary", {}).get("veryActiveMinutes", 0),
-                    "sedentary_minutes": d.get("summary", {}).get("sedentaryMinutes", 0),
-                },
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/activities/heart/date/{date_str}/1d.json",
-                False,
-                lambda d: {
-                    "heart_rate": d.get("activities-heart", [{}])[0].get("value", {}).get("restingHeartRate", 0)
-                },
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/sleep/date/{date_str}.json",
-                False,
-                lambda d: {
-                    "sleep_minutes": sum(log.get("minutesAsleep", 0) for log in d.get("sleep", [])),
-                },
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/foods/log/date/{date_str}.json",
-                False,
-                lambda d: {"nutrition_calories": d.get("summary", {}).get("calories", 0)},
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/foods/log/water/date/{date_str}.json",
-                False,
-                lambda d: {"water": d.get("summary", {}).get("water", 0)},
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/spo2/date/{date_str}.json",
-                True,
-                lambda d: {
-                    "oxygen_saturation": float(
-                        d.get("value", {}).get("avg", 0)
-                        if isinstance(d.get("value"), dict)
-                        else d.get("value", 0)
-                    )
-                },
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/br/date/{date_str}.json",
-                True,
-                lambda d: {
-                    "respiratory_rate": float(
-                        d.get("value", {}).get("breathingRate", 0)
-                        if isinstance(d.get("value"), dict)
-                        else d.get("value", 0)
-                    )
-                },
-            ),
-            (
-                f"{HEALTH_API_BASE}/users/me/temp/core/date/{date_str}.json",
-                True,
-                lambda d: {"temperature": d.get("value", 0)},
-            ),
-        ]
-
         data = {
             "steps": 0,
             "distance": 0,
@@ -122,12 +53,74 @@ class DailySummaryCollectorService(BaseCollector):
         }
 
         try:
-            for url, optional, extractor in endpoints:
-                response_data, rate_limited = client.get(url, optional=optional)
-                if rate_limited:
-                    return False, True
-                if response_data:
-                    data.update(extractor(response_data))
+            # Activity / daily aggregates
+            summary_data, rate_limited = client._translate_activity_summary(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if summary_data:
+                summary = summary_data.get("summary", {})
+                data.update({
+                    "steps": summary.get("steps", 0),
+                    "distance": summary.get("distances", [{}])[0].get("distance", 0),
+                    "calories": summary.get("caloriesOut", 0),
+                    "floors": summary.get("floors", 0),
+                    "elevation": summary.get("elevation", 0),
+                    "active_minutes": summary.get("veryActiveMinutes", 0),
+                    "sedentary_minutes": summary.get("sedentaryMinutes", 0),
+                })
+
+            # Resting heart rate
+            hr_data, rate_limited = client._translate_heart_daily(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if hr_data:
+                data["heart_rate"] = hr_data.get("activities-heart", [{}])[0].get("value", {}).get("restingHeartRate", 0)
+
+            # Sleep minutes
+            sleep_data, rate_limited = client._translate_sleep(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if sleep_data:
+                data["sleep_minutes"] = sum(log.get("minutesAsleep", 0) for log in sleep_data.get("sleep", []))
+
+            # Nutrition calories
+            food_data, rate_limited = client._translate_food(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if food_data:
+                data["nutrition_calories"] = food_data.get("summary", {}).get("calories", 0)
+
+            # Water
+            water_data, rate_limited = client._translate_water(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if water_data:
+                data["water"] = water_data.get("summary", {}).get("water", 0)
+
+            # Oxygen saturation
+            spo2_data, rate_limited = client._translate_spo2_daily(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if spo2_data:
+                data["oxygen_saturation"] = float(
+                    spo2_data.get("value", {}).get("avg", 0) if isinstance(spo2_data.get("value"), dict) else spo2_data.get("value", 0)
+                )
+
+            # Breathing rate
+            br_data, rate_limited = client._translate_br_daily(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if br_data:
+                data["respiratory_rate"] = float(
+                    br_data.get("value", {}).get("breathingRate", 0) if isinstance(br_data.get("value"), dict) else br_data.get("value", 0)
+                )
+
+            # Temperature
+            temp_data, rate_limited = client._translate_temperature(date_str, optional=True)
+            if rate_limited:
+                return False, True
+            if temp_data:
+                data["temperature"] = temp_data.get("value", 0)
 
             # Skip empty/invalid days
             if (
@@ -144,11 +137,6 @@ class DailySummaryCollectorService(BaseCollector):
             logger.info(f"Daily summary collected for device {device_id} ({email_address}) on {date_str}")
             return True, False
 
-        except requests.exceptions.HTTPError as e:
-            if hasattr(e, "response") and e.response and e.response.status_code == 429:
-                return False, True
-            logger.error(f"HTTP error fetching summary for device {device_id} on {date_str}: {e}")
-            return False, False
         except Exception as e:
             logger.error(f"Unexpected error fetching summary for device {device_id} on {date_str}: {e}")
             return False, False
