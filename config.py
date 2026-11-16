@@ -94,6 +94,9 @@ DEBUG = FLASK_ENV == "development"
 HOST = get_optional_env("HOST", "0.0.0.0" if FLASK_ENV == "production" else "localhost")
 PORT = int(get_optional_env("PORT", "5000"))
 
+APP_PREFIX = get_optional_env("APP_PREFIX", "").rstrip("/")
+if APP_PREFIX and not APP_PREFIX.startswith("/"):
+    APP_PREFIX = f"/{APP_PREFIX}"
 
 # =============================================================================
 # Validation (Optional - uncomment to validate on import)

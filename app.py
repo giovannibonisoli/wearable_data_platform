@@ -1,3 +1,5 @@
+from config import APP_PREFIX
+
 from logging.handlers import RotatingFileHandler
 from functools import wraps
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
@@ -28,12 +30,26 @@ import os
 import logging
 from urllib.parse import quote_plus
 
+class PrefixMiddleware:
+    def __init__(self, wsgi_app, prefix=''):
+        self.wsgi_app = wsgi_app
+        self.prefix = prefix.rstrip('/')
+
+    def __call__(self, environ, start_response):
+        if self.prefix:
+            environ['SCRIPT_NAME'] = self.prefix
+            path = environ.get('PATH_INFO', '')
+            if path == self.prefix or path.startswith(self.prefix + '/'):
+                environ['PATH_INFO'] = path[len(self.prefix):] or '/'
+        return self.wsgi_app(environ, start_response)
+
 
 # Initialize Flask app
-app = Flask(__name__,
-           static_url_path='/livelyageing/static',  # Prefix for static files with livelyageing
-           static_folder='static')  # Directory where static files are stored
+app = Flask(__name__, static_folder='static')
 
+if APP_PREFIX:
+    app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix=APP_PREFIX)
+    app.config['SESSION_COOKIE_PATH'] = APP_PREFIX
 
 app.secret_key = os.getenv('SECRET_KEY')
 
@@ -214,7 +230,7 @@ def audit_log(action, resource_type):
     return decorator
 
 
-@app.route('/livelyageing/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         if session.get('role') == 'ADMIN':
@@ -276,7 +292,7 @@ def login():
 
 
 # Logout path
-@app.route('/livelyageing/logout')
+@app.route('/logout')
 @login_required
 def logout():
     user_id = session.get('user_id')
@@ -304,13 +320,17 @@ def logout():
 
 @app.before_request
 def require_login():
-    print(f"🔍 Requested endpoint: {request.endpoint}")  # ← Debug
-    print(f"🔐 Utente autenticato: {current_user.is_authenticated}")  # ← Debug
-
-    public_endpoints = ['login', 'callback', 'static']
+    public_endpoints = [
+        'root',
+        'privacy_policy',
+        'terms_of_service',
+        'login',
+        'callback',
+        'change_language',
+        'static'
+    ]
 
     if not current_user.is_authenticated and request.endpoint not in public_endpoints:
-        print(f"❌ Bloked! Recirect to login")  # ← Debug
         return redirect(url_for('login'))
 
     if current_user.is_authenticated and session.get('role') is None:
@@ -325,33 +345,32 @@ def require_login():
                 session.pop(k, None)
             return redirect(url_for('login'))
 
-    print(f"✅ Access allowed")
-
-# Route: Root URL redirect
+# Route: Public Landing Page 
 @app.route('/')
 def root():
     """
-    Redirect from root URL to the home page or admin dashboard.
+    Public landing page for Google OAuth verification and visitors,
+    or redirect to dashboard if already authenticated.
     """
     if current_user.is_authenticated:
         if session.get('role') == 'ADMIN':
             return redirect(url_for('admin_care_providers'))
         return redirect(url_for('home'))
-    return redirect(url_for('login'))
+    return render_template('landing.html')
 
-# Route: Homepage
-@app.route('/livelyageing/')
-@login_required
-def index():
-    """
-    Redirect to home page or admin dashboard.
-    """
-    if session.get('role') == 'ADMIN':
-        return redirect(url_for('admin_care_providers'))
-    return redirect(url_for('home'))
+# Route: Privacy Policy
+@app.route('/privacy_policy')
+def privacy_policy():
+    return render_template('privacy_policy.html')
 
 
-@app.route('/livelyageing/user_profile_info')
+# Route: Terms of Service
+@app.route('/terms_of_service')
+def terms_of_service():
+    return render_template('terms_of_service.html')
+
+
+@app.route('/user_profile_info')
 @login_required
 def user_profile_info():
     try:
@@ -366,7 +385,7 @@ def user_profile_info():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/livelyageing/change_password', methods=['POST'])
+@app.route('/change_password', methods=['POST'])
 @login_required
 def change_password():
 
@@ -415,7 +434,7 @@ def change_password():
     return redirect(url_for('user_profile_info'))
 
 
-@app.route('/livelyageing/home')
+@app.route('/home')
 @login_required
 @staff_user_required
 def home():
@@ -484,7 +503,7 @@ def load_video_tutorials(locale=None, context=None):
     return localized_videos
 
 
-@app.route('/livelyageing/video_tutorials')
+@app.route('/video_tutorials')
 @login_required
 @staff_user_required
 def video_tutorials():
@@ -500,7 +519,7 @@ def video_tutorials():
     )
 
 
-@app.route('/livelyageing/video_tutorials/<int:video_id>')
+@app.route('/video_tutorials/<int:video_id>')
 @login_required
 @staff_user_required
 def video_tutorial_detail(video_id):
@@ -521,7 +540,7 @@ def video_tutorial_detail(video_id):
     )
 
 
-@app.route('/livelyageing/device_list')
+@app.route('/device_list')
 @login_required
 @staff_user_required
 def device_list():
@@ -575,7 +594,7 @@ def device_list():
 
 
 
-@app.route('/livelyageing/add_device', methods=['POST'])
+@app.route('/add_device', methods=['POST'])
 @login_required
 @staff_user_required
 @audit_log('CREATE', 'device')
@@ -612,7 +631,7 @@ def add_device():
     return redirect(url_for('device_list'))
 
 
-@app.route('/livelyageing/update_devices_info')
+@app.route('/update_devices_info')
 @login_required
 @staff_user_required
 def update_devices_info():
@@ -641,7 +660,7 @@ def update_devices_info():
     return redirect(url_for('device_list'))
 
 
-@app.route('/livelyageing/send_auth_request', methods=['POST'])
+@app.route('/send_auth_request', methods=['POST'])
 @login_required
 @staff_user_required
 def send_auth_request():
@@ -668,7 +687,7 @@ def send_auth_request():
 
 
 # Callback to handle authorization confirmation
-@app.route('/livelyageing/callback')
+@app.route('/callback')
 def callback():
     """
     Handle the callback from the Google Health API after the user authorizes the app.
@@ -729,7 +748,7 @@ def callback():
                                     link_date=datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 
-@app.route('/livelyageing/deactivate_device', methods=['POST'])
+@app.route('/deactivate_device', methods=['POST'])
 @login_required
 @staff_user_required
 @audit_log('DEACTIVATE', 'device')
@@ -745,7 +764,7 @@ def deactivate_device():
     return redirect(url_for('device_list'))
 
 
-@app.route('/livelyageing/rename_device_email/<int:device_id>', methods=['POST'])
+@app.route('/rename_device_email/<int:device_id>', methods=['POST'])
 @login_required
 @staff_user_required
 @audit_log('UPDATE', 'device')
@@ -776,7 +795,7 @@ def rename_device_email(device_id):
     return redirect(url_for('device_list'))
 
 
-@app.route('/livelyageing/admin/care_providers', methods=['GET'])
+@app.route('/admin/care_providers', methods=['GET'])
 @login_required
 @admin_required
 def admin_care_providers():
@@ -787,7 +806,7 @@ def admin_care_providers():
     return render_template('admin_care_providers.html', care_providers=care_providers)
 
 
-@app.route('/livelyageing/admin/care_providers/add', methods=['POST'])
+@app.route('/admin/care_providers/add', methods=['POST'])
 @login_required
 @admin_required
 @audit_log('CREATE', 'care_provider')
@@ -806,7 +825,7 @@ def admin_add_care_provider():
     return redirect(url_for('admin_care_providers'))
 
 
-@app.route('/livelyageing/admin/<int:care_provider_id>/rename', methods=['POST'])
+@app.route('/admin/<int:care_provider_id>/rename', methods=['POST'])
 @login_required
 @admin_required
 @audit_log('UPDATE', 'care_provider')
@@ -831,7 +850,7 @@ def admin_rename_care_provider(care_provider_id):
     return redirect(url_for('admin_care_providers'))
 
 
-@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users', methods=['GET'])
+@app.route('/admin/<int:care_provider_id>/staff_users', methods=['GET'])
 @login_required
 @admin_required
 def admin_staff_users(care_provider_id):
@@ -845,7 +864,7 @@ def admin_staff_users(care_provider_id):
         current_care_provider_id=care_provider_id,
     )
 
-@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/add', methods=['POST'])
+@app.route('/admin/<int:care_provider_id>/staff_users/add', methods=['POST'])
 @login_required
 @admin_required
 @audit_log('CREATE', 'staff_user')
@@ -879,7 +898,7 @@ def admin_add_staff_user(care_provider_id):
     return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
 
 
-@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/reset_password', methods=['POST'])
+@app.route('/admin/<int:care_provider_id>/staff_users/<int:user_id>/reset_password', methods=['POST'])
 @login_required
 @admin_required
 @audit_log('PASSWORD_RESET', 'staff_user')
@@ -911,7 +930,7 @@ def admin_reset_staff_user_password(care_provider_id, user_id):
     return redirect(url_for('admin_staff_users', care_provider_id=care_provider_id))
     
 
-@app.route('/livelyageing/admin/<int:care_provider_id>/staff_users/<int:user_id>/deactivate', methods=['POST'])
+@app.route('/admin/<int:care_provider_id>/staff_users/<int:user_id>/deactivate', methods=['POST'])
 @login_required
 @admin_required
 @audit_log('DEACTIVATE', 'staff_user')
@@ -958,7 +977,7 @@ def utility_processor():
         'static_url': static_url
     }
 
-@app.route('/livelyageing/change_language')
+@app.route('/change_language')
 def change_language():
     """Change the application language."""
     lang = request.args.get('lang', DEFAULT_LANGUAGE)
@@ -968,7 +987,7 @@ def change_language():
     # Get the referrer URL
     referrer = request.referrer
     if not referrer:
-        return redirect(url_for('home'))
+        return redirect(url_for('root'))
 
     # Parse the referrer URL to preserve existing query parameters
     from urllib.parse import urlparse, parse_qs, urlencode

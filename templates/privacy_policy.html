@@ -1,0 +1,23 @@
+{% extends "base_public.html" %}
+
+{% block title %}{{ _('Privacy Policy') }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card p-4 p-md-5 mx-auto legal-content" style="max-width: 900px;">
+        {% if get_locale() == 'en' %}
+            <h1 class="h2 fw-bold text-primary mb-2">Privacy Policy</h1>
+            <p class="text-muted small mb-4">Lively Ageing Wearable Platform</p>
+
+            <!-- INCOLLA QUI IL TESTO DELLA PRIVACY POLICY IN INGLESE -->
+            <p>Insert your English Privacy Policy text here.</p>
+        {% else %}
+            <h1 class="h2 fw-bold text-primary mb-2">Informativa sulla Privacy (Privacy Policy)</h1>
+            <p class="text-muted small mb-4">Lively Ageing Wearable Platform</p>
+
+            <!-- INCOLLA QUI IL TESTO DELLA PRIVACY POLICY IN ITALIANO -->
+            <p>Inserisci qui il testo della Privacy Policy in italiano.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

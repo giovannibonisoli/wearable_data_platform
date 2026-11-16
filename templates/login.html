@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('Medical Platform Login') }} - Lively Ageing Medical Platform</title>
+        <title>{{ _('Login') }} - Lively Ageing Wearable Platform</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- Medical Platform Styling -->
+    <!-- Wearable Platform Styling -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     
     <!-- Login Page Specific Styles -->
@@ -88,9 +88,20 @@
             
             <div class="login-footer">
                 <div class="text-center">
+                    <div class="mb-2">
+                        <a href="{{ url_for('root') }}" class="text-decoration-none small me-3">
+                            <i class="fas fa-arrow-left me-1"></i>{{ _('Overview') }}
+                        </a>
+                        <a href="{{ url_for('privacy_policy') }}" class="text-muted text-decoration-underline small me-3">
+                            {{ _('Privacy Policy') }}
+                        </a>
+                        <a href="{{ url_for('terms_of_service') }}" class="text-muted text-decoration-underline small">
+                            {{ _('Terms of Service') }}
+                        </a>
+                    </div>
                     <small class="text-muted">
                         <i class="fas fa-copyright me-1"></i>
-                        2025 Lively Ageing Wearable Platform
+                        2026 Lively Ageing Wearable Platform
                     </small>
                 </div>
             </div>

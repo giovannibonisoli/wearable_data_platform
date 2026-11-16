@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-24 18:00+0200\n"
+"POT-Creation-Date: 2026-11-16 15:29+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -16,197 +16,192 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:155
+#: app.py:174
 msgid "Access denied."
 msgstr "Accesso negato."
 
-#: app.py:167
+#: app.py:186
 msgid "This area is only available to staff user accounts."
 msgstr "Quest'area è disponibile solo per gli account degli operatori sanitari."
 
-#: app.py:198 templates/home.html:195
+#: app.py:271 templates/home.html:195
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "Benvenuto, %(name)s!"
 
-#: app.py:203
+#: app.py:288
 msgid "Incorrect username or password."
 msgstr "Nome utente o password errati."
 
-#: app.py:300
+#: app.py:409
 msgid "Password changed successfully."
 msgstr "Password modificata con successo."
 
-#: app.py:302
+#: app.py:412
 msgid "The current password is wrong."
 msgstr "La password attuale non è corretta."
 
-#: app.py:304
+#: app.py:415
 msgid "Password change failed."
 msgstr "Modifica della password non riuscita."
 
-#: app.py:306
+#: app.py:430
 msgid "The new password must be at least 8 characters."
 msgstr "La nuova password deve contenere almeno 8 caratteri."
 
-#: app.py:308 app.py:741 app.py:769
+#: app.py:432 app.py:881 app.py:910
 msgid "Passwords do not match."
 msgstr "Le password non corrispondono."
 
-#: app.py:340
+#: app.py:464
 msgid "Error loading the home page."
 msgstr "Errore durante l'aggiunta del dispositivo."
 
-#: app.py:402
+#: app.py:534
 #, fuzzy
 msgid "Video not found."
 msgstr "Email non trovata."
 
-#: app.py:486
+#: app.py:621
 msgid "This device is already registered."
 msgstr "Questo dispositivo è già registrato."
 
-#: app.py:488
+#: app.py:623
 msgid "Device added successfully."
 msgstr "Dispositivo aggiunto con successo."
 
-#: app.py:490
+#: app.py:625
 msgid "Error adding device."
 msgstr "Errore durante l'aggiunta del dispositivo."
 
-#: app.py:494 app.py:656
+#: app.py:629 app.py:793
 msgid "An error occurred."
 msgstr "Si è verificato un errore."
 
-#: app.py:520
+#: app.py:655
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Errore nell'aggiornamento delle informazioni per: %(devices)s"
 
-#: app.py:523
+#: app.py:658
 msgid "Device information updated successfully for all devices."
 msgstr "Informazioni dispositivo aggiornate con successo per tutti i dispositivi."
 
-#: app.py:546
+#: app.py:681
 msgid "Error sending device. Please try again."
 msgstr "Errore nell'invio del dispositivo. Riprova."
 
-#: app.py:549
+#: app.py:684
 msgid "Error storing authorization request."
 msgstr "Errore nel salvataggio della richiesta di autorizzazione."
 
-#: app.py:568 app.py:578
+#: app.py:703 app.py:713
 msgid "Error: Missing authorization information."
 msgstr "Errore: Informazioni di autorizzazione mancanti."
 
-#: app.py:583
+#: app.py:718
 msgid "Email not found."
 msgstr "Email non trovata."
 
-#: app.py:588 app.py:593 app.py:598
+#: app.py:723 app.py:728 app.py:733
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr "Errore: Il link di autorizzazione è scaduto. Richiedine uno nuovo."
 
-#: app.py:639
+#: app.py:776
 msgid "Email address is required."
 msgstr "Indirizzo mail richiesto."
 
-#: app.py:649
+#: app.py:786
 msgid "Email address updated successfully."
 msgstr "Dispositivo aggiunto con successo."
 
-#: app.py:652
+#: app.py:789
 msgid "Error updating email address."
 msgstr "Errore nella modifica dell'indirizzo mail."
 
-#: app.py:683
+#: app.py:821
 msgid "Care provider created."
 msgstr "ASP creata."
 
-#: app.py:685
+#: app.py:823
 msgid "Could not create care provider."
 msgstr "Non è stato possibile creare questa ASP."
 
-#: app.py:697
+#: app.py:836
 msgid "Full name is required."
 msgstr "Username richiesto."
 
-#: app.py:705
+#: app.py:844
 msgid "Care provider renamed."
 msgstr "ASP rinominata."
 
-#: app.py:707
+#: app.py:846
 msgid "A care provider with that name already exists."
 msgstr "Esiste già una ASP con questo nome."
 
-#: app.py:709
+#: app.py:848
 msgid "Could not rename care provider."
 msgstr "Non è stato possibile rinominare l'ASP'."
 
-#: app.py:738
+#: app.py:878
 msgid "Username is required."
 msgstr "Username richiesto."
 
-#: app.py:744 app.py:772
+#: app.py:884 app.py:913
 msgid "The password must be at least 8 characters."
 msgstr "La nuova password deve contenere almeno 8 caratteri."
 
-#: app.py:752
+#: app.py:892
 msgid "Staff user created."
 msgstr "Utente staff creato"
 
-#: app.py:754
+#: app.py:894
 msgid "That username is already taken."
 msgstr "Questo username è già stato preso"
 
-#: app.py:756
+#: app.py:896
 msgid "Could not create staff user."
 msgstr "Non è stato possibile creare l'utente staff."
 
-#: app.py:781
+#: app.py:922
 msgid "Password updated."
 msgstr "Password aggiornata."
 
-#: app.py:783
+#: app.py:924
 msgid "User not found."
 msgstr "Utente non trovato."
 
-#: app.py:785
+#: app.py:926
 msgid "You cannot change that password."
 msgstr "Non puoi modificare quella password."
 
-#: app.py:787
+#: app.py:928
 msgid "Password update failed."
 msgstr "Modifica della password non riuscita."
 
-#: app.py:802
+#: app.py:944
 msgid "Staff user deactivated."
 msgstr "Utente staff disattivato."
 
-#: app.py:804
+#: app.py:946
 msgid "Staff user not found."
 msgstr "Utente staff non trovato."
 
-#: app.py:806
+#: app.py:948
 msgid "You cannot deactivate this staff user."
 msgstr "Non puoi disattivare questo utente staff."
 
-#: app.py:808
+#: app.py:950
 msgid "Deactivation failed."
 msgstr "Disattivazione non riuscita."
 
 #: templates/admin_care_providers.html:3 templates/admin_care_providers.html:9
 #: templates/admin_staff_users.html:82 templates/base.html:87
-#: utils/templates/admin_care_providers.html:3
-#: utils/templates/admin_care_providers.html:9
-#: utils/templates/admin_staff_users.html:82 utils/templates/base.html:82
 msgid "Care providers"
 msgstr "ASP"
 
 #: templates/admin_care_providers.html:12
 #: templates/admin_care_providers.html:72
-#: utils/templates/admin_care_providers.html:12
-#: utils/templates/admin_care_providers.html:72
 msgid "Add care provider"
 msgstr "Aggiungi ASP"
 
@@ -214,183 +209,135 @@ msgstr "Aggiungi ASP"
 #: templates/admin_care_providers.html:78
 #: templates/admin_care_providers.html:109 templates/admin_staff_users.html:26
 #: templates/admin_staff_users.html:111
-#: utils/templates/admin_care_providers.html:22
-#: utils/templates/admin_care_providers.html:78
-#: utils/templates/admin_care_providers.html:109
-#: utils/templates/admin_staff_users.html:26
-#: utils/templates/admin_staff_users.html:111
 msgid "Full name"
 msgstr "Nome esteso"
 
 #: templates/admin_care_providers.html:23
 #: templates/admin_care_providers.html:47 templates/admin_staff_users.html:3
 #: templates/admin_staff_users.html:11
-#: utils/templates/admin_care_providers.html:23
-#: utils/templates/admin_care_providers.html:47
-#: utils/templates/admin_staff_users.html:3
-#: utils/templates/admin_staff_users.html:11
 msgid "Staff users"
 msgstr "Utenti staff"
 
 #: templates/admin_care_providers.html:24 templates/device_list.html:12
-#: utils/templates/admin_care_providers.html:24
-#: utils/templates/device_list.html:12
 msgid "Devices"
 msgstr "Dispositivi"
 
 #: templates/admin_care_providers.html:25 templates/admin_staff_users.html:28
-#: templates/device_list.html:94 utils/templates/admin_care_providers.html:25
-#: utils/templates/admin_staff_users.html:28
-#: utils/templates/device_list.html:94
+#: templates/device_list.html:102
 msgid "Actions"
 msgstr "Azioni"
 
 #: templates/admin_care_providers.html:41
-#: utils/templates/admin_care_providers.html:41
 msgid "Rename this care provider"
 msgstr "Aggiungi ASP"
 
 #: templates/admin_care_providers.html:42
-#: utils/templates/admin_care_providers.html:42
 msgid "Rename"
 msgstr "Rinomina"
 
 #: templates/admin_care_providers.html:46
-#: utils/templates/admin_care_providers.html:46
 msgid "Manage staff users for this facility"
 msgstr "Gestisci gli utenti staff per questa ASP"
 
 #: templates/admin_care_providers.html:53
-#: utils/templates/admin_care_providers.html:53
 msgid "No care providers yet."
 msgstr "Nessun utente staff presente."
 
 #: templates/admin_care_providers.html:74
 #: templates/admin_care_providers.html:105 templates/admin_staff_users.html:102
 #: templates/admin_staff_users.html:154 templates/base.html:163
-#: utils/templates/admin_care_providers.html:74
-#: utils/templates/admin_care_providers.html:105
-#: utils/templates/admin_staff_users.html:102
-#: utils/templates/admin_staff_users.html:154 utils/templates/base.html:158
 msgid "Close"
 msgstr "Chiudi"
 
 #: templates/admin_care_providers.html:83
 #: templates/admin_care_providers.html:115 templates/admin_staff_users.html:128
-#: templates/admin_staff_users.html:171 templates/device_list.html:59
-#: templates/device_list.html:361 templates/device_list.html:408
-#: utils/templates/admin_care_providers.html:83
-#: utils/templates/admin_care_providers.html:115
-#: utils/templates/admin_staff_users.html:128
-#: utils/templates/admin_staff_users.html:171
-#: utils/templates/device_list.html:59 utils/templates/device_list.html:335
+#: templates/admin_staff_users.html:171 templates/device_list.html:67
+#: templates/device_list.html:386 templates/device_list.html:433
 msgid "Cancel"
 msgstr "Annulla"
 
 #: templates/admin_care_providers.html:85
-#: utils/templates/admin_care_providers.html:85
 msgid "Create care provider"
 msgstr "Aggiungi ASP"
 
 #: templates/admin_care_providers.html:103
-#: utils/templates/admin_care_providers.html:103
 msgid "Rename care provider"
 msgstr "Rinomina ASP"
 
-#: templates/admin_care_providers.html:117 templates/device_list.html:411
-#: utils/templates/admin_care_providers.html:117
+#: templates/admin_care_providers.html:117 templates/device_list.html:436
 msgid "Save"
 msgstr "Salva"
 
 #: templates/admin_staff_users.html:14 templates/admin_staff_users.html:99
-#: utils/templates/admin_staff_users.html:14
-#: utils/templates/admin_staff_users.html:99
 msgid "Add staff user"
 msgstr "Aggiungi utente staff"
 
 #: templates/admin_staff_users.html:25 templates/admin_staff_users.html:106
-#: templates/login.html:49 utils/templates/admin_staff_users.html:25
-#: utils/templates/admin_staff_users.html:106
+#: templates/login.html:49
 msgid "Username"
 msgstr "Nome utente"
 
 #: templates/admin_staff_users.html:27
-#: utils/templates/admin_staff_users.html:27
 msgid "Status"
 msgstr "Stato"
 
 #: templates/admin_staff_users.html:38
-#: utils/templates/admin_staff_users.html:38
 msgid "Active"
 msgstr "Attivo"
 
 #: templates/admin_staff_users.html:40
-#: utils/templates/admin_staff_users.html:40
 msgid "Inactive"
 msgstr "Non attivo"
 
 #: templates/admin_staff_users.html:53
-#: utils/templates/admin_staff_users.html:53
 msgid "Change password"
 msgstr "Cambia password"
 
 #: templates/admin_staff_users.html:60
-#: utils/templates/admin_staff_users.html:60
 msgid "Deactivate this user? They will no longer be able to sign in."
 msgstr "Disattivare questo utente? Non potrà più accedere."
 
 #: templates/admin_staff_users.html:63
-#: utils/templates/admin_staff_users.html:63
 msgid "Deactivate"
 msgstr "Disattiva"
 
 #: templates/admin_staff_users.html:70
-#: utils/templates/admin_staff_users.html:70
 msgid "No staff users yet."
 msgstr "Nessun utente staff presente."
 
 #: templates/admin_staff_users.html:116 templates/login.html:57
-#: utils/templates/admin_staff_users.html:116
 msgid "Password"
 msgstr "Password"
 
 #: templates/admin_staff_users.html:121 templates/admin_staff_users.html:164
-#: utils/templates/admin_staff_users.html:121
-#: utils/templates/admin_staff_users.html:164
 msgid "Confirm password"
 msgstr "Conferma password"
 
 #: templates/admin_staff_users.html:131
-#: utils/templates/admin_staff_users.html:131
 msgid "Create user"
 msgstr "Crea utente"
 
 #: templates/admin_staff_users.html:151
-#: utils/templates/admin_staff_users.html:151
 msgid "Reset password"
 msgstr "Cambia password"
 
 #: templates/admin_staff_users.html:159
-#: utils/templates/admin_staff_users.html:159
 msgid "New password"
 msgstr "Nuova password"
 
 #: templates/admin_staff_users.html:174
-#: utils/templates/admin_staff_users.html:174
 msgid "Save password"
 msgstr "Nuova password"
 
 #: templates/admin_staff_users.html:199
-#: utils/templates/admin_staff_users.html:199
 msgid "Reset password for"
 msgstr "Cambia password per"
 
-#: templates/auth_confirmation.html:6 utils/templates/auth_confirmation.html:6
+#: templates/auth_confirmation.html:6
 msgid "Email Data Access Confirmation"
 msgstr "Conferma accesso ai dati via email"
 
 #: templates/auth_confirmation.html:34
-#: utils/templates/auth_confirmation.html:34
 msgid "Authorization Successful!"
 msgstr "Autorizzazione riuscita!"
 
@@ -402,22 +349,18 @@ msgstr ""
 "%(email_address)s"
 
 #: templates/auth_confirmation.html:54
-#: utils/templates/auth_confirmation.html:54
 msgid "Link Date:"
 msgstr "Data di collegamento:"
 
 #: templates/auth_confirmation.html:55
-#: utils/templates/auth_confirmation.html:55
 msgid "Loading..."
 msgstr "Caricamento..."
 
 #: templates/auth_confirmation.html:61
-#: utils/templates/auth_confirmation.html:61
 msgid "Secure Connection Established"
 msgstr "Connessione sicura stabilita"
 
 #: templates/auth_confirmation.html:62
-#: utils/templates/auth_confirmation.html:62
 msgid ""
 "All wearable data will be transmitted securely to the wearable platform "
 "and stored in a pseudonymized form."
@@ -426,71 +369,60 @@ msgstr ""
 "piattaforma e archiviati in forma pseudonimizzata."
 
 #: templates/auth_confirmation.html:69
-#: utils/templates/auth_confirmation.html:69
 msgid "Advanced Wearable Devices Monitoring System"
 msgstr "Sistema avanzato di monitoraggio dei dispositivi indossabili"
 
 #: templates/auth_email_sent_confirmation.html:3
-#: utils/templates/auth_email_sent_confirmation.html:3
 msgid "Email Sent"
 msgstr "Email inviata"
 
 #: templates/auth_email_sent_confirmation.html:13
-#: utils/templates/auth_email_sent_confirmation.html:13
 msgid "Email Sent Successfully!"
 msgstr "Email inviata con successo!"
 
 #: templates/auth_email_sent_confirmation.html:21
-#: utils/templates/auth_email_sent_confirmation.html:21
 msgid "Authorization Request Sent"
 msgstr "Richiesta di autorizzazione inviata"
 
 #: templates/auth_email_sent_confirmation.html:23
-#: utils/templates/auth_email_sent_confirmation.html:23
+#, fuzzy
 msgid "We have sent the Google Health authorization link to:"
 msgstr "Abbiamo inviato il link di autorizzazione di Google Health a:"
 
 #: templates/auth_email_sent_confirmation.html:33
-#: utils/templates/auth_email_sent_confirmation.html:33
 msgid "Next Steps:"
 msgstr "Prossimi passi:"
 
 #: templates/auth_email_sent_confirmation.html:36
-#: utils/templates/auth_email_sent_confirmation.html:36
 msgid "Check your email inbox"
 msgstr "Controlla la tua casella di posta"
 
 #: templates/auth_email_sent_confirmation.html:37
-#: utils/templates/auth_email_sent_confirmation.html:37
 msgid "Click on the authorization link"
 msgstr "Clicca sul link di autorizzazione"
 
 #: templates/auth_email_sent_confirmation.html:38
-#: utils/templates/auth_email_sent_confirmation.html:38
+#, fuzzy
 msgid "Complete the Google Health authorization process"
 msgstr "Completa il processo di autorizzazione di Google Health"
 
 #: templates/auth_email_sent_confirmation.html:39
-#: utils/templates/auth_email_sent_confirmation.html:39
 msgid "Return to the devices page"
 msgstr "Torna alla pagina dei dispositivi"
 
 #: templates/auth_email_sent_confirmation.html:46
-#: utils/templates/auth_email_sent_confirmation.html:46
 msgid "Back to Home"
 msgstr "Torna alla home"
 
 #: templates/auth_email_sent_confirmation.html:54
-#: utils/templates/auth_email_sent_confirmation.html:54
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "Il link di autorizzazione scadrà tra 10 minuti per motivi di sicurezza."
 
-#: templates/base.html:66 templates/home.html:3 utils/templates/base.html:66
+#: templates/base.html:66 templates/home.html:3 templates/login.html:93
 msgid "Home"
 msgstr "Home"
 
 #: templates/base.html:73 templates/device_list.html:3 templates/home.html:256
-#: utils/templates/base.html:73 utils/templates/device_list.html:3
 msgid "Device Management"
 msgstr "Gestione dispositivi"
 
@@ -498,114 +430,129 @@ msgstr "Gestione dispositivi"
 msgid "Tutorials"
 msgstr ""
 
-#: templates/base.html:97 utils/templates/base.html:92
+#: templates/base.html:97
 msgid "Account"
 msgstr "Account"
 
-#: templates/base.html:101 utils/templates/base.html:96
+#: templates/base.html:101
 msgid "User Menu"
 msgstr "Menu utente"
 
 #: templates/base.html:106 templates/user_profile_info.html:3
-#: utils/templates/base.html:101
 msgid "Profile"
 msgstr "Profilo"
 
-#: templates/base.html:111 utils/templates/base.html:106
+#: templates/base.html:111
 msgid "Settings"
 msgstr "Impostazioni"
 
-#: templates/base.html:117 utils/templates/base.html:112
+#: templates/base.html:117
 msgid "Logout"
 msgstr "Esci"
 
-#: templates/base.html:127 utils/templates/base.html:122
+#: templates/base.html:127
 msgid "Language"
 msgstr "Lingua"
 
-#: templates/base.html:133 utils/templates/base.html:128
+#: templates/base.html:133
 msgid "Italian"
 msgstr "Italiano"
 
-#: templates/base.html:139 utils/templates/base.html:134
+#: templates/base.html:139
 msgid "English"
 msgstr "Inglese"
 
-#: templates/base.html:145 utils/templates/base.html:140
+#: templates/base.html:145
 msgid "Spanish"
 msgstr "Spagnolo"
 
-#: templates/base.html:176 utils/templates/base.html:171
+#: templates/base.html:176 templates/base_public.html:106
 msgid "All rights reserved"
 msgstr "Tutti i diritti riservati"
 
-#: templates/device_details.html:4 templates/device_list.html:282
-#: utils/templates/device_details.html:4 utils/templates/device_list.html:256
+#: templates/base.html:179 templates/base_public.html:51
+#: templates/base_public.html:109 templates/login.html:96
+#: templates/privacy_policy.html:3
+msgid "Privacy Policy"
+msgstr "Informativa sulla Privacy"
+
+#: templates/base.html:182 templates/base_public.html:56
+#: templates/base_public.html:112 templates/login.html:99
+#: templates/terms_of_service.html:3
+msgid "Terms of Service"
+msgstr "Termini di Servizio"
+
+#: templates/base_public.html:46 templates/landing.html:3
+msgid "Overview"
+msgstr "Panoramica"
+
+#: templates/base_public.html:91 templates/login.html:70
+msgid "Sign In"
+msgstr "Accedi"
+
+#: templates/device_details.html:4 templates/device_list.html:298
 msgid "Device Details"
 msgstr "Dettagli dispositivo"
 
-#: templates/device_details.html:18 utils/templates/device_details.html:18
+#: templates/device_details.html:18
 msgid "Device Status"
 msgstr "Stato dispositivo"
 
-#: templates/device_details.html:27 utils/templates/device_details.html:27
+#: templates/device_details.html:27
 msgid "Wearable Metrics & Anomalies"
 msgstr "Metriche e anomalie del wearable"
 
-#: templates/device_details.html:360 utils/templates/device_details.html:360
+#: templates/device_details.html:360
 msgid "Passi"
 msgstr "Passi"
 
-#: templates/device_details.html:365 utils/templates/device_details.html:365
+#: templates/device_details.html:365
 msgid "Distanza (km)"
 msgstr "Distanza (km)"
 
-#: templates/device_list.html:17 utils/templates/device_list.html:17
+#: templates/device_list.html:25
 msgid "Update Devices"
 msgstr "Aggiorna dispositivi"
 
-#: templates/device_list.html:22 templates/device_list.html:34
-#: templates/device_list.html:62 utils/templates/device_list.html:22
-#: utils/templates/device_list.html:34 utils/templates/device_list.html:62
+#: templates/device_list.html:30 templates/device_list.html:42
+#: templates/device_list.html:70
 msgid "Add Device"
 msgstr "Aggiungi dispositivo"
 
-#: templates/device_list.html:44 templates/device_list.html:79
-#: utils/templates/device_list.html:44 utils/templates/device_list.html:79
+#: templates/device_list.html:52 templates/device_list.html:87
 msgid "Email Address"
 msgstr "Indirizzo email"
 
-#: templates/device_list.html:47 utils/templates/device_list.html:47
+#: templates/device_list.html:55
 msgid "Enter email address"
 msgstr "Inserisci indirizzo email"
 
-#: templates/device_list.html:50 utils/templates/device_list.html:50
+#: templates/device_list.html:58
 msgid "Enter a valid email address linked to a device"
 msgstr "Inserisci un indirizzo email valido collegato a un dispositivo"
 
-#: templates/device_list.html:82 utils/templates/device_list.html:82
+#: templates/device_list.html:90
 msgid "Device Type"
 msgstr "Tipo dispositivo"
 
-#: templates/device_list.html:85 utils/templates/device_list.html:85
+#: templates/device_list.html:93
 msgid "Authorization"
 msgstr "Autorizzazione"
 
-#: templates/device_list.html:88 utils/templates/device_list.html:88
+#: templates/device_list.html:96
 msgid "Cloud Synchronization"
 msgstr "Sincronizzazione cloud"
 
-#: templates/device_list.html:91 utils/templates/device_list.html:91
+#: templates/device_list.html:99
 msgid "Usage"
 msgstr "Utilizzo"
 
-#: templates/device_list.html:119 templates/device_list.html:227
-#: templates/device_list.html:251 utils/templates/device_list.html:119
-#: utils/templates/device_list.html:211 utils/templates/device_list.html:235
+#: templates/device_list.html:127 templates/device_list.html:235
+#: templates/device_list.html:259
 msgid "Not available"
 msgstr "Non disponibile"
 
-#: templates/device_list.html:127 utils/templates/device_list.html:127
+#: templates/device_list.html:135
 msgid ""
 "Authorization must be requested and granted before downloading data from "
 "the cloud"
@@ -613,97 +560,91 @@ msgstr ""
 "L'autorizzazione deve essere richiesta e concessa prima di scaricare i "
 "dati dal cloud"
 
-#: templates/device_list.html:129 utils/templates/device_list.html:129
+#: templates/device_list.html:137
 msgid "Not Authorized"
 msgstr "Non autorizzato"
 
-#: templates/device_list.html:134 utils/templates/device_list.html:134
+#: templates/device_list.html:142
 msgid "The authorization request has been sent and is awaiting approval"
 msgstr ""
 "La richiesta di autorizzazione è stata inviata ed è in attesa di "
 "approvazione"
 
-#: templates/device_list.html:136 utils/templates/device_list.html:136
+#: templates/device_list.html:144
 msgid "Pending Request"
 msgstr "Richiesta in attesa"
 
-#: templates/device_list.html:141 utils/templates/device_list.html:141
+#: templates/device_list.html:149
 msgid "Access authorization for data collected by this device has been obtained"
 msgstr ""
 "L'autorizzazione all'accesso ai dati raccolti da questo dispositivo è "
 "stata ottenuta"
 
-#: templates/device_list.html:143 utils/templates/device_list.html:143
+#: templates/device_list.html:151
 msgid "Authorized"
 msgstr "Autorizzato"
 
-#: templates/device_list.html:148 utils/templates/device_list.html:148
+#: templates/device_list.html:156
 msgid "Not Active"
 msgstr "Non attivo"
 
-#: templates/device_list.html:159 templates/device_list.html:166
-#: templates/device_list.html:174 templates/device_list.html:181
-#: utils/templates/device_list.html:158 utils/templates/device_list.html:166
-#: utils/templates/device_list.html:173
+#: templates/device_list.html:167 templates/device_list.html:174
+#: templates/device_list.html:182 templates/device_list.html:189
 msgid "Data are updated to the last synchronization"
 msgstr "I dati sono aggiornati all'ultima sincronizzazione"
 
-#: templates/device_list.html:161 templates/device_list.html:168
-#: templates/device_list.html:176 templates/device_list.html:183
-#: templates/device_list.html:198 utils/templates/device_list.html:160
-#: utils/templates/device_list.html:168 utils/templates/device_list.html:175
-#: utils/templates/device_list.html:185
+#: templates/device_list.html:169 templates/device_list.html:176
+#: templates/device_list.html:184 templates/device_list.html:191
+#: templates/device_list.html:206
 msgid "last_sync"
 msgstr "Ultima sincronizzazione"
 
-#: templates/device_list.html:161 templates/device_list.html:168
-#: templates/device_list.html:198 utils/templates/device_list.html:160
-#: utils/templates/device_list.html:185
+#: templates/device_list.html:169 templates/device_list.html:176
+#: templates/device_list.html:206
 msgid "days ago"
 msgstr "giorni fa"
 
-#: templates/device_list.html:166
+#: templates/device_list.html:174
 msgid "more than 4 days ago"
 msgstr ""
 
-#: templates/device_list.html:176 utils/templates/device_list.html:168
+#: templates/device_list.html:184
 msgid "hours ago"
 msgstr "ore fa"
 
-#: templates/device_list.html:183 utils/templates/device_list.html:175
+#: templates/device_list.html:191
 msgid "minutes ago"
 msgstr "minuti fa"
 
-#: templates/device_list.html:188 templates/device_list.html:221
-#: utils/templates/device_list.html:205
+#: templates/device_list.html:196 templates/device_list.html:229
 msgid "Checking..."
 msgstr "Verifica in corso..."
 
-#: templates/device_list.html:195 utils/templates/device_list.html:183
+#: templates/device_list.html:203
 msgid "Resync with the cloud to avoid data loss"
 msgstr "Risincronizza con il cloud per evitare la perdita di dati"
 
-#: templates/device_list.html:200
+#: templates/device_list.html:208
 msgid "Sync warning"
 msgstr ""
 
-#: templates/device_list.html:207 utils/templates/device_list.html:191
+#: templates/device_list.html:215
 msgid "Updating data to the last synchronization"
 msgstr "Aggiornamento dei dati all'ultima sincronizzazione"
 
-#: templates/device_list.html:207 utils/templates/device_list.html:191
+#: templates/device_list.html:215
 msgid "days"
 msgstr "giorni"
 
-#: templates/device_list.html:209 utils/templates/device_list.html:193
+#: templates/device_list.html:217
 msgid "Updating data..."
 msgstr "Aggiornamento dati..."
 
-#: templates/device_list.html:215 utils/templates/device_list.html:199
+#: templates/device_list.html:223
 msgid "No data yet"
 msgstr "Nessun dato disponibile"
 
-#: templates/device_list.html:236 utils/templates/device_list.html:220
+#: templates/device_list.html:244
 msgid ""
 "The patient has used the device for more than 8 hours a day over the past"
 " week"
@@ -711,12 +652,11 @@ msgstr ""
 "Il paziente ha utilizzato il dispositivo per più di 8 ore al giorno "
 "nell'ultima settimana"
 
-#: templates/device_list.html:238 templates/device_list.html:245
-#: utils/templates/device_list.html:222 utils/templates/device_list.html:229
+#: templates/device_list.html:246 templates/device_list.html:253
 msgid "8 hours a day"
 msgstr "8 ore al giorno"
 
-#: templates/device_list.html:243 utils/templates/device_list.html:227
+#: templates/device_list.html:251
 msgid ""
 "The patient has used the device for less than 8 hours a day over the past"
 " week"
@@ -724,7 +664,7 @@ msgstr ""
 "Il paziente ha utilizzato il dispositivo per meno di 8 ore al giorno "
 "nell'ultima settimana"
 
-#: templates/device_list.html:263 utils/templates/device_list.html:246
+#: templates/device_list.html:271
 msgid ""
 "Send an email to request authorization to download the data collected by "
 "the wearable device"
@@ -732,43 +672,43 @@ msgstr ""
 "Invia un'email per richiedere l'autorizzazione al download dei dati "
 "raccolti dal dispositivo indossabile"
 
-#: templates/device_list.html:264 utils/templates/device_list.html:247
+#: templates/device_list.html:272
 msgid "Request Authorization"
 msgstr "Richiedi autorizzazione"
 
-#: templates/device_list.html:272
+#: templates/device_list.html:280
 msgid "Rename the email address associated with this device"
 msgstr "Rinominare l'indirizzo email valido collegato a un dispositivo"
 
-#: templates/device_list.html:273
+#: templates/device_list.html:281
 msgid "Rename Email"
 msgstr "Rinominare Email"
 
-#: templates/device_list.html:281 utils/templates/device_list.html:255
+#: templates/device_list.html:297
 msgid "View detailed device information"
 msgstr "Visualizza informazioni dettagliate sul dispositivo"
 
-#: templates/device_list.html:287 utils/templates/device_list.html:261
+#: templates/device_list.html:303
 msgid "Disable"
 msgstr "Disabilita"
 
-#: templates/device_list.html:293 utils/templates/device_list.html:267
+#: templates/device_list.html:318
 msgid "No action allowed"
 msgstr "Nessuna azione consentita"
 
-#: templates/device_list.html:311 utils/templates/device_list.html:285
+#: templates/device_list.html:336
 msgid "No devices inserted"
 msgstr "Nessun dispositivo inserito"
 
-#: templates/device_list.html:312 utils/templates/device_list.html:286
+#: templates/device_list.html:337
 msgid "Add devices and start monitoring"
 msgstr "Aggiungi dispositivi e inizia il monitoraggio"
 
-#: templates/device_list.html:315 utils/templates/device_list.html:289
+#: templates/device_list.html:340
 msgid "Getting Started:"
 msgstr "Per iniziare:"
 
-#: templates/device_list.html:315 utils/templates/device_list.html:289
+#: templates/device_list.html:340
 msgid ""
 "Use the form above to add a new email address and begin monitoring the "
 "associated wearable."
@@ -776,41 +716,41 @@ msgstr ""
 "Usa il modulo sopra per aggiungere un nuovo indirizzo email e iniziare il"
 " monitoraggio del wearable associato."
 
-#: templates/device_list.html:331 utils/templates/device_list.html:305
+#: templates/device_list.html:356
 msgid "Confirm Deactivation"
 msgstr "Conferma disattivazione"
 
-#: templates/device_list.html:345 utils/templates/device_list.html:319
+#: templates/device_list.html:370
 msgid "Are you sure you want to disable this device?"
 msgstr "Sei sicuro di voler disabilitare questo dispositivo?"
 
-#: templates/device_list.html:349 utils/templates/device_list.html:323
+#: templates/device_list.html:374
 msgid "Email Address:"
 msgstr "Indirizzo email:"
 
-#: templates/device_list.html:354 utils/templates/device_list.html:328
+#: templates/device_list.html:379
 msgid "This action will make the email address no longer usable in this service"
 msgstr ""
 "Questa azione renderà l'indirizzo email non più utilizzabile in questo "
 "servizio"
 
-#: templates/device_list.html:366 utils/templates/device_list.html:340
+#: templates/device_list.html:391
 msgid "confirm"
 msgstr "Conferma"
 
-#: templates/device_list.html:384
+#: templates/device_list.html:409
 msgid "Rename Email Address"
 msgstr "Rinomina indirizzo email"
 
-#: templates/device_list.html:394
+#: templates/device_list.html:419
 msgid "New Email Address"
 msgstr "Nuovo Indirizzo email"
 
-#: templates/device_list.html:397
+#: templates/device_list.html:422
 msgid "Enter new email address"
 msgstr "Inserisci indirizzo email"
 
-#: templates/device_list.html:399
+#: templates/device_list.html:424
 msgid "Enter a valid email address to replace the current one"
 msgstr "Inserisci un indirizzo email valido collegato a un dispositivo"
 
@@ -843,8 +783,9 @@ msgid "Go to Device Management"
 msgstr "Vai alla Gestione Dispositivi"
 
 #: templates/login.html:6
-msgid "Medical Platform Login"
-msgstr "Accesso alla piattaforma medica"
+#, fuzzy
+msgid "Login"
+msgstr "Ultimo accesso"
 
 #: templates/login.html:42
 msgid "Lively Ageing Wearable Platform"
@@ -857,10 +798,6 @@ msgstr "Inserisci il tuo nome utente"
 #: templates/login.html:61
 msgid "Enter your password"
 msgstr "Inserisci la tua password"
-
-#: templates/login.html:70
-msgid "Sign In"
-msgstr "Accedi"
 
 #: templates/user_profile_info.html:18
 msgid "Change Avatar"
@@ -930,10 +867,6 @@ msgstr "Nessun video tutorial disponibile."
 msgid "Back to home"
 msgstr "Torna alla home"
 
-#: utils/templates/auth_confirmation.html:36
-#, python-format
-msgid "Wearable data access has been successfully obtained for %(email_address)s"
-msgstr ""
-"L'accesso ai dati del wearable è stato ottenuto con successo per "
-"\"%(email_address)s"
+#~ msgid "Medical Platform Login"
+#~ msgstr "Accesso alla piattaforma medica"
 
