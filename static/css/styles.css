@@ -1266,3 +1266,15 @@ main {
         height: calc(100vh - 230px); /* mobile navbar is slightly taller */
     }
 }
+/* Legal pages (privacy policy, terms of service) */
+.legal-content h2,
+.legal-content h3 {
+    color: var(--primary);
+    font-weight: 700;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.legal-content h2:first-child {
+    margin-top: 0;
+}

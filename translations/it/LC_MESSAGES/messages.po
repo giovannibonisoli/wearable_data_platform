@@ -757,7 +757,7 @@ msgid "Your user is linked to this organization"
 msgstr "Il tuo utente è collegato a questa azienda"
 
 #: templates/home.html:236
-msgid "Dispositivi Registrati"
+msgid "Registered Devices"
 msgstr "Dispositivi Registrati""
 
 #: templates/home.html:243
