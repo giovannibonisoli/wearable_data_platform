@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 17:04+0100\n"
+"POT-Creation-Date: 2026-11-16 18:49+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -433,6 +433,12 @@ msgstr "Back to Home"
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "The authorization link will expire in 10 minutes for security reasons."
 
+#: templates/base.html:57 templates/base.html:176 templates/base_public.html:28
+#: templates/landing.html:44 templates/login.html:42
+#: templates/terms_of_service.html:34
+msgid "Lively Ageing Wearable Platform"
+msgstr "Lively Ageing Wearable Platform"
+
 #: templates/base.html:66 templates/home.html:3
 msgid "Home"
 msgstr "Home"
@@ -483,13 +489,13 @@ msgstr "All rights reserved"
 
 #: templates/base.html:179 templates/base_public.html:84
 #: templates/login.html:96 templates/privacy_policy.html:3
-#: templates/privacy_policy.html:8
+#: templates/privacy_policy.html:53
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
 #: templates/base.html:182 templates/base_public.html:87
 #: templates/login.html:99 templates/terms_of_service.html:3
-#: templates/terms_of_service.html:8
+#: templates/terms_of_service.html:32
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
@@ -795,51 +801,46 @@ msgid "Overview"
 msgstr "Overview"
 
 #: templates/landing.html:46
-msgid "Part of the Lively Ageing Project"
-msgstr ""
-
-#: templates/landing.html:50
 msgid ""
-"The wearable monitoring platform of the Lively Ageing project, enabling "
-"authorized care and research staff to monitor physical activity and "
-"health metrics collected from enrolled participants' wearable devices via"
-" Google Health."
+"The wearable monitoring platform of the Lively Ageing project enables to "
+"monitor physical activity, vital parameters, and sleep metrics collected "
+"from enrolled participants' wearable devices via Google Health."
 msgstr ""
 
-#: templates/landing.html:55
+#: templates/landing.html:51
 #, fuzzy
 msgid "Staff Login"
 msgstr "Last Login"
 
-#: templates/landing.html:59
+#: templates/landing.html:55
 msgid "Discover Lively Ageing"
 msgstr ""
 
-#: templates/landing.html:80
+#: templates/landing.html:76
 msgid "Integrated Study Monitoring"
 msgstr ""
 
-#: templates/landing.html:83
+#: templates/landing.html:79
 msgid ""
 "Wearable monitoring complements the multidisciplinary activities of the "
 "Lively Ageing program for enrolled participants."
 msgstr ""
 
-#: templates/landing.html:94
+#: templates/landing.html:90
 msgid "Wearable Data via Google Health"
 msgstr ""
 
-#: templates/landing.html:97
+#: templates/landing.html:93
 msgid ""
 "Following participant authorization, the platform synchronizes device "
 "status, daily steps, distance, and heart rate metrics from Google Health."
 msgstr ""
 
-#: templates/landing.html:108
+#: templates/landing.html:104
 msgid "Confidentiality & Data Protection"
 msgstr ""
 
-#: templates/landing.html:111
+#: templates/landing.html:107
 msgid ""
 "Data is stored in pseudonymized form and accessible exclusively to "
 "authorized staff in full compliance with data protection regulations."
@@ -850,10 +851,6 @@ msgstr ""
 msgid "Login"
 msgstr "Last Login"
 
-#: templates/login.html:42
-msgid "Lively Ageing Wearable Platform"
-msgstr "Lively Ageing Wearable Platform"
-
 #: templates/login.html:52
 msgid "Enter your username"
 msgstr "Enter your username"
@@ -862,13 +859,632 @@ msgstr "Enter your username"
 msgid "Enter your password"
 msgstr "Enter your password"
 
-#: templates/privacy_policy.html:12
-msgid "Insert your Privacy Policy text here."
-msgstr "Insert your Privacy Policy text here."
+#: templates/privacy_policy.html:55
+msgid ""
+"Research Project: Lively Ageing - an integrated network of services and "
+"technologies for the well-being of the elderly"
+msgstr ""
 
-#: templates/terms_of_service.html:12
-msgid "Insert your Terms of Service text here."
-msgstr "Insert your Terms of Service text here."
+#: templates/privacy_policy.html:60 templates/terms_of_service.html:36
+msgid "Last updated: 05/11/2026"
+msgstr ""
+
+#: templates/privacy_policy.html:66
+msgid ""
+"This Privacy Policy describes the management of personal data and "
+"wellness data collected and processed through the Lively Ageing Wearable "
+"Platform application."
+msgstr ""
+
+#: templates/privacy_policy.html:72
+msgid "Contents"
+msgstr ""
+
+#: templates/privacy_policy.html:75
+msgid "Ethics Committee Approval"
+msgstr ""
+
+#: templates/privacy_policy.html:76
+msgid "Data Controllers and Processors (GDPR)"
+msgstr ""
+
+#: templates/privacy_policy.html:77
+msgid "Data Security, Pseudonymization, and Encryption"
+msgstr ""
+
+#: templates/privacy_policy.html:78
+msgid "Data Collected and Processing Purposes"
+msgstr ""
+
+#: templates/privacy_policy.html:79
+msgid "Data Management and Retention"
+msgstr ""
+
+#: templates/privacy_policy.html:80
+#, fuzzy
+msgid "Compliance with Google Health Connect & API Policies"
+msgstr "Complete the Google Health authorization process"
+
+#: templates/privacy_policy.html:81
+msgid ""
+"Data Subject Rights, Revocation of Google Authorizations, and Data "
+"Deletion"
+msgstr ""
+
+#: templates/privacy_policy.html:86
+msgid "1. Ethics Committee Approval"
+msgstr ""
+
+#: templates/privacy_policy.html:88
+msgid ""
+"The project was approved by the Area Vasta Emilia Nord (AVEN) Ethics "
+"Committee with protocols no. 34990/24 and no. 34992/24 on 09/12/2024 and "
+"protocol no. 163205/24 on 10/12/2024."
+msgstr ""
+
+#: templates/privacy_policy.html:92
+msgid "2. Data Controllers and Processors (GDPR)"
+msgstr ""
+
+#: templates/privacy_policy.html:94
+msgid ""
+"In compliance with EU Regulation 2016/679 (GDPR) and the Memorandum of "
+"Understanding signed by the project partners, data processing takes place"
+" according to an expressly regulated multi-entity architecture:"
+msgstr ""
+
+#: templates/privacy_policy.html:100
+msgid "Autonomous Data Controllers"
+msgstr ""
+
+#: templates/privacy_policy.html:102
+msgid ""
+"University of Modena and Reggio Emilia (UNIMORE) - Lead Institution and "
+"Platform Developer"
+msgstr ""
+
+#: templates/privacy_policy.html:103
+msgid "Municipality of Modena"
+msgstr ""
+
+#: templates/privacy_policy.html:104
+msgid "ASP Terre d'Argine"
+msgstr ""
+
+#: templates/privacy_policy.html:105
+msgid "ASP Reggio Emilia - Città delle Persone"
+msgstr ""
+
+#: templates/privacy_policy.html:106
+msgid "ASP of Parma"
+msgstr ""
+
+#: templates/privacy_policy.html:112
+#, fuzzy
+msgid "Data Processors"
+msgstr "Update Password"
+
+#: templates/privacy_policy.html:114
+msgid ""
+"University Hospital of Modena (Azienda Ospedaliero-Universitaria di "
+"Modena)"
+msgstr ""
+
+#: templates/privacy_policy.html:115
+msgid "Local Health Authority of Modena (Azienda USL di Modena)"
+msgstr ""
+
+#: templates/privacy_policy.html:116
+msgid ""
+"Local Health Authority IRCCS of Reggio Emilia (Azienda USL IRCCS di "
+"Reggio Emilia)"
+msgstr ""
+
+#: templates/privacy_policy.html:123
+msgid "UNIMORE DPO Contacts:"
+msgstr ""
+
+#: templates/privacy_policy.html:125 templates/privacy_policy.html:273
+msgid "Principal Investigator:"
+msgstr ""
+
+#: templates/privacy_policy.html:130
+msgid "3. Data Security, Pseudonymization, and Encryption"
+msgstr ""
+
+#: templates/privacy_policy.html:132
+msgid ""
+"The Platform implements the principles of Privacy by Design and Privacy "
+"by Default (Art. 25 GDPR) and, to protect the confidentiality of study "
+"participants, enforces strict technical and organizational security "
+"measures pursuant to Art. 32 GDPR and in compliance with the Secure Data "
+"Handling requirements of the Google Health API Developer and User Data "
+"Policy:"
+msgstr ""
+
+#: templates/privacy_policy.html:136
+msgid "Absence of Identifying Data:"
+msgstr ""
+
+#: templates/privacy_policy.html:137
+msgid ""
+"The application does not collect, transmit, or store names, surnames, tax"
+" codes, or any personal information that allows the direct or indirect "
+"identification of monitored participants."
+msgstr ""
+
+#: templates/privacy_policy.html:140
+msgid "Impersonal Accounts and Data Linkage:"
+msgstr ""
+
+#: templates/privacy_policy.html:141
+msgid ""
+"Wearable device association and synchronization occur exclusively through"
+" impersonal project accounts devoid of any personal reference to the user"
+" (e.g., wearable_10_ASP_carpi). Integration and linking between different"
+" data streams on the Platform (wearable indicators, health assessments, "
+"medical device parameters) occur via an internal unique code generated at"
+" the database level, completely devoid of meaning or identifying "
+"references outside the Platform. This mechanism ensures cross-sectional "
+"data pseudonymization and prevents anyone accessing the database from "
+"tracing the real identity of the participant."
+msgstr ""
+
+#: templates/privacy_policy.html:144
+msgid "Exclusive Decoding:"
+msgstr ""
+
+#: templates/privacy_policy.html:145
+msgid ""
+"The lookup table linking the impersonal account to the real identity of "
+"the participant is not available on the Platform; it resides exclusively "
+"in restricted internal systems held by the respective competent "
+"Autonomous Data Controllers. Technical staff managing the Platform "
+"servers have no way of tracing the real identity of the participant."
+msgstr ""
+
+#: templates/privacy_policy.html:148
+msgid "Encryption of Data in Transit:"
+msgstr ""
+
+#: templates/privacy_policy.html:149
+msgid ""
+"All data flows between wearables, the Platform, and Google APIs occur "
+"exclusively over encrypted and secure protocols (TLS/HTTPS)."
+msgstr ""
+
+#: templates/privacy_policy.html:152
+msgid "Encryption of Data at Rest:"
+msgstr ""
+
+#: templates/privacy_policy.html:153
+msgid ""
+"Data and access/refresh tokens obtained from Google Health APIs are "
+"encrypted at rest in system databases using Fernet encryption "
+"(AES-128-CBC with HMAC-SHA256)."
+msgstr ""
+
+#: templates/privacy_policy.html:158
+msgid "4. Data Collected and Processing Purposes"
+msgstr ""
+
+#: templates/privacy_policy.html:160
+msgid ""
+"The Platform processes wellness and vital data exclusively for scientific"
+" purposes, lifestyle monitoring, prevention, and promotion of active "
+"ageing within the \"LivelyAgeing\" research study, subject to prior "
+"acquisition of Informed Consent from the participant."
+msgstr ""
+
+#: templates/privacy_policy.html:162
+msgid "The processed data consists of two components:"
+msgstr ""
+
+#: templates/privacy_policy.html:165
+msgid "Data read via Google Health API:"
+msgstr ""
+
+#: templates/privacy_policy.html:166
+msgid ""
+"Subject to explicit user authorization, the application reads and "
+"processes exclusively the following types of data required for the study:"
+" heart rate, sleep monitoring, steps and physical activity, calories "
+"burned, and oxygen saturation (SpO2). Geographic location data (GPS) is "
+"neither collected nor processed in any way."
+msgstr ""
+
+#: templates/privacy_policy.html:169
+msgid "Additional Project and Integrated Data:"
+msgstr ""
+
+#: templates/privacy_policy.html:170
+msgid ""
+"For cross-sectional integration into the Digital Twin and clinical-"
+"functional evaluation, the Platform is designed to receive:"
+msgstr ""
+
+#: templates/privacy_policy.html:172
+msgid ""
+"Wellness and daily routine data: parameters detected by "
+"environmental/home automation sensors and lifestyle habits;"
+msgstr ""
+
+#: templates/privacy_policy.html:173
+msgid ""
+"Clinical and cardiac measurement parameters: "
+"physiological/electrocardiographic traces and analyses from authorized "
+"medical devices;"
+msgstr ""
+
+#: templates/privacy_policy.html:174
+msgid ""
+"Functional and neuropsychological measurement indices: summary outcomes "
+"of tests and measurement scales on cognitive performance and general "
+"physiological status."
+msgstr ""
+
+#: templates/privacy_policy.html:178
+msgid "Purpose:"
+msgstr ""
+
+#: templates/privacy_policy.html:179
+msgid ""
+"Lifestyle monitoring, prevention, and promotion of active ageing within "
+"the \"LivelyAgeing\" research study."
+msgstr ""
+
+#: templates/privacy_policy.html:184
+msgid "5. Data Management and Retention"
+msgstr ""
+
+#: templates/privacy_policy.html:187
+msgid "Storage Environment and Location:"
+msgstr ""
+
+#: templates/privacy_policy.html:188
+msgid ""
+"All collected and processed data resides at the Data Center of the "
+"University IT Systems of UNIMORE, protected by high physical and "
+"organizational security standards. These infrastructures include physical"
+" access control via restricted badges, 24/7 video surveillance, "
+"uninterruptible power supply systems, climate control, and fire "
+"protection to ensure continuous integrity and confidentiality."
+msgstr ""
+
+#: templates/privacy_policy.html:191
+msgid "Network Security and Access Segregation:"
+msgstr ""
+
+#: templates/privacy_policy.html:192
+msgid ""
+"The application architecture and database reside on segregated virtual "
+"machines protected by firewalls. Administrative access to servers and "
+"databases is strictly limited to expressly authorized UNIMORE technical "
+"platform administrators and occurs exclusively via encrypted and "
+"protected communication channels such as SSH and VPN."
+msgstr ""
+
+#: templates/privacy_policy.html:195
+msgid "Data Retention Period:"
+msgstr ""
+
+#: templates/privacy_policy.html:196
+msgid ""
+"Pseudonymized data collected from wearables will be retained for the "
+"entire duration of the \"LivelyAgeing\" research project and for the "
+"following 2 years, solely to allow scientific validation of the study "
+"results. At the end of the retention period, permanent and irreversible "
+"anonymization of the dataset stored on UNIMORE servers will be carried "
+"out by irreversibly deleting from the database every external linking "
+"identifier (including impersonal project accounts), making it impossible "
+"to reconnect the dataset to the real identity of the participants."
+msgstr ""
+
+#: templates/privacy_policy.html:201
+#, fuzzy
+msgid "6. Compliance with Google Health Connect & API Policies"
+msgstr "Complete the Google Health authorization process"
+
+#: templates/privacy_policy.html:204
+msgid "Formal Limited Use Statement:"
+msgstr ""
+
+#: templates/privacy_policy.html:205
+msgid ""
+"The use and transfer to any other app of information received from Google"
+" Health APIs by the Lively Ageing Wearable Platform will adhere to the "
+"Google Health API Developer and User Data Policy and the Google Health "
+"API User Data and Health Research Policy, including the Limited Use "
+"requirements."
+msgstr ""
+
+#: templates/privacy_policy.html:209
+msgid "Research Requirements:"
+msgstr ""
+
+#: templates/privacy_policy.html:210
+msgid ""
+"Wellness data processing takes place in full compliance with the Google "
+"Health API User Data and Health Research Policy for studies approved by "
+"an Ethics Committee."
+msgstr ""
+
+#: templates/privacy_policy.html:213
+msgid "Limitation of Use:"
+msgstr ""
+
+#: templates/privacy_policy.html:214
+msgid ""
+"Wellness data read via APIs is used exclusively to provide and improve "
+"the operational functionalities of the wellness monitoring Platform and "
+"for the scientific purposes of the study."
+msgstr ""
+
+#: templates/privacy_policy.html:217
+msgid "Prohibition of Sale:"
+msgstr ""
+
+#: templates/privacy_policy.html:218
+msgid ""
+"Collected data will never be sold, transferred to data brokers, or used "
+"for advertising, marketing, or commercial profiling purposes."
+msgstr ""
+
+#: templates/privacy_policy.html:221
+msgid "Third-Party Platforms:"
+msgstr ""
+
+#: templates/privacy_policy.html:222
+msgid ""
+"Data is not shared with third parties, except for the possible release of"
+" aggregated and anonymized datasets (Open Data) from which it is "
+"technically impossible to re-identify the data subject."
+msgstr ""
+
+#: templates/privacy_policy.html:225
+msgid "Data Transfer:"
+msgstr ""
+
+#: templates/privacy_policy.html:226
+msgid ""
+"No transfer of personal data to non-EU countries is foreseen. All storage"
+" and processing servers reside within the European Union."
+msgstr ""
+
+#: templates/privacy_policy.html:232
+msgid ""
+"7. Data Subject Rights, Revocation of Google Authorizations, and Data "
+"Deletion"
+msgstr ""
+
+#: templates/privacy_policy.html:234
+msgid ""
+"Pursuant to Articles 15-22 of the GDPR and in compliance with the Google "
+"Health API User Data and Health Research Policy, the participant may "
+"exercise their rights at any time (access, rectification, integration, "
+"erasure, restriction of processing, and withdrawal of consent) without "
+"providing any justification and without any consequence on the care "
+"services received."
+msgstr ""
+
+#: templates/privacy_policy.html:237
+#, fuzzy
+msgid "Revocation of Google Health API Authorization"
+msgstr "Complete the Google Health authorization process"
+
+#: templates/privacy_policy.html:238
+msgid ""
+"The participant (or authorized personnel assisting them) may disable data"
+" synchronization with the Platform at any time:"
+msgstr ""
+
+#: templates/privacy_policy.html:241
+msgid "Via Google Account Management:"
+msgstr ""
+
+#: templates/privacy_policy.html:242
+msgid ""
+"By accessing the security section of their Google Account (or the "
+"associated project account) under \"Third-party apps with account "
+"access\" and removing authorization for the Lively Ageing Wearable "
+"Platform;"
+msgstr ""
+
+#: templates/privacy_policy.html:245
+msgid "Via Platform / Investigator:"
+msgstr ""
+
+#: templates/privacy_policy.html:246
+msgid ""
+"By requesting the ASP/Municipality contact person or local investigator "
+"to disconnect the impersonal project account, which results in the "
+"immediate invalidation and deletion of stored OAuth access and refresh "
+"tokens."
+msgstr ""
+
+#: templates/privacy_policy.html:250
+msgid "Withdrawal from the Study and Data Deletion"
+msgstr ""
+
+#: templates/privacy_policy.html:251
+msgid "In the event of withdrawal from the study:"
+msgstr ""
+
+#: templates/privacy_policy.html:254
+msgid ""
+"Collection and import of new data via Google Health APIs and wearable "
+"devices will be immediately and automatically stopped;"
+msgstr ""
+
+#: templates/privacy_policy.html:257
+msgid ""
+"Data already collected associated with the impersonal ID will, upon "
+"request of the data subject, be securely deleted from the Platform "
+"servers or irreversibly anonymized by destroying the association keys;"
+msgstr ""
+
+#: templates/privacy_policy.html:260
+msgid ""
+"Data already included in scientific publications or research datasets "
+"will remain stored in purely aggregated and anonymous form, from which it"
+" is technically impossible to trace the identity of the participant."
+msgstr ""
+
+#: templates/privacy_policy.html:264
+msgid "Contacts for Exercising Rights"
+msgstr ""
+
+#: templates/privacy_policy.html:266
+msgid ""
+"The data subject (or authorized personnel assisting them) may exercise "
+"their GDPR rights or request withdrawal of consent and data "
+"deletion/anonymization by contacting the following references:"
+msgstr ""
+
+#: templates/privacy_policy.html:271
+msgid "A) Central Project and Platform Coordination (UNIMORE)"
+msgstr ""
+
+#: templates/privacy_policy.html:275
+msgid "UNIMORE DPO:"
+msgstr ""
+
+#: templates/privacy_policy.html:281
+msgid "B) Local Contacts and DPOs for Each Experimental Site"
+msgstr ""
+
+#: templates/privacy_policy.html:285
+msgid "MODENA Site (Municipality of Modena)"
+msgstr ""
+
+#: templates/privacy_policy.html:286 templates/privacy_policy.html:294
+#: templates/privacy_policy.html:302 templates/privacy_policy.html:310
+msgid "Local Investigator:"
+msgstr ""
+
+#: templates/privacy_policy.html:293
+msgid "CARPI Site (ASP Terre d'Argine)"
+msgstr ""
+
+#: templates/privacy_policy.html:301
+msgid "PARMA Site (ASP Parma)"
+msgstr ""
+
+#: templates/privacy_policy.html:309
+msgid "REGGIO EMILIA Site (ASP Reggio Emilia Città delle Persone)"
+msgstr ""
+
+#: templates/privacy_policy.html:319
+msgid "C) Supervisory Authority"
+msgstr ""
+
+#: templates/privacy_policy.html:321
+msgid ""
+"Without prejudice to the right of the data subject to lodge a complaint "
+"with the Italian Data Protection Authority (Garante per la Protezione dei"
+" Dati Personali, Piazza Venezia n. 11, 00187 Roma -"
+msgstr ""
+
+#: templates/terms_of_service.html:42
+msgid "1. Subject and Scope of the Service"
+msgstr ""
+
+#: templates/terms_of_service.html:44
+msgid ""
+"The Lively Ageing Wearable Platform (hereinafter \"Platform\") is a "
+"software tool — for exclusive scientific research purposes — developed "
+"and managed by the University of Modena and Reggio Emilia (UNIMORE), "
+"intended for the technical management, synchronization, and monitoring of"
+" wearable devices within the scientific project \"LivelyAgeing: an "
+"integrated network of services and technologies for the well-being of the"
+" elderly\""
+msgstr ""
+
+#: templates/terms_of_service.html:49
+msgid "2. Restricted Access and Use"
+msgstr ""
+
+#: templates/terms_of_service.html:51
+msgid ""
+"Use of the application and the Platform is reserved exclusively for "
+"authorized personnel of the project partners. The application is not "
+"intended for direct use by the general public or for individual self-"
+"monitoring."
+msgstr ""
+
+#: templates/terms_of_service.html:55
+msgid "3. Exclusion of Medical Purposes (Medical Disclaimer)"
+msgstr ""
+
+#: templates/terms_of_service.html:59
+msgid "No Diagnosis or Therapy:"
+msgstr ""
+
+#: templates/terms_of_service.html:60
+msgid ""
+"The Platform and its API integrations collect and display wellness and "
+"vital parameters (e.g., heart rate, steps, sleep, oxygen saturation) for "
+"scientific, lifestyle monitoring, and active ageing purposes."
+msgstr ""
+
+#: templates/terms_of_service.html:63
+msgid "Not a Medical Device:"
+msgstr ""
+
+#: templates/terms_of_service.html:64
+msgid ""
+"The application does not provide medical diagnoses, clinical advice, "
+"therapies, or real-time emergency alerts."
+msgstr ""
+
+#: templates/terms_of_service.html:67
+msgid "Medical Consultation:"
+msgstr ""
+
+#: templates/terms_of_service.html:68
+msgid ""
+"No content or alert generated by the Platform replaces the advice, "
+"diagnosis, or treatment of a physician or other qualified healthcare "
+"professional."
+msgstr ""
+
+#: templates/terms_of_service.html:74
+msgid "4. Free Provision of the Service"
+msgstr ""
+
+#: templates/terms_of_service.html:76
+msgid ""
+"The Platform is provided free of charge to the project partners for the "
+"entire duration of the \"LivelyAgeing\" research project. There are no "
+"in-app purchases, subscriptions, or paid features."
+msgstr ""
+
+#: templates/terms_of_service.html:80
+msgid "5. Intellectual Property"
+msgstr ""
+
+#: templates/terms_of_service.html:82
+msgid ""
+"The application, source code, software architecture, and the name "
+"\"Lively Ageing Wearable Platform\" are the exclusive property of the "
+"University of Modena and Reggio Emilia."
+msgstr ""
+
+#: templates/terms_of_service.html:86
+msgid "6. Limitation of Liability"
+msgstr ""
+
+#: templates/terms_of_service.html:88
+msgid ""
+"The Platform is developed and managed by UNIMORE as part of the research "
+"project. While adopting all appropriate technical measures to ensure "
+"proper operation, platform availability may be subject to temporary "
+"interruptions or synchronization delays. Such occurrences, linked to the "
+"experimental nature of the project or third-party technical factors (such"
+" as local Bluetooth connectivity, the internet network, or the device "
+"manufacturer cloud services), fall within the normal dynamics of "
+"experimentation and do not constitute a service disruption."
+msgstr ""
 
 #: templates/user_profile_info.html:18
 msgid "Change Avatar"
@@ -1012,5 +1628,32 @@ msgstr "Back to Home"
 #~ "Services User Data Policy."
 
 #~ msgid "Dispositivi Registrati"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The wearable monitoring platform of the"
+#~ " Lively Ageing project, enabling authorized"
+#~ " care and research staff to monitor"
+#~ " physical activity and health metrics "
+#~ "collected from enrolled participants' wearable"
+#~ " devices via Google Health."
+#~ msgstr ""
+
+#~ msgid "Insert your Privacy Policy text here."
+#~ msgstr "Insert your Privacy Policy text here."
+
+#~ msgid "Insert your Terms of Service text here."
+#~ msgstr "Insert your Terms of Service text here."
+
+#~ msgid "Part of the Lively Ageing Project"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The wearable monitoring platform of the"
+#~ " Lively Ageing project enablesto monitor"
+#~ " physical activity, vital parameters, and"
+#~ " sleep metrics collected from enrolled "
+#~ "participants' wearable devices via Google "
+#~ "Health."
 #~ msgstr ""
 
