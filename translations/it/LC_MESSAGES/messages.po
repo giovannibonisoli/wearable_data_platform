@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:25+0100\n"
+"POT-Creation-Date: 2026-11-16 17:04+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -400,7 +400,6 @@ msgid "Click on the authorization link"
 msgstr "Clicca sul link di autorizzazione"
 
 #: templates/auth_email_sent_confirmation.html:38
-#, fuzzy
 msgid "Complete the Google Health authorization process"
 msgstr "Completa il processo di autorizzazione di Google Health"
 
@@ -448,35 +447,35 @@ msgstr "Impostazioni"
 msgid "Logout"
 msgstr "Esci"
 
-#: templates/base.html:133 templates/base_public.html:54
+#: templates/base.html:133 templates/base_public.html:45
 msgid "Italian"
 msgstr "Italiano"
 
-#: templates/base.html:139 templates/base_public.html:60
+#: templates/base.html:139 templates/base_public.html:51
 msgid "English"
 msgstr "Inglese"
 
-#: templates/base.html:145 templates/base_public.html:66
+#: templates/base.html:145 templates/base_public.html:57
 msgid "Spanish"
 msgstr "Spagnolo"
 
-#: templates/base.html:176 templates/base_public.html:90
+#: templates/base.html:176 templates/base_public.html:81
 msgid "All rights reserved"
 msgstr "Tutti i diritti riservati"
 
-#: templates/base.html:179 templates/base_public.html:93
+#: templates/base.html:179 templates/base_public.html:84
 #: templates/login.html:96 templates/privacy_policy.html:3
 #: templates/privacy_policy.html:8
 msgid "Privacy Policy"
 msgstr "Informativa sulla Privacy"
 
-#: templates/base.html:182 templates/base_public.html:96
+#: templates/base.html:182 templates/base_public.html:87
 #: templates/login.html:99 templates/terms_of_service.html:3
 #: templates/terms_of_service.html:8
 msgid "Terms of Service"
 msgstr "Termini di Servizio"
 
-#: templates/base_public.html:75 templates/login.html:70
+#: templates/base_public.html:66 templates/login.html:70
 msgid "Sign In"
 msgstr "Accedi"
 
@@ -758,7 +757,7 @@ msgstr "Il tuo utente è collegato a questa azienda"
 
 #: templates/home.html:236
 msgid "Registered Devices"
-msgstr "Dispositivi Registrati""
+msgstr "Dispositivi Registrati"
 
 #: templates/home.html:243
 msgid "Wearables linked to your organization"
@@ -811,8 +810,8 @@ msgid ""
 "Lively Ageing program for enrolled participants."
 msgstr ""
 "Il monitoraggio tramite dispositivi indossabili affianca le attività "
-"multidisciplinari del programma Lively Ageing per i partecipanti "
-"iscritti allo studio."
+"multidisciplinari del programma Lively Ageing per i partecipanti iscritti"
+" allo studio."
 
 #: templates/landing.html:94
 msgid "Wearable Data via Google Health"
@@ -1006,4 +1005,10 @@ msgstr "Torna alla home"
 #~ " pseudonimizzata e trattati nel pieno "
 #~ "rispetto della Google API Services User"
 #~ " Data Policy."
+
+#~ msgid "Registered Devices"
+#~ msgstr "Dispositivi Registrati\""
+
+#~ msgid "Dispositivi Registrati"
+#~ msgstr ""
 

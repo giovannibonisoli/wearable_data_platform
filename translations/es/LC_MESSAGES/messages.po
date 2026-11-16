@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:25+0100\n"
+"POT-Creation-Date: 2026-11-16 17:04+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -454,35 +454,35 @@ msgstr "Configuración"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: templates/base.html:133 templates/base_public.html:54
+#: templates/base.html:133 templates/base_public.html:45
 msgid "Italian"
 msgstr "Italiano"
 
-#: templates/base.html:139 templates/base_public.html:60
+#: templates/base.html:139 templates/base_public.html:51
 msgid "English"
 msgstr "Inglés"
 
-#: templates/base.html:145 templates/base_public.html:66
+#: templates/base.html:145 templates/base_public.html:57
 msgid "Spanish"
 msgstr "Español"
 
-#: templates/base.html:176 templates/base_public.html:90
+#: templates/base.html:176 templates/base_public.html:81
 msgid "All rights reserved"
 msgstr "Todos los derechos reservados"
 
-#: templates/base.html:179 templates/base_public.html:93
+#: templates/base.html:179 templates/base_public.html:84
 #: templates/login.html:96 templates/privacy_policy.html:3
 #: templates/privacy_policy.html:8
 msgid "Privacy Policy"
 msgstr "Política de Privacidad"
 
-#: templates/base.html:182 templates/base_public.html:96
+#: templates/base.html:182 templates/base_public.html:87
 #: templates/login.html:99 templates/terms_of_service.html:3
 #: templates/terms_of_service.html:8
 msgid "Terms of Service"
 msgstr "Términos del Servicio"
 
-#: templates/base_public.html:75 templates/login.html:70
+#: templates/base_public.html:66 templates/login.html:70
 msgid "Sign In"
 msgstr "Iniciar sesión"
 
@@ -767,8 +767,8 @@ msgid "Your user is linked to this organization"
 msgstr "Tu usuario está vinculado a esta organización"
 
 #: templates/home.html:236
-msgid "Dispositivi Registrati"
-msgstr "Dispositivos registrados"
+msgid "Registered Devices"
+msgstr "Dispositivos Registrados"
 
 #: templates/home.html:243
 msgid "Wearables linked to your organization"
@@ -1009,4 +1009,7 @@ msgstr "Volver al inicio"
 #~ " tratan con estricto cumplimiento de "
 #~ "la Política de Datos de Usuario de"
 #~ " los Servicios de API de Google."
+
+#~ msgid "Dispositivi Registrati"
+#~ msgstr "Dispositivos registrados"
 

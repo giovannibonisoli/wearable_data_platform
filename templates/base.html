@@ -54,7 +54,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{{ home_url() }}">
-                <i class="bi bi-smartwatch me-2"></i>Lively Ageing Wearable Platform
+                <i class="bi bi-smartwatch me-2"></i>{{ _('Lively Ageing Wearable Platform') }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -173,7 +173,7 @@
     <footer class="footer">
         <div class="container">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                <p class="mb-0">&copy; 2026 Lively Ageing Wearable Platform. {{ _('All rights reserved') }}.</p>
+                <p class="mb-0">&copy; 2026 {{ _('Lively Ageing Wearable Platform') }}. {{ _('All rights reserved') }}.</p>
                 <div class="d-flex gap-3">
                     <a href="{{ url_for('privacy_policy') }}" class="text-white text-decoration-underline small">
                         {{ _('Privacy Policy') }}
