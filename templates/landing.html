@@ -1,6 +1,6 @@
 {% extends "base_public.html" %}
 
-{% block title %}{{ _('Overview') }}{% endblock %}
+{% block title %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -17,9 +17,20 @@
         font-size: 2.15rem;
         font-weight: 700;
     }
+    .btn-hero-secondary {
+        color: #ffffff;
+        border: 1.5px solid rgba(255, 255, 255, 0.75);
+        background: rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
+    }
+    .btn-hero-secondary:hover {
+        color: var(--primary);
+        background: #ffffff;
+        border-color: #ffffff;
+    }
     .feature-icon-box {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
         border-radius: 0.875rem;
         background: linear-gradient(135deg, rgba(44, 90, 160, 0.12) 0%, rgba(74, 144, 164, 0.12) 100%);
         display: flex;
@@ -28,7 +39,7 @@
         margin-bottom: 1rem;
     }
     .feature-icon-box i {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         color: var(--primary);
     }
 </style>
@@ -41,16 +52,21 @@
     <div class="public-hero mb-5">
         <div class="row align-items-center g-4">
             <div class="col-lg-8">
-                <h1 class="mb-3">{{ _('Lively Ageing Wearable Platform') }}</h1>
+                <span class="badge bg-light text-primary mb-3 px-3 py-2">
+                    <i class="bi bi-heart-pulse me-1"></i>
+                    {{ _('UNIMORE Research Project') }}
+                </span>
+                <h1 class="mb-3">Lively Ageing Web Platform</h1>
                 <p class="lead mb-4" style="opacity: 0.92;">
-                    {{ _("The wearable monitoring platform of the Lively Ageing project enables to monitor physical activity, vital parameters, and sleep metrics collected from enrolled participants' wearable devices via Google Health.") }}
+                    {{ _("The platform enables authorized care and research staff within the Lively Ageing project to monitor physical activity, vital parameters, and sleep metrics collected from enrolled participants' wearable devices via Google Health.") }}
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{{ url_for('login') }}" class="btn btn-light text-primary fw-bold px-4 py-3">
                         <i class="fas fa-sign-in-alt me-2"></i>
                         {{ _('Staff Login') }}
                     </a>
-                    <a href="https://www.livelyageing.unimore.it/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light px-4 py-3">
+                    <a href="https://www.livelyageing.unimore.it/" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-hero-secondary fw-semibold px-4 py-3">
                         <i class="fas fa-external-link-alt me-2"></i>
                         {{ _('Discover Lively Ageing') }}
                     </a>
@@ -67,44 +83,30 @@
 
     <!-- Platform Overview Cards -->
     <div class="row g-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card h-100 p-4">
                 <div class="feature-icon-box">
                     <i class="bi bi-clipboard2-pulse"></i>
                 </div>
                 <h5 class="fw-bold" style="color: var(--dark);">
-                    {{ _('Integrated Study Monitoring') }}
+                    {{ _('The Lively Ageing Study') }}
                 </h5>
                 <p class="text-muted mb-0">
-                    {{ _('Wearable monitoring complements the multidisciplinary activities of the Lively Ageing program for enrolled participants.') }}
+                    {{ _('A multidisciplinary research initiative promoted by the University of Modena and Reggio Emilia to support active ageing and well-being.') }}
                 </p>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card h-100 p-4">
                 <div class="feature-icon-box">
-                    <i class="bi bi-activity"></i>
+                    <i class="bi bi-people"></i>
                 </div>
                 <h5 class="fw-bold" style="color: var(--dark);">
-                    {{ _('Wearable Data via Google Health') }}
+                    {{ _('Reserved for Project Staff') }}
                 </h5>
                 <p class="text-muted mb-0">
-                    {{ _('Following participant authorization, the platform synchronizes device status, daily steps, distance, and heart rate metrics from Google Health.') }}
-                </p>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100 p-4">
-                <div class="feature-icon-box">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <h5 class="fw-bold" style="color: var(--dark);">
-                    {{ _('Confidentiality & Data Protection') }}
-                </h5>
-                <p class="text-muted mb-0">
-                    {{ _('Data is stored in pseudonymized form and accessible exclusively to authorized staff in full compliance with data protection regulations.') }}
+                    {{ _('Authorized researchers and care operators can verify device synchronization status and monitor collected metrics across partner facilities.') }}
                 </p>
             </div>
         </div>

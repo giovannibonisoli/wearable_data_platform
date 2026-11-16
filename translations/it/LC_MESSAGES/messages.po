@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 18:49+0100\n"
+"POT-Creation-Date: 2026-11-16 19:32+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -415,12 +415,6 @@ msgstr "Torna alla home"
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "Il link di autorizzazione scadrà tra 10 minuti per motivi di sicurezza."
 
-#: templates/base.html:57 templates/base.html:176 templates/base_public.html:28
-#: templates/landing.html:44 templates/login.html:42
-#: templates/terms_of_service.html:34
-msgid "Lively Ageing Wearable Platform"
-msgstr "Piattaforma Wearable Lively Ageing"
-
 #: templates/base.html:66 templates/home.html:3
 msgid "Home"
 msgstr "Home"
@@ -781,63 +775,55 @@ msgstr "Vai alla Gestione Dispositivi"
 msgid "Overview"
 msgstr "Panoramica"
 
-#: templates/landing.html:46
-msgid ""
-"The wearable monitoring platform of the Lively Ageing project enables to "
-"monitor physical activity, vital parameters, and sleep metrics collected "
-"from enrolled participants' wearable devices via Google Health."
-msgstr ""
-"La piattaforma di monitoraggio wearable del progetto Lively Ageing "
-"permette di monitorare l'attività fisica, i parametri vitali e del sonno "
-"raccolti dai dispositivi indossabili dei partecipanti tramite Google "
-"Health."
+#: templates/landing.html:57
+msgid "UNIMORE Research Project"
+msgstr "Progetto di Ricerca UNIMORE"
 
-#: templates/landing.html:51
+#: templates/landing.html:61
+msgid ""
+"The platform enables authorized care and research staff within the Lively"
+" Ageing project to monitor physical activity, vital parameters, and sleep"
+" metrics collected from enrolled participants' wearable devices via "
+"Google Health."
+msgstr ""
+"La piattaforma consente agli operatori sanitari e ai ricercatori "
+"autorizzati del progetto Lively Ageing di monitorare l'attività fisica, i"
+" parametri vitali e del sonno raccolti dai dispositivi indossabili dei "
+"partecipanti tramite Google Health."
+
+#: templates/landing.html:66
 msgid "Staff Login"
 msgstr "Accesso operatori"
 
-#: templates/landing.html:55
+#: templates/landing.html:71
 msgid "Discover Lively Ageing"
 msgstr "Scopri Lively Ageing"
 
-#: templates/landing.html:76
-msgid "Integrated Study Monitoring"
-msgstr "Monitoraggio Integrato nello Studio"
+#: templates/landing.html:92
+msgid "The Lively Ageing Study"
+msgstr "Lo Studio Lively Ageing"
 
-#: templates/landing.html:79
+#: templates/landing.html:95
 msgid ""
-"Wearable monitoring complements the multidisciplinary activities of the "
-"Lively Ageing program for enrolled participants."
+"A multidisciplinary research initiative promoted by the University of "
+"Modena and Reggio Emilia to support active ageing and well-being."
 msgstr ""
-"Il monitoraggio tramite dispositivi indossabili affianca le attività "
-"multidisciplinari del programma Lively Ageing per i partecipanti iscritti"
-" allo studio."
+"Un'iniziativa di ricerca multidisciplinare promossa dall'Università degli "
+"Studi di Modena e Reggio Emilia per sostenere l'invecchiamento attivo e il benessere."
 
-#: templates/landing.html:90
-msgid "Wearable Data via Google Health"
-msgstr "Dati Wearable tramite Google Health"
+#: templates/landing.html:106
+msgid "Reserved for Project Staff"
+msgstr "Riservato allo Staff di Progetto"
 
-#: templates/landing.html:93
+#: templates/landing.html:109
 msgid ""
-"Following participant authorization, the platform synchronizes device "
-"status, daily steps, distance, and heart rate metrics from Google Health."
+"Authorized researchers and care operators can verify device "
+"synchronization status and monitor collected metrics across partner "
+"facilities."
 msgstr ""
-"Previa autorizzazione del partecipante, la piattaforma sincronizza da "
-"Google Health lo stato del dispositivo, i passi giornalieri, la distanza "
-"e i parametri del battito cardiaco."
-
-#: templates/landing.html:104
-msgid "Confidentiality & Data Protection"
-msgstr "Riservatezza e Protezione dei Dati"
-
-#: templates/landing.html:107
-msgid ""
-"Data is stored in pseudonymized form and accessible exclusively to "
-"authorized staff in full compliance with data protection regulations."
-msgstr ""
-"I dati sono conservati in forma pseudonimizzata e accessibili "
-"esclusivamente al personale autorizzato, nel pieno rispetto delle "
-"normative sulla protezione dei dati."
+"I ricercatori e gli operatori autorizzati possono verificare lo stato "
+"di sincronizzazione dei dispositivi e monitorare i parametri raccolti "
+"presso le strutture partner."
 
 #: templates/login.html:6
 msgid "Login"
@@ -866,12 +852,12 @@ msgstr "Data di ultimo aggiornamento: 05/11/2026"
 #: templates/privacy_policy.html:66
 msgid ""
 "This Privacy Policy describes the management of personal data and "
-"wellness data collected and processed through the Lively Ageing Wearable "
-"Platform application."
+"wellness data collected and processed through the Lively Ageing Platform "
+"application."
 msgstr ""
 "Questa Informativa descrive la gestione del trattamento dei dati "
-"personali e dei dati sul benessere raccolti \"ed elaborati tramite la "
-"Piattaforma Wearable Lively Ageing."
+"personali e dei dati sul benessere raccolti \"ed elaborati tramite Lively"
+" Ageing Platform."
 
 #: templates/privacy_policy.html:72
 msgid "Contents"
@@ -1274,16 +1260,15 @@ msgstr "Dichiarazione formale di Limited Use:"
 #: templates/privacy_policy.html:205
 msgid ""
 "The use and transfer to any other app of information received from Google"
-" Health APIs by the Lively Ageing Wearable Platform will adhere to the "
-"Google Health API Developer and User Data Policy and the Google Health "
-"API User Data and Health Research Policy, including the Limited Use "
-"requirements."
+" Health APIs by the Lively Ageing Platform will adhere to the Google "
+"Health API Developer and User Data Policy and the Google Health API User "
+"Data and Health Research Policy, including the Limited Use requirements."
 msgstr ""
 "L'uso e il trasferimento ad altre app delle informazioni ricevute dalle "
-"Google Health API da parte della Piattaforma Wearable Lively Ageing si "
-"atterranno alla Google Health API Developer and User Data Policy e alla "
-"Google Health API User Data and Health Research Policy, inclusi i "
-"requisiti di Limited Use."
+"Google Health API da parte di Lively Ageing Platform si atterranno alla "
+"Google Health API Developer and User Data Policy e alla Google Health API"
+" User Data and Health Research Policy, inclusi i requisiti di Limited "
+"Use."
 
 #: templates/privacy_policy.html:209
 msgid "Research Requirements:"
@@ -1398,13 +1383,12 @@ msgstr "Via Gestione Account Google:"
 msgid ""
 "By accessing the security section of their Google Account (or the "
 "associated project account) under \"Third-party apps with account "
-"access\" and removing authorization for the Lively Ageing Wearable "
-"Platform;"
+"access\" and removing authorization for the Lively Ageing Platform;"
 msgstr ""
 "Accedendo alla sezione di sicurezza del proprio Account Google (o "
 "dell'account di progetto associato) alla voce \"App di terze parti con "
-"accesso all'account\" e rimuovendo l'autorizzazione per la Piattaforma "
-"Wearable Lively Ageing;"
+"accesso all'account\" e rimuovendo l'autorizzazione per Lively Ageing "
+"Platform;"
 
 #: templates/privacy_policy.html:245
 msgid "Via Platform / Investigator:"
@@ -1529,21 +1513,20 @@ msgstr "1. Oggetto e Ambito del Servizio"
 
 #: templates/terms_of_service.html:44
 msgid ""
-"The Lively Ageing Wearable Platform (hereinafter \"Platform\") is a "
-"software tool — for exclusive scientific research purposes — developed "
-"and managed by the University of Modena and Reggio Emilia (UNIMORE), "
-"intended for the technical management, synchronization, and monitoring of"
-" wearable devices within the scientific project \"LivelyAgeing: an "
-"integrated network of services and technologies for the well-being of the"
-" elderly\""
+"The Lively Ageing Platform (hereinafter \"Platform\") is a software tool "
+"— for exclusive scientific research purposes — developed and managed by "
+"the University of Modena and Reggio Emilia (UNIMORE), intended for the "
+"technical management, synchronization, and monitoring of wearable devices"
+" within the scientific project \"LivelyAgeing: an integrated network of "
+"services and technologies for the well-being of the elderly\""
 msgstr ""
-"La Piattaforma Wearable Lively Ageing (di seguito \"Piattaforma\") è uno "
-"strumento software - con esclusive finalità di ricerca scientifica "
-"sviluppato e gestito dall'Università degli Studi di Modena e Reggio "
-"Emilia (UNIMORE), destinato alla gestione, sincronizzazione e "
-"monitoraggio tecnico di dispositivi wearable nell'ambito del progetto "
-"scientifico \"LivelyAgeing: una rete integrata di servizi e tecnologie "
-"per il benessere degli anziani\""
+"Lively Ageing Platform (di seguito \"Piattaforma\") è uno strumento "
+"software - con esclusive finalità di ricerca scientifica sviluppato e "
+"gestito dall'Università degli Studi di Modena e Reggio Emilia (UNIMORE), "
+"destinato alla gestione, sincronizzazione e monitoraggio tecnico di "
+"dispositivi wearable nell'ambito del progetto scientifico \"LivelyAgeing:"
+" una rete integrata di servizi e tecnologie per il benessere degli "
+"anziani\""
 
 #: templates/terms_of_service.html:49
 msgid "2. Restricted Access and Use"
@@ -1627,12 +1610,12 @@ msgstr "5. Proprietà Intellettuale"
 #: templates/terms_of_service.html:82
 msgid ""
 "The application, source code, software architecture, and the name "
-"\"Lively Ageing Wearable Platform\" are the exclusive property of the "
-"University of Modena and Reggio Emilia."
+"\"Lively Ageing Platform\" are the exclusive property of the University "
+"of Modena and Reggio Emilia."
 msgstr ""
 "L'applicazione, il codice sorgente, l'architettura software ed il nome "
-"\"Piattaforma Wearable Lively Ageing\" sono di proprietà esclusiva "
-"dell'Università degli Studi di Modena e Reggio Emilia."
+"\"Lively Ageing Platform\" sono di proprietà esclusiva dell'Università "
+"degli Studi di Modena e Reggio Emilia."
 
 #: templates/terms_of_service.html:86
 msgid "6. Limitation of Liability"
@@ -1727,93 +1710,13 @@ msgstr "Nessun video tutorial disponibile."
 msgid "Back to home"
 msgstr "Torna alla home"
 
-#~ msgid "Medical Platform Login"
-#~ msgstr "Accesso alla piattaforma medica"
-
-#~ msgid "Language"
-#~ msgstr "Lingua"
-
-#~ msgid "Google Health API Integrated Platform"
-#~ msgstr "Piattaforma integrata con Google Health API"
+#~ msgid "Monitored Indicators"
+#~ msgstr ""
 
 #~ msgid ""
-#~ "A clinical and care-provider platform"
-#~ " designed to monitor physical activity, "
-#~ "sleep, and vital parameters collected "
-#~ "from patients' wearable devices via "
-#~ "authorized Google Health APIs."
+#~ "For enrolled participants, the platform "
+#~ "synchronizes daily steps, distance, heart "
+#~ "rate, and sleep metrics from Google "
+#~ "Health."
 #~ msgstr ""
-#~ "Una piattaforma dedicata alle strutture "
-#~ "sanitarie e assistenziali per il "
-#~ "monitoraggio dell'attività fisica, del sonno"
-#~ " e dei parametri raccolti dai "
-#~ "dispositivi wearable dei pazienti tramite "
-#~ "le API autorizzate di Google Health."
-
-#~ msgid "Operator Login"
-#~ msgstr "Accesso Operatori"
-
-#~ msgid "Privacy & Data Policy"
-#~ msgstr "Informativa Privacy & Dati"
-
-#~ msgid "Explicit Patient Consent"
-#~ msgstr "Consenso Esplicito dell'Utente"
-
-#~ msgid ""
-#~ "Wearable data is accessed only after "
-#~ "the user explicitly authorizes the "
-#~ "connection through the official Google "
-#~ "OAuth 2.0 consent screen."
-#~ msgstr ""
-#~ "L'accesso ai dati del dispositivo "
-#~ "wearable avviene esclusivamente previa "
-#~ "autorizzazione esplicita dell'utente tramite "
-#~ "la schermata ufficiale di consenso "
-#~ "Google OAuth 2.0."
-
-#~ msgid "Health & Activity Metrics"
-#~ msgstr "Metriche di Salute e Attività"
-
-#~ msgid ""
-#~ "Authorized care providers can verify "
-#~ "device synchronization status, daily steps,"
-#~ " distance, and heart rate trends to"
-#~ " support active ageing programs."
-#~ msgstr ""
-#~ "Gli operatori autorizzati possono verificare"
-#~ " lo stato di sincronizzazione dei "
-#~ "dispositivi, i passi giornalieri, la "
-#~ "distanza percorsa e l'andamento del "
-#~ "battito cardiaco."
-
-#~ msgid "Pseudonymization & Limited Use"
-#~ msgstr "Pseudonimizzazione e Uso Limitato"
-
-#~ msgid ""
-#~ "All collected health data is transmitted"
-#~ " over encrypted channels, stored in "
-#~ "pseudonymized form, and processed strictly "
-#~ "in compliance with the Google API "
-#~ "Services User Data Policy."
-#~ msgstr ""
-#~ "Tutti i dati raccolti sono trasmessi "
-#~ "su canali cifrati, conservati in forma"
-#~ " pseudonimizzata e trattati nel pieno "
-#~ "rispetto della Google API Services User"
-#~ " Data Policy."
-
-#~ msgid "Registered Devices"
-#~ msgstr "Dispositivi Registrati\""
-
-#~ msgid "Dispositivi Registrati"
-#~ msgstr ""
-
-#~ msgid "Insert your Privacy Policy text here."
-#~ msgstr "Inserisci qui il testo della Privacy Policy in italiano."
-
-#~ msgid "Insert your Terms of Service text here."
-#~ msgstr "Inserisci qui il testo dei Termini di Servizio in italiano."
-
-#~ msgid "Part of the Lively Ageing Project"
-#~ msgstr "Parte del progetto Lively Ageing"
 

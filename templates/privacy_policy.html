@@ -1,6 +1,6 @@
 {% extends "base.html" if current_user.is_authenticated else "base_public.html" %}
 
-{% block title %}{{ _('Privacy Policy') }}{% endblock %}
+{% block title %}{{ _('Privacy Policy') }} - {% endblock %}
 
 {% block extra_css %}
 <style>
@@ -55,7 +55,7 @@
                 {{ _('Research Project: Lively Ageing - an integrated network of services and technologies for the well-being of the elderly') }}
             </p>
             <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
-                <span><i class="bi bi-smartwatch me-1"></i>Lively Ageing Wearable Platform</span>
+                <span><i class="bi bi-smartwatch me-1"></i>Lively Ageing Platform</span>
                 <span class="badge bg-light text-dark border">
                     <i class="bi bi-calendar3 me-1"></i>{{ _('Last updated: 05/11/2026') }}
                 </span>
@@ -63,7 +63,7 @@
         </div>
 
         <p>
-            {{ _('This Privacy Policy describes the management of personal data and wellness data collected and processed through the Lively Ageing Wearable Platform application.') }}
+            {{ _('This Privacy Policy describes the management of personal data and wellness data collected and processed through the Lively Ageing Platform application.') }}
         </p>
 
         <!-- Quick Table of Contents -->
@@ -202,7 +202,7 @@
         <div class="legal-callout my-3">
             <p class="mb-2">
                 <strong>{{ _('Formal Limited Use Statement:') }}</strong>
-                {{ _('The use and transfer to any other app of information received from Google Health APIs by the Lively Ageing Wearable Platform will adhere to the Google Health API Developer and User Data Policy and the Google Health API User Data and Health Research Policy, including the Limited Use requirements.') }}
+                {{ _('The use and transfer to any other app of information received from Google Health APIs by the Lively Ageing Platform will adhere to the Google Health API Developer and User Data Policy and the Google Health API User Data and Health Research Policy, including the Limited Use requirements.') }}
             </p>
             <ul class="mb-0">
                 <li class="mb-1">
@@ -239,7 +239,7 @@
         <ul>
             <li class="mb-2">
                 <strong>{{ _('Via Google Account Management:') }}</strong>
-                {{ _('By accessing the security section of their Google Account (or the associated project account) under "Third-party apps with account access" and removing authorization for the Lively Ageing Wearable Platform;') }}
+                {{ _('By accessing the security section of their Google Account (or the associated project account) under "Third-party apps with account access" and removing authorization for the Lively Ageing Platform;') }}
             </li>
             <li>
                 <strong>{{ _('Via Platform / Investigator:') }}</strong>
