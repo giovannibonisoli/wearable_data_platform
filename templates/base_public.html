@@ -41,22 +41,6 @@
             </button>
             <div class="collapse navbar-collapse" id="publicNavbar">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('root') }}">
-                            <i class="fas fa-compass me-1"></i>{{ _('Overview') }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('privacy_policy') }}">
-                            {{ _('Privacy Policy') }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('terms_of_service') }}">
-                            {{ _('Terms of Service') }}
-                        </a>
-                    </li>
-
                     <!-- Language Selector -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="publicLangDropdown" role="button"
@@ -67,19 +51,19 @@
                             <li>
                                 <a class="dropdown-item {% if get_locale() == 'it' %}active{% endif %}"
                                    href="{{ url_for('change_language', lang='it') }}">
-                                    Italiano
+                                    {{ _('Italian') }}
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item {% if get_locale() == 'en' %}active{% endif %}"
                                    href="{{ url_for('change_language', lang='en') }}">
-                                    English
+                                    {{ _('English') }}
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item {% if get_locale() == 'es' %}active{% endif %}"
                                    href="{{ url_for('change_language', lang='es') }}">
-                                    Español
+                                    {{ _('Spanish') }}
                                 </a>
                             </li>
                         </ul>

@@ -1,12 +1,10 @@
 from cryptography.fernet import Fernet
 import base64
-import os
 
-# Generate a secret key (it must be the same for encryption and decryption)
-SECRET_KEY = os.getenv('SECRET_KEY')
+from config import SECRET_KEY
 
-# Make sure the key is 32 bytes
-if len(SECRET_KEY) != 32:
+# The secret key must be 32 bytes (it must be the same for encryption and decryption)
+if not SECRET_KEY or len(SECRET_KEY) != 32:
     raise ValueError("The secret key must have 32 bytes.")
 
 # Convert the key to base64 format for Fernet

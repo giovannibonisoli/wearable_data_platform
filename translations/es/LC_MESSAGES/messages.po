@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:29+0100\n"
+"POT-Creation-Date: 2026-11-16 16:25+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -16,186 +16,186 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:174
+#: app.py:146
 msgid "Access denied."
 msgstr "Acceso denegado."
 
-#: app.py:186
+#: app.py:158
 msgid "This area is only available to staff user accounts."
 msgstr "Esta área solo está disponible para cuentas de usuario de personal."
 
-#: app.py:271 templates/home.html:195
+#: app.py:243 templates/home.html:195
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "¡Bienvenido, %(name)s!"
 
-#: app.py:288
+#: app.py:260
 msgid "Incorrect username or password."
 msgstr "Nombre de usuario o contraseña incorrectos."
 
-#: app.py:409
+#: app.py:381
 msgid "Password changed successfully."
 msgstr "Contraseña cambiada correctamente."
 
-#: app.py:412
+#: app.py:384
 msgid "The current password is wrong."
 msgstr "La contraseña actual es incorrecta."
 
-#: app.py:415
+#: app.py:387
 msgid "Password change failed."
 msgstr "El cambio de contraseña ha fallado."
 
-#: app.py:430
+#: app.py:402
 msgid "The new password must be at least 8 characters."
 msgstr "La nueva contraseña debe tener al menos 8 caracteres."
 
-#: app.py:432 app.py:881 app.py:910
+#: app.py:404 app.py:851 app.py:880
 msgid "Passwords do not match."
 msgstr "Las contraseñas no coinciden."
 
-#: app.py:464
+#: app.py:436
 msgid "Error loading the home page."
 msgstr "Error al cargar la página de inicio."
 
-#: app.py:534
+#: app.py:504
 #, fuzzy
 msgid "Video not found."
 msgstr "Usuario no encontrado."
 
-#: app.py:621
+#: app.py:591
 msgid "This device is already registered."
 msgstr "Este dispositivo ya está registrado."
 
-#: app.py:623
+#: app.py:593
 msgid "Device added successfully."
 msgstr "Dispositivo añadido correctamente."
 
-#: app.py:625
+#: app.py:595
 msgid "Error adding device."
 msgstr "Error al añadir el dispositivo."
 
-#: app.py:629 app.py:793
+#: app.py:599 app.py:763
 msgid "An error occurred."
 msgstr "Se ha producido un error."
 
-#: app.py:655
+#: app.py:625
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Error al actualizar la información del dispositivo para: %(devices)s"
 
-#: app.py:658
+#: app.py:628
 msgid "Device information updated successfully for all devices."
 msgstr ""
 "Información del dispositivo actualizada correctamente para todos los "
 "dispositivos."
 
-#: app.py:681
+#: app.py:651
 msgid "Error sending device. Please try again."
 msgstr "Error al enviar el dispositivo. Por favor, inténtelo de nuevo."
 
-#: app.py:684
+#: app.py:654
 msgid "Error storing authorization request."
 msgstr "Error al almacenar la solicitud de autorización."
 
-#: app.py:703 app.py:713
+#: app.py:673 app.py:683
 msgid "Error: Missing authorization information."
 msgstr "Error: Falta información de autorización."
 
-#: app.py:718
+#: app.py:688
 msgid "Email not found."
 msgstr "Correo electrónico no encontrado."
 
-#: app.py:723 app.py:728 app.py:733
+#: app.py:693 app.py:698 app.py:703
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr ""
 "Error: El enlace de autorización ha caducado. Por favor, solicite uno "
 "nuevo."
 
-#: app.py:776
+#: app.py:746
 msgid "Email address is required."
 msgstr "La dirección de correo electrónico es obligatoria."
 
-#: app.py:786
+#: app.py:756
 msgid "Email address updated successfully."
 msgstr "Dirección de correo electrónico actualizada correctamente."
 
-#: app.py:789
+#: app.py:759
 msgid "Error updating email address."
 msgstr "Error al actualizar la dirección de correo electrónico."
 
-#: app.py:821
+#: app.py:791
 msgid "Care provider created."
 msgstr "Proveedor de atención creado."
 
-#: app.py:823
+#: app.py:793
 msgid "Could not create care provider."
 msgstr "No se pudo crear el proveedor de atención."
 
-#: app.py:836
+#: app.py:806
 msgid "Full name is required."
 msgstr "El nombre completo es obligatorio."
 
-#: app.py:844
+#: app.py:814
 msgid "Care provider renamed."
 msgstr "Proveedor de atención renombrado."
 
-#: app.py:846
+#: app.py:816
 msgid "A care provider with that name already exists."
 msgstr "Ya existe un proveedor de atención con ese nombre."
 
-#: app.py:848
+#: app.py:818
 msgid "Could not rename care provider."
 msgstr "No se pudo renombrar el proveedor de atención."
 
-#: app.py:878
+#: app.py:848
 msgid "Username is required."
 msgstr "El nombre de usuario es obligatorio."
 
-#: app.py:884 app.py:913
+#: app.py:854 app.py:883
 msgid "The password must be at least 8 characters."
 msgstr "La contraseña debe tener al menos 8 caracteres."
 
-#: app.py:892
+#: app.py:862
 msgid "Staff user created."
 msgstr "Usuario de personal creado."
 
-#: app.py:894
+#: app.py:864
 msgid "That username is already taken."
 msgstr "Ese nombre de usuario ya está en uso."
 
-#: app.py:896
+#: app.py:866
 msgid "Could not create staff user."
 msgstr "No se pudo crear el usuario de personal."
 
-#: app.py:922
+#: app.py:892
 msgid "Password updated."
 msgstr "Contraseña actualizada."
 
-#: app.py:924
+#: app.py:894
 msgid "User not found."
 msgstr "Usuario no encontrado."
 
-#: app.py:926
+#: app.py:896
 msgid "You cannot change that password."
 msgstr "No puedes cambiar esa contraseña."
 
-#: app.py:928
+#: app.py:898
 msgid "Password update failed."
 msgstr "Error al actualizar la contraseña."
 
-#: app.py:944
+#: app.py:914
 msgid "Staff user deactivated."
 msgstr "Usuario de personal desactivado."
 
-#: app.py:946
+#: app.py:916
 msgid "Staff user not found."
 msgstr "Usuario de personal no encontrado."
 
-#: app.py:948
+#: app.py:918
 msgid "You cannot deactivate this staff user."
 msgstr "No puedes desactivar este usuario de personal."
 
-#: app.py:950
+#: app.py:920
 msgid "Deactivation failed."
 msgstr "Error al desactivar."
 
@@ -422,7 +422,7 @@ msgstr "Volver al inicio"
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "El enlace de autorización caducará en 10 minutos por razones de seguridad."
 
-#: templates/base.html:66 templates/home.html:3 templates/login.html:93
+#: templates/base.html:66 templates/home.html:3
 msgid "Home"
 msgstr "Inicio"
 
@@ -454,43 +454,35 @@ msgstr "Configuración"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: templates/base.html:127
-msgid "Language"
-msgstr "Idioma"
-
-#: templates/base.html:133
+#: templates/base.html:133 templates/base_public.html:54
 msgid "Italian"
 msgstr "Italiano"
 
-#: templates/base.html:139
+#: templates/base.html:139 templates/base_public.html:60
 msgid "English"
 msgstr "Inglés"
 
-#: templates/base.html:145
+#: templates/base.html:145 templates/base_public.html:66
 msgid "Spanish"
 msgstr "Español"
 
-#: templates/base.html:176 templates/base_public.html:106
+#: templates/base.html:176 templates/base_public.html:90
 msgid "All rights reserved"
 msgstr "Todos los derechos reservados"
 
-#: templates/base.html:179 templates/base_public.html:51
-#: templates/base_public.html:109 templates/login.html:96
-#: templates/privacy_policy.html:3
+#: templates/base.html:179 templates/base_public.html:93
+#: templates/login.html:96 templates/privacy_policy.html:3
+#: templates/privacy_policy.html:8
 msgid "Privacy Policy"
-msgstr ""
+msgstr "Política de Privacidad"
 
-#: templates/base.html:182 templates/base_public.html:56
-#: templates/base_public.html:112 templates/login.html:99
-#: templates/terms_of_service.html:3
+#: templates/base.html:182 templates/base_public.html:96
+#: templates/login.html:99 templates/terms_of_service.html:3
+#: templates/terms_of_service.html:8
 msgid "Terms of Service"
-msgstr ""
+msgstr "Términos del Servicio"
 
-#: templates/base_public.html:46 templates/landing.html:3
-msgid "Overview"
-msgstr "Resumen"
-
-#: templates/base_public.html:91 templates/login.html:70
+#: templates/base_public.html:75 templates/login.html:70
 msgid "Sign In"
 msgstr "Iniciar sesión"
 
@@ -792,6 +784,61 @@ msgstr ""
 msgid "Go to Device Management"
 msgstr "Ir a la gestión de dispositivos"
 
+#: templates/landing.html:3 templates/login.html:93
+msgid "Overview"
+msgstr "Resumen"
+
+#: templates/landing.html:46
+msgid "Part of the Lively Ageing Project"
+msgstr ""
+
+#: templates/landing.html:50
+msgid ""
+"The wearable monitoring platform of the Lively Ageing project, enabling "
+"authorized care and research staff to monitor physical activity and "
+"health metrics collected from enrolled participants' wearable devices via"
+" Google Health."
+msgstr ""
+
+#: templates/landing.html:55
+#, fuzzy
+msgid "Staff Login"
+msgstr "Último acceso"
+
+#: templates/landing.html:59
+msgid "Discover Lively Ageing"
+msgstr ""
+
+#: templates/landing.html:80
+msgid "Integrated Study Monitoring"
+msgstr ""
+
+#: templates/landing.html:83
+msgid ""
+"Wearable monitoring complements the multidisciplinary activities of the "
+"Lively Ageing program for enrolled participants."
+msgstr ""
+
+#: templates/landing.html:94
+msgid "Wearable Data via Google Health"
+msgstr ""
+
+#: templates/landing.html:97
+msgid ""
+"Following participant authorization, the platform synchronizes device "
+"status, daily steps, distance, and heart rate metrics from Google Health."
+msgstr ""
+
+#: templates/landing.html:108
+msgid "Confidentiality & Data Protection"
+msgstr ""
+
+#: templates/landing.html:111
+msgid ""
+"Data is stored in pseudonymized form and accessible exclusively to "
+"authorized staff in full compliance with data protection regulations."
+msgstr ""
+
 #: templates/login.html:6
 #, fuzzy
 msgid "Login"
@@ -808,6 +855,14 @@ msgstr "Introduce tu nombre de usuario"
 #: templates/login.html:61
 msgid "Enter your password"
 msgstr "Introduce tu contraseña"
+
+#: templates/privacy_policy.html:12
+msgid "Insert your Privacy Policy text here."
+msgstr "Introduce aquí el texto de la Política de Privacidad en español."
+
+#: templates/terms_of_service.html:12
+msgid "Insert your Terms of Service text here."
+msgstr "Introduce aquí el texto de los Términos del Servicio en español."
 
 #: templates/user_profile_info.html:18
 msgid "Change Avatar"
@@ -880,4 +935,78 @@ msgstr "Volver al inicio"
 
 #~ msgid "Medical Platform Login"
 #~ msgstr "Inicio de sesión en la plataforma médica"
+
+#~ msgid "Language"
+#~ msgstr "Idioma"
+
+#~ msgid "Google Health API Integrated Platform"
+#~ msgstr "Plataforma integrada con Google Health API"
+
+#~ msgid ""
+#~ "A clinical and care-provider platform"
+#~ " designed to monitor physical activity, "
+#~ "sleep, and vital parameters collected "
+#~ "from patients' wearable devices via "
+#~ "authorized Google Health APIs."
+#~ msgstr ""
+#~ "Una plataforma clínica y de atención "
+#~ "diseñada para monitorizar la actividad "
+#~ "física, el sueño y los parámetros "
+#~ "vitales recogidos de los dispositivos "
+#~ "wearables de los pacientes a través "
+#~ "de las API autorizadas de Google "
+#~ "Health."
+
+#~ msgid "Operator Login"
+#~ msgstr "Acceso para operadores"
+
+#~ msgid "Privacy & Data Policy"
+#~ msgstr "Política de Privacidad y Datos"
+
+#~ msgid "Explicit Patient Consent"
+#~ msgstr "Consentimiento explícito del paciente"
+
+#~ msgid ""
+#~ "Wearable data is accessed only after "
+#~ "the user explicitly authorizes the "
+#~ "connection through the official Google "
+#~ "OAuth 2.0 consent screen."
+#~ msgstr ""
+#~ "Solo se accede a los datos del "
+#~ "wearable después de que el usuario "
+#~ "autorice explícitamente la conexión mediante"
+#~ " la pantalla oficial de consentimiento "
+#~ "de Google OAuth 2.0."
+
+#~ msgid "Health & Activity Metrics"
+#~ msgstr "Métricas de salud y actividad"
+
+#~ msgid ""
+#~ "Authorized care providers can verify "
+#~ "device synchronization status, daily steps,"
+#~ " distance, and heart rate trends to"
+#~ " support active ageing programs."
+#~ msgstr ""
+#~ "Los cuidadores autorizados pueden verificar"
+#~ " el estado de sincronización de los"
+#~ " dispositivos, los pasos diarios, la "
+#~ "distancia y la evolución de la "
+#~ "frecuencia cardíaca."
+
+#~ msgid "Pseudonymization & Limited Use"
+#~ msgstr "Seudonimización y uso limitado"
+
+#~ msgid ""
+#~ "All collected health data is transmitted"
+#~ " over encrypted channels, stored in "
+#~ "pseudonymized form, and processed strictly "
+#~ "in compliance with the Google API "
+#~ "Services User Data Policy."
+#~ msgstr ""
+#~ "Todos los datos recopilados se "
+#~ "transmiten por canales cifrados, se "
+#~ "almacenan de forma seudonimizada y se"
+#~ " tratan con estricto cumplimiento de "
+#~ "la Política de Datos de Usuario de"
+#~ " los Servicios de API de Google."
 

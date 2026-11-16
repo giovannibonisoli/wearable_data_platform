@@ -6,6 +6,7 @@ systemd, Docker, or your hosting provider). Secrets must never be hardcoded.
 """
 
 import os
+from urllib.parse import quote_plus
 
 
 class ConfigurationError(Exception):
@@ -49,6 +50,19 @@ def get_optional_env(var_name: str, default: str) -> str:
     return os.getenv(var_name, default)
 
 
+def get_bool_env(var_name: str, default: bool = False) -> bool:
+    """
+    Get a boolean environment variable.
+
+    Accepts the usual truthy spellings ("1", "true", "yes", "on"); anything
+    else is False. Falls back to `default` when the variable is unset.
+    """
+    value = os.getenv(var_name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 # =============================================================================
 # OAuth Configuration (Google Health API)
 # =============================================================================
@@ -88,11 +102,49 @@ SMTP_PORT = int(get_optional_env("SMTP_PORT", "587"))
 # =============================================================================
 SECRET_KEY = get_required_env("SECRET_KEY")
 FLASK_ENV = get_optional_env("FLASK_ENV", "development")
-DEBUG = FLASK_ENV == "development"
+IS_PRODUCTION = FLASK_ENV == "production"
 
-# Flask host and port
-HOST = get_optional_env("HOST", "0.0.0.0" if FLASK_ENV == "production" else "localhost")
+# -----------------------------------------------------------------------------
+# SQLAlchemy
+# Use an explicit SQLALCHEMY_DATABASE_URI when provided, otherwise build it
+# from the individual DB_* variables.
+# -----------------------------------------------------------------------------
+_explicit_uri = get_optional_env("SQLALCHEMY_DATABASE_URI", "")
+if _explicit_uri:
+    SQLALCHEMY_DATABASE_URI = _explicit_uri
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+else:
+    SQLALCHEMY_DATABASE_URI = (
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{quote_plus(DB_CONFIG['password'])}"
+        f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+    )
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {"sslmode": DB_CONFIG["sslmode"]}
+    }
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# -----------------------------------------------------------------------------
+# Development server / runtime flags
+# PRODUCTION_HOST and PRODUCTION_PORT are accepted as overrides of HOST and
+# PORT for backwards compatibility with existing deployments.
+# -----------------------------------------------------------------------------
+HOST = get_optional_env(
+    "HOST", "0.0.0.0" if IS_PRODUCTION else "localhost"
+)
 PORT = int(get_optional_env("PORT", "5000"))
+
+if IS_PRODUCTION:
+    HOST = get_optional_env("PRODUCTION_HOST", HOST)
+    PORT = int(get_optional_env("PRODUCTION_PORT", str(PORT)))
+    DEBUG = False
+else:
+    # Local development defaults to debug mode; set DEBUG=false to disable it.
+    DEBUG = get_bool_env("DEBUG", default=True)
+
+_ssl_cert = get_optional_env("SSL_CERT", "")
+_ssl_key = get_optional_env("SSL_KEY", "")
+SSL_CONTEXT = (_ssl_cert, _ssl_key) if _ssl_cert and _ssl_key else None
 
 APP_PREFIX = get_optional_env("APP_PREFIX", "").rstrip("/")
 if APP_PREFIX and not APP_PREFIX.startswith("/"):

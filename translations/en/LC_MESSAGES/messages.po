@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:29+0100\n"
+"POT-Creation-Date: 2026-11-16 16:25+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -16,187 +16,187 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:174
+#: app.py:146
 msgid "Access denied."
 msgstr ""
 
-#: app.py:186
+#: app.py:158
 msgid "This area is only available to staff user accounts."
 msgstr ""
 
-#: app.py:271 templates/home.html:195
+#: app.py:243 templates/home.html:195
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "Welcome, %(name)s!"
 
-#: app.py:288
+#: app.py:260
 msgid "Incorrect username or password."
 msgstr "Incorrect username or password."
 
-#: app.py:409
+#: app.py:381
 msgid "Password changed successfully."
 msgstr "Password changed successfully."
 
-#: app.py:412
+#: app.py:384
 msgid "The current password is wrong."
 msgstr "The current password is wrong."
 
-#: app.py:415
+#: app.py:387
 msgid "Password change failed."
 msgstr "Password change failed."
 
-#: app.py:430
+#: app.py:402
 msgid "The new password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:432 app.py:881 app.py:910
+#: app.py:404 app.py:851 app.py:880
 msgid "Passwords do not match."
 msgstr "Passwords do not match."
 
-#: app.py:464
+#: app.py:436
 #, fuzzy
 msgid "Error loading the home page."
 msgstr "Error adding device."
 
-#: app.py:534
+#: app.py:504
 #, fuzzy
 msgid "Video not found."
 msgstr "Email not found."
 
-#: app.py:621
+#: app.py:591
 msgid "This device is already registered."
 msgstr "This device is already registered."
 
-#: app.py:623
+#: app.py:593
 msgid "Device added successfully."
 msgstr "Device added successfully."
 
-#: app.py:625
+#: app.py:595
 msgid "Error adding device."
 msgstr "Error adding device."
 
-#: app.py:629 app.py:793
+#: app.py:599 app.py:763
 msgid "An error occurred."
 msgstr "An error occurred."
 
-#: app.py:655
+#: app.py:625
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Error updating device info for: %(devices)s"
 
-#: app.py:658
+#: app.py:628
 msgid "Device information updated successfully for all devices."
 msgstr "Device information updated successfully for all devices."
 
-#: app.py:681
+#: app.py:651
 msgid "Error sending device. Please try again."
 msgstr "Error sending device. Please try again."
 
-#: app.py:684
+#: app.py:654
 msgid "Error storing authorization request."
 msgstr "Error storing authorization request."
 
-#: app.py:703 app.py:713
+#: app.py:673 app.py:683
 msgid "Error: Missing authorization information."
 msgstr "Error: Missing authorization information."
 
-#: app.py:718
+#: app.py:688
 msgid "Email not found."
 msgstr "Email not found."
 
-#: app.py:723 app.py:728 app.py:733
+#: app.py:693 app.py:698 app.py:703
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr "Error: Authorization link expired. Please request a new one."
 
-#: app.py:776
+#: app.py:746
 #, fuzzy
 msgid "Email address is required."
 msgstr "Email Address"
 
-#: app.py:786
+#: app.py:756
 #, fuzzy
 msgid "Email address updated successfully."
 msgstr "Device added successfully."
 
-#: app.py:789
+#: app.py:759
 #, fuzzy
 msgid "Error updating email address."
 msgstr "Enter email address"
 
-#: app.py:821
+#: app.py:791
 msgid "Care provider created."
 msgstr ""
 
-#: app.py:823
+#: app.py:793
 msgid "Could not create care provider."
 msgstr ""
 
-#: app.py:836
+#: app.py:806
 msgid "Full name is required."
 msgstr ""
 
-#: app.py:844
+#: app.py:814
 msgid "Care provider renamed."
 msgstr ""
 
-#: app.py:846
+#: app.py:816
 msgid "A care provider with that name already exists."
 msgstr ""
 
-#: app.py:848
+#: app.py:818
 msgid "Could not rename care provider."
 msgstr ""
 
-#: app.py:878
+#: app.py:848
 msgid "Username is required."
 msgstr ""
 
-#: app.py:884 app.py:913
+#: app.py:854 app.py:883
 #, fuzzy
 msgid "The password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:892
+#: app.py:862
 msgid "Staff user created."
 msgstr ""
 
-#: app.py:894
+#: app.py:864
 msgid "That username is already taken."
 msgstr ""
 
-#: app.py:896
+#: app.py:866
 msgid "Could not create staff user."
 msgstr ""
 
-#: app.py:922
+#: app.py:892
 msgid "Password updated."
 msgstr "Password updated."
 
-#: app.py:924
+#: app.py:894
 msgid "User not found."
 msgstr "User not found."
 
-#: app.py:926
+#: app.py:896
 msgid "You cannot change that password."
 msgstr "You cannot change that password."
 
-#: app.py:928
+#: app.py:898
 msgid "Password update failed."
 msgstr "Password update failed."
 
-#: app.py:944
+#: app.py:914
 msgid "Staff user deactivated."
 msgstr ""
 
-#: app.py:946
+#: app.py:916
 msgid "Staff user not found."
 msgstr "Staff user not found."
 
-#: app.py:948
+#: app.py:918
 msgid "You cannot deactivate this staff user."
 msgstr "You cannot deactivate this staff user."
 
-#: app.py:950
+#: app.py:920
 msgid "Deactivation failed."
 msgstr "Deactivation failed."
 
@@ -433,7 +433,7 @@ msgstr "Back to Home"
 msgid "The authorization link will expire in 10 minutes for security reasons."
 msgstr "The authorization link will expire in 10 minutes for security reasons."
 
-#: templates/base.html:66 templates/home.html:3 templates/login.html:93
+#: templates/base.html:66 templates/home.html:3
 msgid "Home"
 msgstr "Home"
 
@@ -465,43 +465,35 @@ msgstr "Settings"
 msgid "Logout"
 msgstr "Logout"
 
-#: templates/base.html:127
-msgid "Language"
-msgstr "Language"
-
-#: templates/base.html:133
+#: templates/base.html:133 templates/base_public.html:54
 msgid "Italian"
 msgstr "Italian"
 
-#: templates/base.html:139
+#: templates/base.html:139 templates/base_public.html:60
 msgid "English"
 msgstr "English"
 
-#: templates/base.html:145
+#: templates/base.html:145 templates/base_public.html:66
 msgid "Spanish"
 msgstr "Spanish"
 
-#: templates/base.html:176 templates/base_public.html:106
+#: templates/base.html:176 templates/base_public.html:90
 msgid "All rights reserved"
 msgstr "All rights reserved"
 
-#: templates/base.html:179 templates/base_public.html:51
-#: templates/base_public.html:109 templates/login.html:96
-#: templates/privacy_policy.html:3
+#: templates/base.html:179 templates/base_public.html:93
+#: templates/login.html:96 templates/privacy_policy.html:3
+#: templates/privacy_policy.html:8
 msgid "Privacy Policy"
-msgstr ""
+msgstr "Privacy Policy"
 
-#: templates/base.html:182 templates/base_public.html:56
-#: templates/base_public.html:112 templates/login.html:99
-#: templates/terms_of_service.html:3
+#: templates/base.html:182 templates/base_public.html:96
+#: templates/login.html:99 templates/terms_of_service.html:3
+#: templates/terms_of_service.html:8
 msgid "Terms of Service"
-msgstr ""
+msgstr "Terms of Service"
 
-#: templates/base_public.html:46 templates/landing.html:3
-msgid "Overview"
-msgstr "Overview"
-
-#: templates/base_public.html:91 templates/login.html:70
+#: templates/base_public.html:75 templates/login.html:70
 msgid "Sign In"
 msgstr "Sign In"
 
@@ -798,6 +790,61 @@ msgstr ""
 msgid "Go to Device Management"
 msgstr "Device Management"
 
+#: templates/landing.html:3 templates/login.html:93
+msgid "Overview"
+msgstr "Overview"
+
+#: templates/landing.html:46
+msgid "Part of the Lively Ageing Project"
+msgstr ""
+
+#: templates/landing.html:50
+msgid ""
+"The wearable monitoring platform of the Lively Ageing project, enabling "
+"authorized care and research staff to monitor physical activity and "
+"health metrics collected from enrolled participants' wearable devices via"
+" Google Health."
+msgstr ""
+
+#: templates/landing.html:55
+#, fuzzy
+msgid "Staff Login"
+msgstr "Last Login"
+
+#: templates/landing.html:59
+msgid "Discover Lively Ageing"
+msgstr ""
+
+#: templates/landing.html:80
+msgid "Integrated Study Monitoring"
+msgstr ""
+
+#: templates/landing.html:83
+msgid ""
+"Wearable monitoring complements the multidisciplinary activities of the "
+"Lively Ageing program for enrolled participants."
+msgstr ""
+
+#: templates/landing.html:94
+msgid "Wearable Data via Google Health"
+msgstr ""
+
+#: templates/landing.html:97
+msgid ""
+"Following participant authorization, the platform synchronizes device "
+"status, daily steps, distance, and heart rate metrics from Google Health."
+msgstr ""
+
+#: templates/landing.html:108
+msgid "Confidentiality & Data Protection"
+msgstr ""
+
+#: templates/landing.html:111
+msgid ""
+"Data is stored in pseudonymized form and accessible exclusively to "
+"authorized staff in full compliance with data protection regulations."
+msgstr ""
+
 #: templates/login.html:6
 #, fuzzy
 msgid "Login"
@@ -814,6 +861,14 @@ msgstr "Enter your username"
 #: templates/login.html:61
 msgid "Enter your password"
 msgstr "Enter your password"
+
+#: templates/privacy_policy.html:12
+msgid "Insert your Privacy Policy text here."
+msgstr "Insert your Privacy Policy text here."
+
+#: templates/terms_of_service.html:12
+msgid "Insert your Terms of Service text here."
+msgstr "Insert your Terms of Service text here."
 
 #: templates/user_profile_info.html:18
 msgid "Change Avatar"
@@ -886,4 +941,73 @@ msgstr "Back to Home"
 
 #~ msgid "Medical Platform Login"
 #~ msgstr "Medical Platform Login"
+
+#~ msgid "Language"
+#~ msgstr "Language"
+
+#~ msgid "Google Health API Integrated Platform"
+#~ msgstr "Google Health API Integrated Platform"
+
+#~ msgid ""
+#~ "A clinical and care-provider platform"
+#~ " designed to monitor physical activity, "
+#~ "sleep, and vital parameters collected "
+#~ "from patients' wearable devices via "
+#~ "authorized Google Health APIs."
+#~ msgstr ""
+#~ "A clinical and care-provider platform"
+#~ " designed to monitor physical activity, "
+#~ "sleep, and vital parameters collected "
+#~ "from patients' wearable devices via "
+#~ "authorized Google Health APIs."
+
+#~ msgid "Operator Login"
+#~ msgstr "Operator Login"
+
+#~ msgid "Privacy & Data Policy"
+#~ msgstr "Privacy & Data Policy"
+
+#~ msgid "Explicit Patient Consent"
+#~ msgstr "Explicit Patient Consent"
+
+#~ msgid ""
+#~ "Wearable data is accessed only after "
+#~ "the user explicitly authorizes the "
+#~ "connection through the official Google "
+#~ "OAuth 2.0 consent screen."
+#~ msgstr ""
+#~ "Wearable data is accessed only after "
+#~ "the user explicitly authorizes the "
+#~ "connection through the official Google "
+#~ "OAuth 2.0 consent screen."
+
+#~ msgid "Health & Activity Metrics"
+#~ msgstr "Health & Activity Metrics"
+
+#~ msgid ""
+#~ "Authorized care providers can verify "
+#~ "device synchronization status, daily steps,"
+#~ " distance, and heart rate trends to"
+#~ " support active ageing programs."
+#~ msgstr ""
+#~ "Authorized care providers can verify "
+#~ "device synchronization status, daily steps,"
+#~ " distance, and heart rate trends to"
+#~ " support active ageing programs."
+
+#~ msgid "Pseudonymization & Limited Use"
+#~ msgstr "Pseudonymization & Limited Use"
+
+#~ msgid ""
+#~ "All collected health data is transmitted"
+#~ " over encrypted channels, stored in "
+#~ "pseudonymized form, and processed strictly "
+#~ "in compliance with the Google API "
+#~ "Services User Data Policy."
+#~ msgstr ""
+#~ "All collected health data is transmitted"
+#~ " over encrypted channels, stored in "
+#~ "pseudonymized form, and processed strictly "
+#~ "in compliance with the Google API "
+#~ "Services User Data Policy."
 

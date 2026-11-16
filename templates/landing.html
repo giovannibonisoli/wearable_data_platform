@@ -14,7 +14,7 @@
         box-shadow: 0 10px 30px rgba(44, 90, 160, 0.18);
     }
     .public-hero h1 {
-        font-size: 2.2rem;
+        font-size: 2.15rem;
         font-weight: 700;
     }
     .feature-icon-box {
@@ -43,28 +43,20 @@
             <div class="col-lg-8">
                 <span class="badge bg-light text-primary mb-3 px-3 py-2">
                     <i class="bi bi-heart-pulse me-1"></i>
-                    {% if get_locale() == 'en' %}
-                        Google Health API Integrated Platform
-                    {% else %}
-                        Piattaforma integrata con Google Health API
-                    {% endif %}
+                    {{ _('Part of the Lively Ageing Project') }}
                 </span>
                 <h1 class="mb-3">Lively Ageing Wearable Platform</h1>
                 <p class="lead mb-4" style="opacity: 0.92;">
-                    {% if get_locale() == 'en' %}
-                        A clinical and care-provider platform designed to monitor physical activity, sleep, and vital parameters collected from patients' wearable devices via authorized Google Health APIs.
-                    {% else %}
-                        Una piattaforma dedicata alle strutture sanitarie e assistenziali per il monitoraggio dell'attività fisica e dei parametri raccolti dai dispositivi wearable dei pazienti tramite le API autorizzate di Google Health.
-                    {% endif %}
+                    {{ _("The wearable monitoring platform of the Lively Ageing project, enabling authorized care and research staff to monitor physical activity and health metrics collected from enrolled participants' wearable devices via Google Health.") }}
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{{ url_for('login') }}" class="btn btn-light text-primary fw-bold px-4 py-3">
                         <i class="fas fa-sign-in-alt me-2"></i>
-                        {% if get_locale() == 'en' %}Operator Login{% else %}Accesso Operatori{% endif %}
+                        {{ _('Staff Login') }}
                     </a>
-                    <a href="{{ url_for('privacy_policy') }}" class="btn btn-outline-light px-4 py-3">
-                        <i class="fas fa-shield-alt me-2"></i>
-                        {% if get_locale() == 'en' %}Data & Privacy Policy{% else %}Informativa Privacy & Dati{% endif %}
+                    <a href="https://www.livelyageing.unimore.it/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light px-4 py-3">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        {{ _('Discover Lively Ageing') }}
                     </a>
                 </div>
             </div>
@@ -77,22 +69,18 @@
         </div>
     </div>
 
-    <!-- How it works / Google Health Data Transparency -->
-    <div class="row g-4 mb-4">
+    <!-- Platform Overview Cards -->
+    <div class="row g-4">
         <div class="col-md-4">
             <div class="card h-100 p-4">
                 <div class="feature-icon-box">
-                    <i class="fas fa-user-check"></i>
+                    <i class="bi bi-clipboard2-pulse"></i>
                 </div>
                 <h5 class="fw-bold" style="color: var(--dark);">
-                    {% if get_locale() == 'en' %}Explicit Patient Consent{% else %}Consenso Esplicito dell'Utente{% endif %}
+                    {{ _('Integrated Study Monitoring') }}
                 </h5>
                 <p class="text-muted mb-0">
-                    {% if get_locale() == 'en' %}
-                        Wearable data is accessed only after the user explicitly authorizes the connection through the official Google OAuth 2.0 consent screen.
-                    {% else %}
-                        L'accesso ai dati del dispositivo wearable avviene esclusivamente previa autorizzazione esplicita dell'utente tramite la schermata ufficiale di consenso Google OAuth 2.0.
-                    {% endif %}
+                    {{ _('Wearable monitoring complements the multidisciplinary activities of the Lively Ageing program for enrolled participants.') }}
                 </p>
             </div>
         </div>
@@ -103,14 +91,10 @@
                     <i class="bi bi-activity"></i>
                 </div>
                 <h5 class="fw-bold" style="color: var(--dark);">
-                    {% if get_locale() == 'en' %}Health & Activity Metrics{% else %}Metriche di Salute e Attività{% endif %}
+                    {{ _('Wearable Data via Google Health') }}
                 </h5>
                 <p class="text-muted mb-0">
-                    {% if get_locale() == 'en' %}
-                        Authorized care providers can verify device synchronization status, daily steps, distance, and heart rate trends to support active ageing programs.
-                    {% else %}
-                        Gli operatori autorizzati possono verificare lo stato di sincronizzazione dei dispositivi, i passi giornalieri, la distanza percorsa e l'andamento del battito cardiaco.
-                    {% endif %}
+                    {{ _('Following participant authorization, the platform synchronizes device status, daily steps, distance, and heart rate metrics from Google Health.') }}
                 </p>
             </div>
         </div>
@@ -118,17 +102,13 @@
         <div class="col-md-4">
             <div class="card h-100 p-4">
                 <div class="feature-icon-box">
-                    <i class="fas fa-lock"></i>
+                    <i class="fas fa-user-shield"></i>
                 </div>
                 <h5 class="fw-bold" style="color: var(--dark);">
-                    {% if get_locale() == 'en' %}Pseudonymization & Limited Use{% else %}Pseudonimizzazione e Uso Limitato{% endif %}
+                    {{ _('Confidentiality & Data Protection') }}
                 </h5>
                 <p class="text-muted mb-0">
-                    {% if get_locale() == 'en' %}
-                        All collected health data is transmitted over encrypted channels, stored in pseudonymized form, and processed strictly in compliance with the Google API Services User Data Policy.
-                    {% else %}
-                        Tutti i dati raccolti sono trasmessi su canali cifrati, conservati in forma pseudonimizzata e trattati nel pieno rispetto della Google API Services User Data Policy.
-                    {% endif %}
+                    {{ _('Data is stored in pseudonymized form and accessible exclusively to authorized staff in full compliance with data protection regulations.') }}
                 </p>
             </div>
         </div>

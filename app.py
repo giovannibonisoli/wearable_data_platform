@@ -1,9 +1,17 @@
-from config import APP_PREFIX
+from config import (
+    APP_PREFIX,
+    DEBUG,
+    HOST,
+    PORT,
+    SECRET_KEY,
+    SQLALCHEMY_DATABASE_URI,
+    SQLALCHEMY_ENGINE_OPTIONS,
+    SQLALCHEMY_TRACK_MODIFICATIONS,
+)
 
 from logging.handlers import RotatingFileHandler
 from functools import wraps
 from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
-from rich import _console
 
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
@@ -28,7 +36,6 @@ from services.result_enums import (
 
 import os
 import logging
-from urllib.parse import quote_plus
 
 class PrefixMiddleware:
     def __init__(self, wsgi_app, prefix=''):
@@ -51,26 +58,11 @@ if APP_PREFIX:
     app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix=APP_PREFIX)
     app.config['SESSION_COOKIE_PATH'] = APP_PREFIX
 
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = SECRET_KEY
 
-_sqlalchemy_uri = os.getenv("SQLALCHEMY_DATABASE_URI")
-if not _sqlalchemy_uri:
-    _db_user = os.getenv("DB_USER")
-    _db_password = os.getenv("DB_PASSWORD")
-    _db_host = os.getenv("DB_HOST")
-    _db_port = os.getenv("DB_PORT")
-    _db_name = os.getenv("DB_NAME")
-    if all((_db_user, _db_password, _db_host, _db_port, _db_name)):
-        _sqlalchemy_uri = (
-            f"postgresql+psycopg2://{_db_user}:{quote_plus(_db_password)}"
-            f"@{_db_host}:{_db_port}/{_db_name}"
-        )
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {"sslmode": os.getenv("DB_SSLMODE", "require")}
-        }
-if _sqlalchemy_uri:
-    app.config["SQLALCHEMY_DATABASE_URI"] = _sqlalchemy_uri
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = SQLALCHEMY_ENGINE_OPTIONS
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = SQLALCHEMY_TRACK_MODIFICATIONS
 db.init_app(app)
 migrate.init_app(app, db)
 
@@ -87,10 +79,6 @@ logging.basicConfig(
         logging.FileHandler(LOG_FILE, mode='w')  # Log on a file
     ]
 )
-
-# Get execution mode
-FLASK_ENV = os.getenv('FLASK_ENV', 'development')  # By default, development mode
-
 
 # Language settings
 LANGUAGES = {
@@ -137,22 +125,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Route for starting session
 
-
-if FLASK_ENV == 'production':
-    # Production mode: use public IP and HTTPS.
-    HOST = os.getenv('PRODUCTION_HOST','0.0.0.0')
-    PORT = int(os.getenv('PRODUCTION_PORT'))
-    # SSL_CONTEXT = (
-    #     os.getenv('SSL_CERT'),  # Path to the certificate.
-    #     os.getenv('SSL_KEY')     # Path to the private key.
-    # )
-    DEBUG = False
-else:
-    # Development mode: use localhost and HTTP
-    HOST = os.getenv('HOST')
-    PORT = int(os.getenv('PORT'))
-    SSL_CONTEXT = None
-    DEBUG = os.getenv('DEBUG').lower() == 'true'
 
 # User Model
 class User(UserMixin):
@@ -466,8 +438,6 @@ def home():
 
 
 import json
-import os
-
 VIDEO_TUTORIALS_FILE = os.path.join(os.path.dirname(__file__), 'video_tutorials.json')
 
 

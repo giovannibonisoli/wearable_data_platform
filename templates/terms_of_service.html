@@ -5,19 +5,11 @@
 {% block content %}
 <div class="container py-5">
     <div class="card p-4 p-md-5 mx-auto legal-content" style="max-width: 900px;">
-        {% if get_locale() == 'en' %}
-            <h1 class="h2 fw-bold text-primary mb-2">Terms of Service</h1>
-            <p class="text-muted small mb-4">Lively Ageing Wearable Platform</p>
+        <h1 class="h2 fw-bold text-primary mb-2">{{ _('Terms of Service') }}</h1>
+        <p class="text-muted small mb-4">Lively Ageing Wearable Platform</p>
 
-            <!-- INCOLLA QUI IL TESTO DEI TERMINI DI SERVIZIO IN INGLESE -->
-            <p>Insert your English Terms of Service text here.</p>
-        {% else %}
-            <h1 class="h2 fw-bold text-primary mb-2">Termini di Servizio</h1>
-            <p class="text-muted small mb-4">Lively Ageing Wearable Platform</p>
-
-            <!-- INCOLLA QUI IL TESTO DEI TERMINI DI SERVIZIO IN ITALIANO -->
-            <p>Inserisci qui il testo dei Termini di Servizio in italiano.</p>
-        {% endif %}
+        <!-- TODO: replace with the final Terms of Service text -->
+        <p>{{ _('Insert your Terms of Service text here.') }}</p>
     </div>
 </div>
 {% endblock %}
