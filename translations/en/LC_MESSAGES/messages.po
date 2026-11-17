@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 19:32+0100\n"
+"POT-Creation-Date: 2026-11-17 10:59+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -465,35 +465,35 @@ msgstr "Settings"
 msgid "Logout"
 msgstr "Logout"
 
-#: templates/base.html:133 templates/base_public.html:45
+#: templates/base.html:133 templates/base_public.html:46
 msgid "Italian"
 msgstr "Italian"
 
-#: templates/base.html:139 templates/base_public.html:51
+#: templates/base.html:139 templates/base_public.html:52
 msgid "English"
 msgstr "English"
 
-#: templates/base.html:145 templates/base_public.html:57
+#: templates/base.html:145 templates/base_public.html:58
 msgid "Spanish"
 msgstr "Spanish"
 
-#: templates/base.html:176 templates/base_public.html:81
+#: templates/base.html:176 templates/base_public.html:82
 msgid "All rights reserved"
 msgstr "All rights reserved"
 
-#: templates/base.html:179 templates/base_public.html:84
+#: templates/base.html:179 templates/base_public.html:85
 #: templates/login.html:96 templates/privacy_policy.html:3
 #: templates/privacy_policy.html:53
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: templates/base.html:182 templates/base_public.html:87
+#: templates/base.html:182 templates/base_public.html:88
 #: templates/login.html:99 templates/terms_of_service.html:3
 #: templates/terms_of_service.html:32
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
-#: templates/base_public.html:66 templates/login.html:70
+#: templates/base_public.html:67 templates/login.html:70
 msgid "Sign In"
 msgstr "Sign In"
 
@@ -790,10 +790,6 @@ msgstr ""
 msgid "Go to Device Management"
 msgstr "Device Management"
 
-#: templates/landing.html:3 templates/login.html:93
-msgid "Overview"
-msgstr "Overview"
-
 #: templates/landing.html:57
 msgid "UNIMORE Research Project"
 msgstr ""
@@ -849,6 +845,10 @@ msgstr "Enter your username"
 msgid "Enter your password"
 msgstr "Enter your password"
 
+#: templates/login.html:93
+msgid "Overview"
+msgstr "Overview"
+
 #: templates/privacy_policy.html:55
 msgid ""
 "Research Project: Lively Ageing - an integrated network of services and "
@@ -862,8 +862,8 @@ msgstr ""
 #: templates/privacy_policy.html:66
 msgid ""
 "This Privacy Policy describes the management of personal data and "
-"wellness data collected and processed through the Lively Ageing Platform "
-"application."
+"wellness data collected and processed through the Lively Ageing Wearable "
+"Platform application."
 msgstr ""
 
 #: templates/privacy_policy.html:72
@@ -1182,9 +1182,10 @@ msgstr ""
 #: templates/privacy_policy.html:205
 msgid ""
 "The use and transfer to any other app of information received from Google"
-" Health APIs by the Lively Ageing Platform will adhere to the Google "
-"Health API Developer and User Data Policy and the Google Health API User "
-"Data and Health Research Policy, including the Limited Use requirements."
+" Health APIs by the Lively Ageing Wearable Platform will adhere to the "
+"Google Health API Developer and User Data Policy and the Google Health "
+"API User Data and Health Research Policy, including the Limited Use "
+"requirements."
 msgstr ""
 
 #: templates/privacy_policy.html:209
@@ -1275,7 +1276,8 @@ msgstr ""
 msgid ""
 "By accessing the security section of their Google Account (or the "
 "associated project account) under \"Third-party apps with account "
-"access\" and removing authorization for the Lively Ageing Platform;"
+"access\" and removing authorization for the Lively Ageing Wearable "
+"Platform;"
 msgstr ""
 
 #: templates/privacy_policy.html:245
@@ -1379,12 +1381,12 @@ msgstr ""
 
 #: templates/terms_of_service.html:44
 msgid ""
-"The Lively Ageing Platform (hereinafter \"Platform\") is a software tool "
-"— for exclusive scientific research purposes — developed and managed by "
-"the University of Modena and Reggio Emilia (UNIMORE), intended for the "
-"technical management, synchronization, and monitoring of wearable devices"
-" within the scientific project \"LivelyAgeing: an integrated network of "
-"services and technologies for the well-being of the elderly\""
+"The Lively Ageing Wearable Platform is a software tool, for exclusive "
+"scientific research purposes, developed and managed by the University of "
+"Modena and Reggio Emilia (UNIMORE), intended for the technical "
+"management, synchronization, and monitoring of wearable devices within "
+"the scientific project \"LivelyAgeing: an integrated network of services "
+"and technologies for the well-being of the elderly\""
 msgstr ""
 
 #: templates/terms_of_service.html:49
@@ -1453,8 +1455,8 @@ msgstr ""
 #: templates/terms_of_service.html:82
 msgid ""
 "The application, source code, software architecture, and the name "
-"\"Lively Ageing Platform\" are the exclusive property of the University "
-"of Modena and Reggio Emilia."
+"\"Lively Ageing Wearable Platform\" are the exclusive property of the "
+"University of Modena and Reggio Emilia."
 msgstr ""
 
 #: templates/terms_of_service.html:86
@@ -1569,5 +1571,55 @@ msgstr "Back to Home"
 #~ "synchronizes daily steps, distance, heart "
 #~ "rate, and sleep metrics from Google "
 #~ "Health."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "This Privacy Policy describes the "
+#~ "management of personal data and wellness"
+#~ " data collected and processed through "
+#~ "the Lively Ageing Platform application."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The use and transfer to any other"
+#~ " app of information received from "
+#~ "Google Health APIs by the Lively "
+#~ "Ageing Platform will adhere to the "
+#~ "Google Health API Developer and User "
+#~ "Data Policy and the Google Health "
+#~ "API User Data and Health Research "
+#~ "Policy, including the Limited Use "
+#~ "requirements."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "By accessing the security section of "
+#~ "their Google Account (or the associated"
+#~ " project account) under \"Third-party "
+#~ "apps with account access\" and removing"
+#~ " authorization for the Lively Ageing "
+#~ "Platform;"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The Lively Ageing Platform (hereinafter "
+#~ "\"Platform\") is a software tool — "
+#~ "for exclusive scientific research purposes "
+#~ "— developed and managed by the "
+#~ "University of Modena and Reggio Emilia"
+#~ " (UNIMORE), intended for the technical "
+#~ "management, synchronization, and monitoring of"
+#~ " wearable devices within the scientific "
+#~ "project \"LivelyAgeing: an integrated network"
+#~ " of services and technologies for the"
+#~ " well-being of the elderly\""
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The application, source code, software "
+#~ "architecture, and the name \"Lively "
+#~ "Ageing Platform\" are the exclusive "
+#~ "property of the University of Modena "
+#~ "and Reggio Emilia."
 #~ msgstr ""
 

@@ -4,7 +4,7 @@ import base64
 from config import SECRET_KEY
 
 # The secret key must be 32 bytes (it must be the same for encryption and decryption)
-if not SECRET_KEY or len(SECRET_KEY) != 32:
+if not SECRET_KEY or len(SECRET_KEY) < 32:
     raise ValueError("The secret key must have 32 bytes.")
 
 # Convert the key to base64 format for Fernet
