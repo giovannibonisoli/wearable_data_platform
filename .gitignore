@@ -1,80 +1,68 @@
-# .gitignore
-config.js
-.codegpt
-.env
-.vscode
-.venv/
-credentials.json
-venv
-test.py
-access.pem
-app.log
-.qodo
-.ssh
-.codebuddy
-config
-# Translation files
-messages.pot
-translate.py
-*.mo
-__pycache__/
-*.pyc
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
 venv/
 ENV/
 
-# Environment and credentials
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets & local config
 .env
 *.env
 *.pem
 credentials.json
-access.pem
+.ssh/
+instance/
 
-# IDE and editor files
+# Runtime output
+logs/
+app.log
+*.db
+*.sqlite
+
+# Health data exports (never commit)
+*.csv
+*.xlsx
+*.xls
+
+# Babel (compile with: pybabel compile -d translations)
+messages.pot
+*.mo
+
+# App content not yet versioned
+video_tutorials.json
+
+# Local scripts (may contain tokens)
+get_tokens.py
+translate.py
+test.py
+
+# Editors, AI tools, OS
 .vscode/
-.codegpt/
 .idea/
+.codegpt/
+.qodo/
+.codebuddy/
 *.swp
 *~
 .DS_Store
 
-
-# Logs and databases
-logs/
-*.db
-*.sqlite
-app.log
-
-# Backup and temporary files
+# Backups & temp files
 *.bak
 *.backup
 *.tmp
 *.temp
-
-# Data files
-*.csv
-*.xlsx
-*.xls
-*.pdf
-*.txt
-
-# Project specific
-.qodo/
-.ssh/
-test.py
-messages.pot
-translate.py
-*.mo
-video_tutorials.json
-
-# Documentation
-Tfg_bueno*.doc
-Tfg_bueno*.pdf
-Tfg_bueno*.txt
-get_tokens.py

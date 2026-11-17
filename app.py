@@ -438,7 +438,7 @@ def home():
 
 
 import json
-VIDEO_TUTORIALS_FILE = os.path.join(os.path.dirname(__file__), 'video_tutorials.json')
+VIDEO_TUTORIALS_FILE = os.path.join(BASE_DIR, 'data', 'video_tutorials.json')
 
 
 def load_video_tutorials(locale=None, context=None):
