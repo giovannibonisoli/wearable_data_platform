@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from database import DeviceRepository, AuthorizationRepository
 from database.connection import SqlalchemyConnection
@@ -6,6 +6,7 @@ from services.integrations.oauth_provider import (
     create_api_client,
     exchange_code,
     generate_auth_url,
+    generate_pkce_pair,
     generate_state,
 )
 from services.integrations.emails import send_email
@@ -97,8 +98,9 @@ class DeviceService:
             "random": generate_state(),
         }
         state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        code_verifier, code_challenge = generate_pkce_pair()
 
-        auth_url = generate_auth_url(state)
+        auth_url = generate_auth_url(state, code_challenge)
 
         provider_label = "Google Health"
         email_subject = f"Autorizzazione {provider_label} - Lively Ageing"
@@ -132,30 +134,37 @@ class DeviceService:
             """
 
         if send_email(email_address, email_subject, email_html, email_text):
-            if self.auth_repo.store_pending_auth(device_id, state, ""):
+            if self.auth_repo.store_pending_auth(device_id, state, code_verifier):
                 return email_address, SendAuthEmailResult.SUCCESS
             else:
                 return email_address, SendAuthEmailResult.ERROR_STORING_PENDING_AUTH
         else:
             return email_address, SendAuthEmailResult.EMAIL_SENDING_ERROR
 
-    def handle_authorization_grant(self, code: str, state: str) -> AuthGrantResult:
+    def handle_authorization_grant(
+        self, code: str, state: str
+    ) -> tuple[AuthGrantResult, Optional[str]]:
+        """Complete the OAuth flow.
+
+        Always returns ``(result, email_address)``; ``email_address`` is None
+        when it could not be determined.
+        """
         try:
             state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
             email_address = state_data.get("email_address")
         except Exception:
-            return AuthGrantResult.MISSING_AUTH_INFO
+            return AuthGrantResult.MISSING_AUTH_INFO, None
 
         if not email_address:
-            return AuthGrantResult.EMAIL_NOT_FOUND
+            return AuthGrantResult.EMAIL_NOT_FOUND, None
 
         pending_auth = self.auth_repo.get_by_state(state)
         if not pending_auth:
-            return AuthGrantResult.INVALID_AUTH_LINK
+            return AuthGrantResult.INVALID_AUTH_LINK, email_address
 
-        access_token, refresh_token = exchange_code(code)
+        access_token, refresh_token = exchange_code(code, pending_auth["code_verifier"])
         if not access_token or not refresh_token:
-            return AuthGrantResult.ERROR_RETRIEVE_TOKENS
+            return AuthGrantResult.ERROR_RETRIEVE_TOKENS, email_address
 
         device = self.device_repo.get_by_email(email_address)
 

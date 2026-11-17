@@ -43,8 +43,8 @@ GOOGLE_SCOPES = [
 # OAuth helpers
 # ===================================================================
 
-def generate_google_auth_url(state: str) -> str:
-    """Build a Google OAuth 2.0 authorization URL."""
+def generate_google_auth_url(state: str, code_challenge: str) -> str:
+    """Build a Google OAuth 2.0 authorization URL (PKCE, S256)."""
     from urllib.parse import urlencode
 
     params = {
@@ -55,12 +55,19 @@ def generate_google_auth_url(state: str) -> str:
         "access_type": "offline",
         "prompt": "consent",
         "state": state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
     }
     return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
 
 
-def exchange_google_code(code: str) -> tuple[str | None, str | None]:
-    """Exchange an authorization code for Google access/refresh tokens."""
+def exchange_google_code(code: str, code_verifier: str = "") -> tuple[str | None, str | None]:
+    """Exchange an authorization code for Google access/refresh tokens.
+
+    ``code_verifier`` is the PKCE verifier stored with the pending
+    authorization. It is omitted when empty, so links issued before PKCE
+    was introduced still work.
+    """
     payload = {
         "code": code,
         "client_id": GOOGLE_CLIENT_ID,
@@ -68,6 +75,8 @@ def exchange_google_code(code: str) -> tuple[str | None, str | None]:
         "redirect_uri": GOOGLE_REDIRECT_URI,
         "grant_type": "authorization_code",
     }
+    if code_verifier:
+        payload["code_verifier"] = code_verifier
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     resp = requests.post(GOOGLE_TOKEN_URL, data=payload, headers=headers)
     if resp.status_code != 200:

@@ -4,7 +4,9 @@ OAuth provider integration layer.
 Currently backed by the Google Health API.
 """
 
-import random
+import base64
+import hashlib
+import secrets
 import string
 from typing import Callable, Optional
 
@@ -28,17 +30,28 @@ def create_api_client(
     return GoogleHealthClient(access_token, refresh_token, on_tokens_updated)
 
 
-def generate_auth_url(state: str) -> str:
-    """Build a Google OAuth 2.0 authorization URL."""
-    return generate_google_auth_url(state)
+def generate_auth_url(state: str, code_challenge: str) -> str:
+    """Build a Google OAuth 2.0 authorization URL (PKCE, S256)."""
+    return generate_google_auth_url(state, code_challenge)
 
 
-def exchange_code(code: str) -> tuple[str | None, str | None]:
+def exchange_code(code: str, code_verifier: str = "") -> tuple[str | None, str | None]:
     """Exchange an authorization code for Google access/refresh tokens."""
-    return exchange_google_code(code)
+    return exchange_google_code(code, code_verifier)
 
 
 def generate_state(length: int = 16) -> str:
-    """Generate a random state parameter for OAuth."""
+    """Generate an unguessable state parameter for OAuth."""
     characters = string.ascii_letters + string.digits
-    return "".join(random.choice(characters) for _ in range(length))
+    return "".join(secrets.choice(characters) for _ in range(length))
+
+
+def generate_pkce_pair() -> tuple[str, str]:
+    """Generate a PKCE (code_verifier, code_challenge) pair using S256.
+
+    The verifier is 86 URL-safe characters (RFC 7636 requires 43-128).
+    """
+    code_verifier = secrets.token_urlsafe(64)
+    digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    code_challenge = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+    return code_verifier, code_challenge
