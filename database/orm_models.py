@@ -37,7 +37,7 @@ class UserModel(db.Model):
         server_default=UserRole.STAFF.value
     )
 
-    created_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=True, server_default=db.func.now())
     last_login = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
@@ -54,7 +54,7 @@ class CareProviderModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=True, server_default=db.func.now())
 
 
 class DeviceModel(db.Model):
@@ -69,7 +69,7 @@ class DeviceModel(db.Model):
         server_default=StatusType.INSERTED.value  # ← usa .value, non .name!
     )
     device_type = db.Column(db.String(128), nullable=True)
-    created_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=True, server_default=db.func.now())
     last_synch = db.Column(db.DateTime, nullable=True)
     daily_summaries_checkpoint = db.Column(db.Date, nullable=True)
     intraday_checkpoint = db.Column(db.DateTime, nullable=True)
@@ -86,7 +86,7 @@ class PendingAuthorizationModel(db.Model):
     state = db.Column(db.Text, nullable=False)
     code_verifier = db.Column(db.Text, nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=True, server_default=db.func.now())
 
 
 class DailySummaryModel(db.Model):
