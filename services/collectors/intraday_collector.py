@@ -14,11 +14,9 @@ from database.connection import SqlalchemyConnection
 from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
+from config import COLLECTION_START_DATE
 
 logger = logging.getLogger(__name__)
-
-# First date to collect when no checkpoint exists
-DEFAULT_START_DATE = datetime(2025, 11, 18).date()
 
 
 class IntradayCollectorService(BaseCollector):
@@ -157,7 +155,7 @@ class IntradayCollectorService(BaseCollector):
             current_dt = intraday_checkpoint + timedelta(minutes=1)
             current_dt = current_dt.replace(second=0, microsecond=0)
         else:
-            current_dt = datetime.combine(DEFAULT_START_DATE, datetime.min.time())
+            current_dt = datetime.combine(COLLECTION_START_DATE, datetime.min.time())
             if last_synch.tzinfo:
                 current_dt = current_dt.replace(tzinfo=last_synch.tzinfo)
             self.device_repo.update_intraday_checkpoint(device_id, current_dt)

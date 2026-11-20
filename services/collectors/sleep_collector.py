@@ -17,11 +17,9 @@ from database.connection import SqlalchemyConnection
 from services.integrations.oauth_provider import create_api_client
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
+from config import COLLECTION_START_DATE
 
 logger = logging.getLogger(__name__)
-
-# First date to collect when no checkpoint exists
-DEFAULT_START_DATE = datetime(2025, 1, 24).date()
 
 
 class SleepCollectorService(BaseCollector):
@@ -238,7 +236,7 @@ class SleepCollectorService(BaseCollector):
         if last_date:
             start_date = last_date + timedelta(days=1)
         else:
-            start_date = DEFAULT_START_DATE
+            start_date = COLLECTION_START_DATE
 
         if not device.last_synch:
             logger.warning(f"No last_synch for device {device_id}")

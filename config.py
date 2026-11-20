@@ -6,6 +6,7 @@ systemd, Docker, or your hosting provider). Secrets must never be hardcoded.
 """
 
 import os
+from datetime import date
 from urllib.parse import quote_plus
 
 
@@ -149,6 +150,22 @@ SSL_CONTEXT = (_ssl_cert, _ssl_key) if _ssl_cert and _ssl_key else None
 APP_PREFIX = get_optional_env("APP_PREFIX", "").rstrip("/")
 if APP_PREFIX and not APP_PREFIX.startswith("/"):
     APP_PREFIX = f"/{APP_PREFIX}"
+
+# =============================================================================
+# Data Collection
+# First date the collectors fetch for a device that has no checkpoint yet.
+# Global for all devices; set it once before the first collection and do not
+# change it afterwards (devices already collected ignore it anyway).
+# Format: YYYY-MM-DD
+# =============================================================================
+_collection_start_date = get_optional_env("COLLECTION_START_DATE", "2025-01-21")
+try:
+    COLLECTION_START_DATE = date.fromisoformat(_collection_start_date)
+except ValueError:
+    raise ConfigurationError(
+        f"COLLECTION_START_DATE must be in YYYY-MM-DD format, got '{_collection_start_date}'"
+    )
+
 
 # =============================================================================
 # Validation (Optional - uncomment to validate on import)
