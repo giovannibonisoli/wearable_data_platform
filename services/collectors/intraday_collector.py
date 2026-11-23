@@ -169,6 +169,7 @@ class IntradayCollectorService(BaseCollector):
             access_token=access_token,
             refresh_token=refresh_token,
             on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),
+            on_tokens_revoked=lambda: self.device_repo.mark_reauthorization_required(device_id),
         )
 
         # Refresh last_synch from API if we're caught up

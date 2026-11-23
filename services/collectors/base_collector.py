@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Dict
 
 from database import DeviceRepository
-from database.orm_models import DeviceModel
+from database.orm_models import DeviceModel, StatusType
 from database.connection import SqlalchemyConnection
 from services.result_enums import CollectorResult
 
@@ -44,7 +44,7 @@ class BaseCollector(ABC):
         if not device:
             logger.warning(f"Device {device_id} not found")
             return CollectorResult.ERROR.value
-        if device.authorization_status != "authorized":
+        if device.authorization_status != StatusType.AUTHORIZED:
             logger.warning(f"Device {device_id} is not authorized")
             return CollectorResult.ERROR.value
         return self._process_one_device(device)

@@ -24,6 +24,15 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
+# Seconds before an HTTP call to Google is abandoned. Without a timeout a
+# stalled connection would freeze a collector forever.
+REQUEST_TIMEOUT = 30
+
+
+class RefreshTokenRevokedError(Exception):
+    """The refresh token is no longer valid (revoked, expired or unused for
+    too long). The device must be authorized again by the participant."""
+
 # ---------------------------------------------------------------------------
 # Google Health API scopes (read-only — adjust if your app writes)
 # ---------------------------------------------------------------------------
@@ -78,7 +87,7 @@ def exchange_google_code(code: str, code_verifier: str = "") -> tuple[str | None
     if code_verifier:
         payload["code_verifier"] = code_verifier
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    resp = requests.post(GOOGLE_TOKEN_URL, data=payload, headers=headers)
+    resp = requests.post(GOOGLE_TOKEN_URL, data=payload, headers=headers, timeout=REQUEST_TIMEOUT)
     if resp.status_code != 200:
         raise Exception(f"Google token exchange failed: {resp.text}")
     tokens = resp.json()
@@ -94,7 +103,14 @@ def refresh_google_tokens(refresh_token: str) -> tuple[str | None, str | None]:
         "grant_type": "refresh_token",
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    resp = requests.post(GOOGLE_TOKEN_URL, data=payload, headers=headers)
+    resp = requests.post(GOOGLE_TOKEN_URL, data=payload, headers=headers, timeout=REQUEST_TIMEOUT)
+    if resp.status_code in (400, 401):
+        try:
+            error = resp.json().get("error")
+        except ValueError:
+            error = None
+        if error == "invalid_grant":
+            raise RefreshTokenRevokedError(f"Google refresh token is no longer valid: {resp.text}")
     if resp.status_code != 200:
         raise Exception(f"Google token refresh failed: {resp.text}")
     tokens = resp.json()
@@ -179,10 +195,13 @@ class GoogleHealthClient:
         access_token: str,
         refresh_token: str,
         on_tokens_updated: Optional[Callable[[str, str], None]] = None,
+        on_tokens_revoked: Optional[Callable[[], None]] = None,
     ):
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.on_tokens_updated = on_tokens_updated
+        self.on_tokens_revoked = on_tokens_revoked
+        self._revoked = False
 
     # ------------------------------------------------------------------
     # Public interface  (mirrors the provider client)
@@ -198,13 +217,13 @@ class GoogleHealthClient:
         """Fetch paired devices — returns the first paired device."""
         url = f"{HEALTH_API_BASE}/users/me/pairedDevices"
         headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
         if resp.status_code == 401:
             logger.warning("Token expired fetching device info, refreshing…")
             self._do_refresh()
             headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
         if resp.status_code != 200:
             raise Exception(
@@ -235,7 +254,7 @@ class GoogleHealthClient:
         self, url: str, token: str, optional: bool
     ) -> tuple[dict | None, bool]:
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
         if resp.status_code == 200:
             return resp.json(), False
@@ -245,7 +264,7 @@ class GoogleHealthClient:
             logger.warning(f"Token expired for {url}, refreshing…")
             self._do_refresh()
             headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
             if resp.status_code == 200:
                 return resp.json(), False
             if resp.status_code == 429:
@@ -256,7 +275,20 @@ class GoogleHealthClient:
         return None, False
 
     def _do_refresh(self) -> None:
-        new_access, new_refresh = refresh_google_tokens(self.refresh_token)
+        if self._revoked:
+            # Already known to be dead: don't ask Google again.
+            raise RefreshTokenRevokedError("Google refresh token is no longer valid.")
+        try:
+            new_access, new_refresh = refresh_google_tokens(self.refresh_token)
+        except RefreshTokenRevokedError:
+            self._revoked = True
+            logger.error("Google refresh token revoked or expired; re-authorization required.")
+            if self.on_tokens_revoked:
+                try:
+                    self.on_tokens_revoked()
+                except Exception as e:
+                    logger.error(f"on_tokens_revoked callback failed: {e}")
+            raise
         if not new_access:
             raise Exception("Google token refresh failed: no access token returned.")
         self.access_token = new_access
@@ -399,7 +431,7 @@ class GoogleHealthClient:
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-        resp = requests.post(url, json=body, headers=headers)
+        resp = requests.post(url, json=body, headers=headers, timeout=REQUEST_TIMEOUT)
 
         if resp.status_code == 429:
             return None, True
@@ -408,7 +440,7 @@ class GoogleHealthClient:
         if resp.status_code == 401:
             self._do_refresh()
             headers["Authorization"] = f"Bearer {self.access_token}"
-            resp = requests.post(url, json=body, headers=headers)
+            resp = requests.post(url, json=body, headers=headers, timeout=REQUEST_TIMEOUT)
         if resp.status_code == 200:
             return resp.json(), False
         if optional:
@@ -444,7 +476,7 @@ class GoogleHealthClient:
             )
 
         headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
-        resp = requests.get(url, headers=headers, params=params)
+        resp = requests.get(url, headers=headers, params=params, timeout=REQUEST_TIMEOUT)
 
         if resp.status_code == 429:
             return None, True
@@ -453,7 +485,7 @@ class GoogleHealthClient:
         if resp.status_code == 401:
             self._do_refresh()
             headers["Authorization"] = f"Bearer {self.access_token}"
-            resp = requests.get(url, headers=headers, params=params)
+            resp = requests.get(url, headers=headers, params=params, timeout=REQUEST_TIMEOUT)
         if resp.status_code == 200:
             return resp.json(), False
         if optional:

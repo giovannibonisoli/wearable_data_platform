@@ -12,6 +12,7 @@ from typing import Callable, Optional
 
 from services.integrations.google_health import (
     GoogleHealthClient,
+    RefreshTokenRevokedError,
     exchange_google_code,
     generate_google_auth_url,
 )
@@ -21,13 +22,17 @@ def create_api_client(
     access_token: str,
     refresh_token: str,
     on_tokens_updated: Optional[Callable[[str, str], None]] = None,
+    on_tokens_revoked: Optional[Callable[[], None]] = None,
 ):
     """Return a Google Health API client scoped to a single device.
 
     The returned client has a ``get(url, optional=False)`` method that
     returns ``(data_dict_or_None, rate_limited_bool)``.
+
+    ``on_tokens_revoked`` is called once if the refresh token turns out to be
+    dead; the call that triggered it then raises ``RefreshTokenRevokedError``.
     """
-    return GoogleHealthClient(access_token, refresh_token, on_tokens_updated)
+    return GoogleHealthClient(access_token, refresh_token, on_tokens_updated, on_tokens_revoked)
 
 
 def generate_auth_url(state: str, code_challenge: str) -> str:

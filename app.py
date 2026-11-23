@@ -538,6 +538,9 @@ def device_list():
 
                 if device_data["auth_status"] == 'INSERTED' and device_data["is_pending_auth"]:
                     device_data["auth_status"] = "pending_auth_request"
+
+                elif device_data["auth_status"] == 'INSERTED' and device_data["reauth_required"]:
+                    device_data["auth_status"] = "REAUTH_REQUIRED"
                     
                 elif device_data["auth_status"] == 'AUTHORIZED':
                     data_reception_status, data_reception_details = device_stats_service.get_device_sync_data(device_data["id"])

@@ -136,6 +136,13 @@
                                             <i class="fa fa-warning status-icon"></i>
                                             <span class="status-text">{{ _('Not Authorized') }}</span>
                                         </div>
+                                    {% elif device.auth_status == 'REAUTH_REQUIRED' %}
+                                        <div class="status-indicator status-danger"
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ _('The authorization has expired or was revoked. Request a new authorization to resume data collection') }}">
+                                            <i class="fa fa-warning status-icon"></i>
+                                            <span class="status-text">{{ _('Authorization expired') }}</span>
+                                        </div>
                                     {% elif device.auth_status == 'pending_auth_request' %}
                                         <div class="status-indicator status-info"
                                             data-bs-toggle="tooltip" 
@@ -261,7 +268,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if device.auth_status == 'INSERTED' %}
+                                    {% if device.auth_status in ['INSERTED', 'REAUTH_REQUIRED'] %}
                                         <div class="actions-container">
                                             <form action="{{ url_for('send_auth_request') }}" method="POST" class="d-inline">
                                                 <input type="hidden" name="deviceIdAuth" value="{{ device.id }}">
@@ -272,6 +279,7 @@
                                                     <i class="fas fa-paper-plane me-2"></i>{{ _('Request Authorization') }}
                                                 </button>
                                             </form>
+                                            {% if device.auth_status == 'INSERTED' %}
                                             <button type="button"
                                                     class="btn btn-warning btn-sm action-btn"
                                                     data-bs-toggle="modal"
@@ -280,6 +288,7 @@
                                                     title="{{ _('Rename the email address associated with this device') }}">
                                                 <i class="fas fa-pencil-alt me-2"></i>{{ _('Rename Email') }}
                                             </button>
+                                            {% endif %}
                                             {% if tutorial_videos and tutorial_videos.get('get_device_auth') %}
                                             <a href="{{ url_for('video_tutorial_detail', video_id=tutorial_videos.get('get_device_auth').id) }}" 
                                             class="tutorial-icon ms-1"

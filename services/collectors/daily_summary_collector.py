@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from database import DeviceRepository, MetricsRepository
 from database.orm_models import DeviceModel
 from database.connection import SqlalchemyConnection
-from services.integrations.oauth_provider import create_api_client
+from services.integrations.oauth_provider import create_api_client, RefreshTokenRevokedError
 from services.collectors.base_collector import BaseCollector
 from services.result_enums import CollectorResult
 from config import COLLECTION_START_DATE
@@ -135,6 +135,8 @@ class DailySummaryCollectorService(BaseCollector):
             logger.info(f"Daily summary collected for device {device_id} ({email_address}) on {date_str}")
             return True, False
 
+        except RefreshTokenRevokedError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error fetching summary for device {device_id} on {date_str}: {e}")
             return False, False
@@ -170,6 +172,7 @@ class DailySummaryCollectorService(BaseCollector):
             access_token=access_token,
             refresh_token=refresh_token,
             on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device_id, a, r),
+            on_tokens_revoked=lambda: self.device_repo.mark_reauthorization_required(device_id),
         )
 
         current_date = start_date

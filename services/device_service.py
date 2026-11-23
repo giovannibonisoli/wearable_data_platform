@@ -43,6 +43,16 @@ class DeviceService:
                 "email_address": device.email_address,
                 "device_type": device.device_type if device.device_type else "",
                 "auth_status": device.authorization_status.value,
+                # INSERTED again after having collected data: the refresh token died
+                "reauth_required": (
+                    device.authorization_status.value == "INSERTED"
+                    and any([
+                        device.last_synch,
+                        device.daily_summaries_checkpoint,
+                        device.intraday_checkpoint,
+                        device.sleep_checkpoint,
+                    ])
+                ),
                 "is_pending_auth": self.auth_repo.check_exists(device.id),
             })
 
@@ -73,6 +83,7 @@ class DeviceService:
                     access_token=access_token,
                     refresh_token=refresh_token,
                     on_tokens_updated=lambda a, r: self.device_repo.update_tokens(device.id, a, r),
+                    on_tokens_revoked=lambda: self.device_repo.mark_reauthorization_required(device.id),
                 )
 
                 device_data = client.get_device_info()

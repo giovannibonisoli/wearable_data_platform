@@ -106,6 +106,21 @@ class DeviceRepository:
             return True
         return False
 
+    def mark_reauthorization_required(self, device_id: int) -> bool:
+        """Send a device whose refresh token died back to INSERTED.
+
+        Tokens are cleared because they can no longer be used; checkpoints are
+        kept so collection resumes where it stopped once re-authorized.
+        """
+        device = self.db.session.query(DeviceModel).get(device_id)
+        if device:
+            device.authorization_status = StatusType.INSERTED
+            device.access_token = None
+            device.refresh_token = None
+            self.db.session.commit()
+            return True
+        return False
+
     def update_last_synch(self, device_id: int, timestamp: datetime) -> bool:
         device = self.db.session.query(DeviceModel).get(device_id)
         if device:
