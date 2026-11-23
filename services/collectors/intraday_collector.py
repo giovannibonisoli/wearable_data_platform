@@ -37,9 +37,9 @@ class IntradayCollectorService(BaseCollector):
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
         metrics_config = [
             # (internal data type, Google Health dataType, value field, kind)
-            # kind: "sample" -> filtered via sample physical time
-            #      "interval" -> filtered via interval civil start time
-            #      "reconcile" -> reconciled endpoint (no `list` action)
+            # kind: "sample"    -> filtered on the sample's civil time
+            #       "interval"  -> filtered on the interval's civil start time
+            #       "reconcile" -> reconciled endpoint (no `list` action), interval type
             ("heart_rate", "heart-rate", "beatsPerMinute", "sample"),
             ("steps", "steps", "count", "interval"),
             ("calories", "active-energy-burned", "kilocalories", "interval"),
@@ -48,24 +48,17 @@ class IntradayCollectorService(BaseCollector):
             ("elevation", "altitude", "meters", "interval"),
         ]
 
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
         data_points: dict = {}
         for data_type, gtype, value_field, kind in metrics_config:
-            if kind == "sample":
-                start_time = f"{date_str}T00:00:00Z"
-                end_time = f"{date_str}T23:59:59Z"
-                resp, rate_limited = client._list_data_points(
-                    gtype, date_str, optional=False, start_time=start_time, end_time=end_time
-                )
-            elif kind == "reconcile":
-                filter_expr = f'{gtype.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
-                resp, rate_limited = client._list_data_points(
-                    gtype, date_str, optional=False, filter_expr=filter_expr, action="reconcile"
-                )
-            else:
-                filter_expr = f'{gtype.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
-                resp, rate_limited = client._list_data_points(
-                    gtype, date_str, optional=False, filter_expr=filter_expr
-                )
+            resp, rate_limited = client._list_data_points(
+                gtype,
+                date_str,
+                optional=False,
+                sample=(kind == "sample"),
+                action="reconcile" if kind == "reconcile" else "list",
+            )
 
             if rate_limited:
                 logger.warning(f"Rate limit hit for {device.email_address} on {data_type}")
@@ -73,15 +66,18 @@ class IntradayCollectorService(BaseCollector):
 
             dataset = client._to_intraday_dataset(resp, gtype, value_field)
             for point in dataset:
-                time_str = point.get("time")
+                timestamp = point.get("datetime")
                 value = point.get("value")
-                if time_str and value is not None:
-                    timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
-                    if last_synch_date.tzinfo:
-                        timestamp = timestamp.replace(tzinfo=last_synch_date.tzinfo)
-                    if timestamp not in data_points:
-                        data_points[timestamp] = {}
-                    data_points[timestamp][data_type] = value
+                if timestamp is None or value is None:
+                    continue
+                # Defensive: never store a point under a day other than its own.
+                if timestamp.date() != target_date:
+                    continue
+                if last_synch_date.tzinfo:
+                    timestamp = timestamp.replace(tzinfo=last_synch_date.tzinfo)
+                if timestamp not in data_points:
+                    data_points[timestamp] = {}
+                data_points[timestamp][data_type] = value
 
         day_end = datetime.strptime(f"{date_str} 23:59:00", "%Y-%m-%d %H:%M:%S")
         if last_synch_date.tzinfo:

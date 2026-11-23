@@ -24,7 +24,7 @@ from services.integrations.oauth_provider import create_api_client
 
 # (label, google dataType, valueField, translated key, kind)
 # kind: "interval" -> filtered via interval civil start time
-#       "sample"  -> filtered via startTime/endTime time range
+#       "sample"  -> filtered via sample civil time
 INTRADAY_METRICS = [
     ("heart_rate", "heart-rate", "beatsPerMinute", "activities-heart-intraday", "sample"),
     ("steps", "steps", "count", "activities-steps-intraday", "interval"),
@@ -66,18 +66,10 @@ def main() -> None:
         for data_type, gtype, value_field, key, kind in INTRADAY_METRICS:
             url = f"{HEALTH_API_BASE}/users/me/dataTypes/{gtype}/dataPoints"
             try:
-                if kind == "sample":
-                    start_time = f"{date_str}T00:00:00Z"
-                    end_time = f"{date_str}T23:59:59Z"
-                    resp, rate_limited = client._list_data_points(
-                        gtype, date_str, optional=False, start_time=start_time, end_time=end_time
-                    )
-                else:
-                    filter_expr = f'{gtype.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
-                    action = "reconcile" if gtype == "floors" else "list"
-                    resp, rate_limited = client._list_data_points(
-                        gtype, date_str, optional=False, filter_expr=filter_expr, action=action
-                    )
+                action = "reconcile" if gtype == "floors" else "list"
+                resp, rate_limited = client._list_data_points(
+                    gtype, date_str, optional=False, sample=(kind == "sample"), action=action
+                )
 
                 dataset = client._to_intraday_dataset(resp, gtype, value_field)
 

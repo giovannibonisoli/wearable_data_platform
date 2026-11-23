@@ -10,7 +10,7 @@ a Google Health API-shaped response.
 import logging
 import re
 import requests
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from config import (
@@ -27,6 +27,13 @@ logger = logging.getLogger(__name__)
 # Seconds before an HTTP call to Google is abandoned. Without a timeout a
 # stalled connection would freeze a collector forever.
 REQUEST_TIMEOUT = 30
+
+# Largest page the dataPoints list/reconcile endpoints accept (sleep and
+# exercise are capped at 25 by the API). Big pages keep request count low.
+DATA_POINTS_PAGE_SIZE = 10000
+SESSION_PAGE_SIZE = 25
+# Guard against a provider bug returning the same page token forever.
+MAX_DATA_POINT_PAGES = 200
 
 
 class RefreshTokenRevokedError(Exception):
@@ -448,33 +455,76 @@ class GoogleHealthClient:
         resp.raise_for_status()
         return None, False
 
+    @staticmethod
+    def _civil_day_filter(data_type: str, date_str: str, sample: bool) -> str:
+        """Filter matching exactly one local (civil) day: [date_str, date_str + 1 day).
+
+        Both bounds are required: the API returns points newest-first, so a
+        lower bound alone yields the most recent points, not the requested day.
+        """
+        field = data_type.replace("-", "_")
+        time_field = "sample_time.civil_time" if sample else "interval.civil_start_time"
+        next_day = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+        return (
+            f'{field}.{time_field} >= "{date_str}" AND '
+            f'{field}.{time_field} < "{next_day}"'
+        )
+
     def _list_data_points(
         self,
         data_type: str,
         date_str: str,
         optional: bool = False,
         filter_expr: str | None = None,
-        start_time: str | None = None,
-        end_time: str | None = None,
+        sample: bool = False,
         action: str = "list",
     ) -> tuple[dict | None, bool]:
-        """Call the Google Health API list (or reconcile) endpoint."""
+        """Call the Google Health API list (or reconcile) endpoint for one day.
+
+        Unless `filter_expr` is given, the filter selects the local day
+        `date_str`, using the sample time for sample data types (heart rate,
+        SpO2, HRV, …) and the interval start for interval types (steps, …).
+
+        Follows `nextPageToken` and returns every page merged into a single
+        ``{"dataPoints": [...]}`` response.
+        """
         url = f"{HEALTH_API_BASE}/users/me/dataTypes/{data_type}/dataPoints"
         if action == "reconcile":
             url = url + ":reconcile"
-        params = {}
-        if filter_expr:
-            params["filter"] = filter_expr
-        elif start_time and end_time:
-            # Sample-based data types (heart rate, SpO2, HRV, …) must be
-            # filtered via the sample physical time (startTime/endTime are not
-            # bindable query parameters for these data types).
-            params["filter"] = f'{data_type.replace("-", "_")}.sample_time.physical_time >= "{start_time}"'
-        else:
-            params["filter"] = (
-                f'{data_type.replace("-", "_")}.interval.civil_start_time >= "{date_str}T00:00:00"'
-            )
 
+        params = {
+            "filter": filter_expr or self._civil_day_filter(data_type, date_str, sample),
+            "pageSize": SESSION_PAGE_SIZE if data_type in ("sleep", "exercise") else DATA_POINTS_PAGE_SIZE,
+        }
+
+        data_points: list = []
+        for page in range(MAX_DATA_POINT_PAGES):
+            # Only the first page may be "optionally" missing: a failure after
+            # that would silently drop data, so it must raise.
+            resp_json, rate_limited = self._get_data_points_page(
+                url, params, optional=optional and page == 0
+            )
+            if rate_limited:
+                return None, True
+            if resp_json is None:
+                return None, False
+
+            data_points.extend(resp_json.get("dataPoints", []))
+
+            next_token = resp_json.get("nextPageToken")
+            if not next_token:
+                return {"dataPoints": data_points}, False
+            params["pageToken"] = next_token
+
+        raise Exception(
+            f"Too many result pages for {data_type} on {date_str} "
+            f"(more than {MAX_DATA_POINT_PAGES})"
+        )
+
+    def _get_data_points_page(
+        self, url: str, params: dict, optional: bool
+    ) -> tuple[dict | None, bool]:
+        """Fetch a single page of a list/reconcile call."""
         headers = {"Authorization": f"Bearer {self.access_token}", "Accept": "application/json"}
         resp = requests.get(url, headers=headers, params=params, timeout=REQUEST_TIMEOUT)
 
@@ -575,13 +625,7 @@ class GoogleHealthClient:
     def _translate_intraday_heart(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points(
-            "heart-rate",
-            date_str,
-            optional=True,
-            start_time=f"{date_str}T00:00:00Z",
-            end_time=f"{date_str}T23:59:59Z",
-        )
+        resp, limited = self._list_data_points("heart-rate", date_str, optional=True, sample=True)
         if limited:
             return None, True
         dataset = self._to_intraday_dataset(resp, "heart-rate", "beatsPerMinute")
@@ -611,8 +655,15 @@ class GoogleHealthClient:
     def _translate_sleep(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points("sleep", date_str, optional=True,
-                                                filter_expr=f'sleep.interval.civil_end_time >= "{date_str}"')
+        # Sessions that END on the requested local day (the night before it, plus naps).
+        next_day = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+        resp, limited = self._list_data_points(
+            "sleep", date_str, optional=True,
+            filter_expr=(
+                f'sleep.interval.civil_end_time >= "{date_str}" AND '
+                f'sleep.interval.civil_end_time < "{next_day}"'
+            ),
+        )
         if limited:
             return None, True
         if not resp:
@@ -714,13 +765,7 @@ class GoogleHealthClient:
     def _translate_spo2_intraday(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points(
-            "oxygen-saturation",
-            date_str,
-            optional=True,
-            start_time=f"{date_str}T00:00:00Z",
-            end_time=f"{date_str}T23:59:59Z",
-        )
+        resp, limited = self._list_data_points("oxygen-saturation", date_str, optional=True, sample=True)
         if limited:
             return None, True
         if not resp:
@@ -747,13 +792,7 @@ class GoogleHealthClient:
     def _translate_hrv_intraday(
         self, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
-        resp, limited = self._list_data_points(
-            "heart-rate-variability",
-            date_str,
-            optional=True,
-            start_time=f"{date_str}T00:00:00Z",
-            end_time=f"{date_str}T23:59:59Z",
-        )
+        resp, limited = self._list_data_points("heart-rate-variability", date_str, optional=True, sample=True)
         if limited:
             return None, True
         if not resp:
@@ -868,15 +907,8 @@ class GoogleHealthClient:
             if not obj:
                 continue
 
-            interval = obj.get("interval") or {}
-            sample_time = obj.get("sampleTime") or {}
-            ts = interval.get("startTime") or sample_time.get("physicalTime") or ""
-            if not ts:
-                continue
-            try:
-                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-                time_str = dt.strftime("%H:%M:%S")
-            except ValueError:
+            dt = GoogleHealthClient._local_datetime(obj)
+            if dt is None:
                 continue
 
             val = obj.get(value_field)
@@ -885,8 +917,54 @@ class GoogleHealthClient:
             except (TypeError, ValueError):
                 val = 0.0
 
-            dataset.append({"time": time_str, "value": int(val) if val.is_integer() else val})
+            dataset.append({
+                "datetime": dt,
+                "time": dt.strftime("%H:%M:%S"),
+                "value": int(val) if val.is_integer() else val,
+            })
         return dataset
+
+    @staticmethod
+    def _local_datetime(obj: dict) -> datetime | None:
+        """Wearer's local (civil) date and time of a data point, as a naive datetime.
+
+        Uses the API's civil time when present; otherwise the physical (UTC)
+        time shifted by the recorded UTC offset; as a last resort the UTC time.
+        """
+        interval = obj.get("interval") or {}
+        sample_time = obj.get("sampleTime") or {}
+
+        civil = interval.get("civilStartTime") or sample_time.get("civilTime")
+        if civil:
+            d = civil.get("date") or {}
+            t = civil.get("time") or {}
+            try:
+                # Proto JSON omits zero-valued fields (e.g. minutes at :00)
+                return datetime(
+                    int(d["year"]), int(d["month"]), int(d["day"]),
+                    int(t.get("hours", 0)), int(t.get("minutes", 0)), int(t.get("seconds", 0)),
+                )
+            except (KeyError, TypeError, ValueError):
+                pass
+
+        ts = interval.get("startTime") or sample_time.get("physicalTime")
+        if not ts:
+            return None
+        try:
+            physical = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if physical.tzinfo is None:
+            physical = physical.replace(tzinfo=timezone.utc)
+
+        offset = interval.get("startUtcOffset") or sample_time.get("utcOffset")
+        try:
+            offset_s = float(str(offset).rstrip("s")) if offset else 0.0
+        except ValueError:
+            offset_s = 0.0
+
+        local = physical.astimezone(timezone.utc) + timedelta(seconds=offset_s)
+        return local.replace(tzinfo=None)
 
     @staticmethod
     def _duration_seconds(start: str, end: str) -> int:
