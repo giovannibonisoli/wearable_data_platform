@@ -568,10 +568,13 @@ def device_list():
 
 
 DEVICE_DETAIL_SECTIONS = ('data_collection', 'vitals', 'sleep')
+HEATMAP_RANGE_DAYS = (7, 14, 30)
 
 
 def _render_device_detail(device_id, section):
     """Load a device owned by the current staff user's care provider and render one detail section."""
+    context = {}
+
     with ConnectionManager() as conn:
         staff_user_service = StaffUserService(conn)
         device_service = DeviceService(conn)
@@ -579,10 +582,19 @@ def _render_device_detail(device_id, section):
         user_info = staff_user_service.get_user_info(int(current_user.id))
         device = device_service.get_device_for_care_provider(device_id, user_info['care_provider_id'])
 
-    if device is None:
-        abort(404)
+        if device is None:
+            abort(404)
 
-    return render_template(f'device_detail/{section}.html', device=device, active_section=section)
+        if section == 'data_collection':
+            days = request.args.get('days', type=int)
+            if days not in HEATMAP_RANGE_DAYS:
+                days = HEATMAP_RANGE_DAYS[0]
+            stats_service = DeviceStatisticsService(conn)
+            context['coverage'] = stats_service.get_hourly_coverage(device_id, days)
+            context['coverage_days'] = days
+            context['coverage_range_options'] = HEATMAP_RANGE_DAYS
+
+    return render_template(f'device_detail/{section}.html', device=device, active_section=section, **context)
 
 
 @app.route('/devices/<int:device_id>')

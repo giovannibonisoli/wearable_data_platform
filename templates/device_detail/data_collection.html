@@ -38,14 +38,199 @@
     <!-- Hourly coverage heatmap -->
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <i class="bi bi-grid-3x3 me-2"></i>{{ _('Data collection heatmap') }}
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><i class="bi bi-grid-3x3 me-2"></i>{{ _('Data collection heatmap') }}</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Time range') }}">
+                    {% for n in coverage_range_options %}
+                    <a href="{{ url_for('device_detail_section', device_id=device.id, section='data_collection', days=n) }}"
+                       class="btn btn-outline-primary {% if n == coverage_days %}active{% endif %}"
+                       {% if n == coverage_days %}aria-current="true"{% endif %}>
+                        {{ _('%(n)s days', n=n) }}
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+                <p class="text-muted small mb-3">
+                    {{ _('Minutes of data received in each hour (out of 60).') }}
+                </p>
+
+                {# level 0 = no data; 1..5 = increasing minutes received #}
+                {% macro level(m) -%}
+                    {%- if m == 0 %}0{% elif m < 15 %}1{% elif m < 30 %}2{% elif m < 45 %}3{% elif m < 60 %}4{% else %}5{% endif -%}
+                {%- endmacro %}
+
+                <div class="coverage-scroll">
+                    <table class="coverage-heatmap" id="coverageHeatmap">
+                        <caption class="visually-hidden">{{ _('Minutes of data received in each hour (out of 60).') }}</caption>
+                        <colgroup>
+                            <col class="col-day">
+                            <col span="24">
+                            <col class="col-total">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th scope="col"><span class="visually-hidden">{{ _('Day') }}</span></th>
+                                {% for hour in range(24) %}
+                                <th scope="col" class="hour-label">
+                                    {% if hour % 3 == 0 %}{{ '%02d'|format(hour) }}{% else %}<span class="visually-hidden">{{ '%02d'|format(hour) }}</span>{% endif %}
+                                </th>
+                                {% endfor %}
+                                <th scope="col" class="total-label">{{ _('Total') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in coverage %}
+                            {% set day_label = row.date|dateformat('EEE d MMM') %}
+                            <tr>
+                                <th scope="row" class="day-label">{{ day_label }}</th>
+                                {% for m in row.hours %}
+                                {% set hour_label = '%02d:00–%02d:00'|format(loop.index0, loop.index0 + 1) %}
+                                {% if m is none %}
+                                <td class="cell cell-future"
+                                    data-t="{{ day_label }}, {{ hour_label }}" data-v="{{ _('Not yet') }}">
+                                    <span class="visually-hidden">{{ _('Not yet') }}</span>
+                                </td>
+                                {% else %}
+                                <td class="cell lvl-{{ level(m) }}"
+                                    data-t="{{ day_label }}, {{ hour_label }}"
+                                    data-v="{% if m %}{{ m }} min{% else %}{{ _('No data') }}{% endif %}">
+                                    <span class="visually-hidden">{{ m }} min</span>
+                                </td>
+                                {% endif %}
+                                {% endfor %}
+                                <td class="total-value">
+                                    {{ row.total_minutes // 60 }}h {{ '%02d'|format(row.total_minutes % 60) }}m
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Legend -->
+                <div class="coverage-legend d-flex flex-wrap align-items-center gap-3 mt-3 small text-muted">
+                    <span><span class="swatch lvl-0"></span>{{ _('No data') }}</span>
+                    <span><span class="swatch lvl-1"></span>1–14</span>
+                    <span><span class="swatch lvl-2"></span>15–29</span>
+                    <span><span class="swatch lvl-3"></span>30–44</span>
+                    <span><span class="swatch lvl-4"></span>45–59</span>
+                    <span><span class="swatch lvl-5"></span>60 min</span>
+                </div>
+
+                <div class="coverage-tooltip" id="coverageTooltip" role="presentation" hidden>
+                    <strong class="d-block"></strong>
+                    <span class="small"></span>
+                </div>
             </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coverage-scroll { overflow-x: auto; }
+    .coverage-heatmap {
+        border-collapse: separate;
+        border-spacing: 2px;
+        width: 100%;
+        min-width: 560px;
+        table-layout: fixed;
+    }
+    .coverage-heatmap .col-day { width: 6.5rem; }
+    .coverage-heatmap .col-total { width: 4.5rem; }
+    .coverage-heatmap .day-label {
+        font-weight: 400;
+        font-size: 0.8rem;
+        color: var(--text);
+        white-space: nowrap;
+        text-align: left;
+        padding-right: 0.5rem;
+    }
+    .coverage-heatmap .hour-label {
+        font-weight: 400;
+        font-size: 0.7rem;
+        color: var(--text-light);
+        text-align: left;
+        white-space: nowrap;
+        overflow: visible;
+    }
+    .coverage-heatmap .total-label,
+    .coverage-heatmap .total-value {
+        font-size: 0.8rem;
+        text-align: right;
+        white-space: nowrap;
+        color: var(--text);
+    }
+    .coverage-heatmap .total-label { font-weight: 400; color: var(--text-light); }
+    .coverage-heatmap .cell {
+        height: 22px;
+        border-radius: 3px;
+        padding: 0;
+        cursor: default;
+    }
+    .coverage-heatmap .cell:hover { outline: 2px solid var(--dark); outline-offset: -1px; }
+    .coverage-heatmap .cell-future { background: transparent; box-shadow: inset 0 0 0 1px #d5d9de; }
+
+    /* Ordinal blue ramp (validated: monotone, single hue, light end >= 2:1 on white) */
+    .lvl-0 { background: #eceef1; }
+    .lvl-1 { background: #86b6ef; }
+    .lvl-2 { background: #5598e7; }
+    .lvl-3 { background: #2a78d6; }
+    .lvl-4 { background: #1c5cab; }
+    .lvl-5 { background: #0d366b; }
+
+    .coverage-legend .swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        margin-right: 0.35rem;
+        vertical-align: -1px;
+    }
+
+    .coverage-tooltip {
+        position: fixed;
+        z-index: 1080;
+        pointer-events: none;
+        background: var(--white);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        padding: 0.4rem 0.6rem;
+        white-space: nowrap;
+    }
+    .coverage-tooltip strong { color: var(--dark); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const table = document.getElementById('coverageHeatmap');
+        const tip = document.getElementById('coverageTooltip');
+        if (!table || !tip) return;
+        const value = tip.querySelector('strong');
+        const label = tip.querySelector('span');
+
+        table.addEventListener('pointermove', function (e) {
+            const cell = e.target.closest('td.cell');
+            if (!cell) { tip.hidden = true; return; }
+            value.textContent = cell.dataset.v;
+            label.textContent = cell.dataset.t;
+            tip.hidden = false;
+            const pad = 12;
+            let x = e.clientX + pad;
+            let y = e.clientY + pad;
+            if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - pad;
+            if (y + tip.offsetHeight > window.innerHeight) y = e.clientY - tip.offsetHeight - pad;
+            tip.style.left = x + 'px';
+            tip.style.top = y + 'px';
+        });
+        table.addEventListener('pointerleave', function () { tip.hidden = true; });
+    })();
+</script>
 {% endblock %}

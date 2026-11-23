@@ -13,7 +13,7 @@ Services should:
 
 from datetime import datetime, timedelta
 from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 from database import DeviceRepository, MetricsRepository
 from database.connection import SqlalchemyConnection
@@ -185,6 +185,57 @@ class DeviceStatisticsService:
             'num_days': usage_stats['num_days']
         }
     
+    def get_hourly_coverage(
+        self,
+        device_id: int,
+        num_days: int,
+        now: Optional[datetime] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Count, for each hour of the last `num_days` days (today included),
+        how many distinct minutes of intraday data were received.
+
+        Intraday timestamps hold the wearer's civil (wall-clock) time, so they
+        are bucketed by their wall-clock hour without any timezone conversion.
+
+        Returns one row per day, oldest first:
+            {'date': date, 'hours': [minutes 0-60, or None for future hours] * 24,
+             'total_minutes': int}
+        """
+        now = now or datetime.now()
+        today = now.date()
+        first_day = today - timedelta(days=num_days - 1)
+
+        start = datetime.combine(first_day, datetime.min.time())
+        end = datetime.combine(today + timedelta(days=1), datetime.min.time())
+
+        # Query bounds are exclusive: widen by one second so 00:00 of the first day is included
+        timestamps = self.metrics_repo.get_intraday_timestamps_by_range(
+            device_id, start - timedelta(seconds=1), end
+        )
+
+        minutes_by_hour = defaultdict(set)
+        for ts in timestamps:
+            ts = ts.replace(tzinfo=None)
+            minutes_by_hour[(ts.date(), ts.hour)].add(ts.minute)
+
+        rows = []
+        for offset in range(num_days):
+            day = first_day + timedelta(days=offset)
+            hours = []
+            for hour in range(24):
+                if day == today and hour > now.hour:
+                    hours.append(None)
+                else:
+                    hours.append(len(minutes_by_hour.get((day, hour), ())))
+            rows.append({
+                'date': day,
+                'hours': hours,
+                'total_minutes': sum(h for h in hours if h),
+            })
+
+        return rows
+
     def get_device_sync_data(self, device_id: int) -> tuple:
         """
         Get device synchronization status and data gap information.
