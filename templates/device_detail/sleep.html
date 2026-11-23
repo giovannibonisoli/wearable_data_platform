@@ -10,7 +10,91 @@
                 <i class="bi bi-moon me-2"></i>{{ _('Last sleep session') }}
             </div>
             <div class="card-body">
-                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+                {% macro hm(minutes) -%}
+                    {{ minutes // 60 }}h {{ '%02d'|format(minutes % 60) }}m
+                {%- endmacro %}
+                {% set stage_labels = {
+                    'wake': _('Awake'), 'rem': _('REM'), 'light': _('Light'), 'deep': _('Deep'),
+                    'restless': _('Restless'), 'asleep': _('Asleep'),
+                } %}
+
+                {% if last_sleep %}
+                {% set s = last_sleep %}
+
+                <!-- When -->
+                <div class="small text-muted mb-3">
+                    <i class="bi bi-calendar3 me-1"></i>{{ s.start|dateformat('EEE d MMM') }},
+                    {{ s.start.strftime('%H:%M') }} &rarr; {{ s.end.strftime('%H:%M') }}
+                    {% if not s.is_main_sleep %}<span class="badge bg-light text-muted border ms-1">{{ _('Nap') }}</span>{% endif %}
+                </div>
+
+                <!-- Headline figures -->
+                <div class="sleep-figures d-flex flex-wrap gap-4 mb-4">
+                    <div>
+                        <div class="sleep-figure-label">{{ _('Time asleep') }}</div>
+                        <div class="sleep-figure-value">{{ hm(s.minutes_asleep) }}</div>
+                    </div>
+                    <div>
+                        <div class="sleep-figure-label">{{ _('Time in bed') }}</div>
+                        <div class="sleep-figure-value">{{ hm(s.minutes_in_bed) }}</div>
+                    </div>
+                    <div>
+                        <div class="sleep-figure-label">{{ _('Time awake') }}</div>
+                        <div class="sleep-figure-value">{{ hm(s.minutes_awake) }}</div>
+                    </div>
+                </div>
+
+                {% if s.segments %}
+                <!-- Hypnogram: one row per stage, lightest sleep on top -->
+                <div class="hypnogram" id="hypnogram" aria-hidden="true">
+                    {% for key in s.rows %}
+                    <div class="hyp-track">
+                        {% for t in s.ticks %}<span class="hyp-gridline" style="left: {{ t.left }}%"></span>{% endfor %}
+                        {% for seg in s.segments if seg.stage == key %}
+                        <span class="hyp-seg stage-{{ key }}"
+                              style="left: {{ seg.left }}%; width: {{ seg.width }}%"
+                              data-v="{{ stage_labels.get(key, key) }} · {{ seg.minutes }} min"
+                              data-t="{{ seg.start.strftime('%H:%M') }}–{{ seg.end.strftime('%H:%M') }}"></span>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    <div class="hyp-axis">
+                        {% for t in s.ticks %}<span style="left: {{ t.left }}%">{{ t.label }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <!-- Legend with totals per stage (also the text alternative to the chart) -->
+                <ul class="sleep-legend list-unstyled d-flex flex-wrap gap-3 mt-3 mb-0 small">
+                    {% for st in s.stages %}
+                    <li>
+                        <span class="swatch stage-{{ st.key }}"></span>
+                        <span class="sleep-legend-name">{{ stage_labels.get(st.key, st.key) }}</span>
+                        <span class="text-muted">{{ hm(st.minutes) }} ({{ st.percent }}%)</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <table class="visually-hidden">
+                    <caption>{{ _('Sleep stages of the last sleep session') }}</caption>
+                    <thead><tr><th scope="col">{{ _('Stage') }}</th><th scope="col">{{ _('From') }}</th><th scope="col">{{ _('To') }}</th><th scope="col">{{ _('Minutes') }}</th></tr></thead>
+                    <tbody>
+                        {% for seg in s.segments %}
+                        <tr><td>{{ stage_labels.get(seg.stage, seg.stage) }}</td><td>{{ seg.start.strftime('%H:%M') }}</td><td>{{ seg.end.strftime('%H:%M') }}</td><td>{{ seg.minutes }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="chart-tooltip" id="hypnogramTooltip" role="presentation" hidden>
+                    <strong class="d-block"></strong>
+                    <span class="small"></span>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">{{ _('No sleep stage details for this session.') }}</p>
+                {% endif %}
+
+                {% else %}
+                <p class="text-muted mb-0">{{ _('No sleep sessions recorded yet.') }}</p>
+                {% endif %}
             </div>
         </div>
 
@@ -38,4 +122,113 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sleep-figure-label { font-size: 0.8rem; color: var(--text-light); }
+    .sleep-figure-value { font-size: 1.5rem; font-weight: 600; color: var(--dark); line-height: 1.2; }
+
+    .hypnogram {
+        display: grid;
+        grid-template-columns: 1fr;
+        row-gap: 2px;
+    }
+    .hyp-track {
+        position: relative;
+        height: 28px;
+        border-bottom: 1px solid #e1e0d9;
+    }
+    .hyp-gridline {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-left: 1px solid #eceef1;
+    }
+    .hyp-seg {
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        min-width: 3px;
+        border-radius: 3px;
+        box-shadow: 0 0 0 1px var(--white);
+        cursor: default;
+    }
+    .hyp-seg:hover { outline: 2px solid var(--dark); outline-offset: 0; }
+    .hyp-axis {
+        position: relative;
+        height: 1.4rem;
+        font-size: 0.7rem;
+        color: var(--text-light);
+    }
+    .hyp-axis span {
+        position: absolute;
+        top: 0.25rem;
+        transform: translateX(-50%);
+        white-space: nowrap;
+    }
+    @media (max-width: 575.98px) {
+        .hyp-axis span:nth-child(even) { display: none; }
+    }
+
+    /* Ordinal blue ramp, lighter = lighter sleep (validated: monotone, single hue, light end >= 2:1 on white) */
+    .stage-wake { background: #86b6ef; }
+    .stage-restless,
+    .stage-rem { background: #5598e7; }
+    .stage-light { background: #2a78d6; }
+    .stage-asleep,
+    .stage-deep { background: #104281; }
+
+    .sleep-legend .swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        margin-right: 0.35rem;
+        vertical-align: -1px;
+    }
+    .sleep-legend-name { color: var(--text); margin-right: 0.25rem; }
+
+    .chart-tooltip {
+        position: fixed;
+        z-index: 1080;
+        pointer-events: none;
+        background: var(--white);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        padding: 0.4rem 0.6rem;
+        white-space: nowrap;
+    }
+    .chart-tooltip strong { color: var(--dark); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const chart = document.getElementById('hypnogram');
+        const tip = document.getElementById('hypnogramTooltip');
+        if (!chart || !tip) return;
+        const value = tip.querySelector('strong');
+        const label = tip.querySelector('span');
+
+        chart.addEventListener('pointermove', function (e) {
+            const seg = e.target.closest('.hyp-seg');
+            if (!seg) { tip.hidden = true; return; }
+            value.textContent = seg.dataset.v;
+            label.textContent = seg.dataset.t;
+            tip.hidden = false;
+            const pad = 12;
+            let x = e.clientX + pad;
+            let y = e.clientY + pad;
+            if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - pad;
+            if (y + tip.offsetHeight > window.innerHeight) y = e.clientY - tip.offsetHeight - pad;
+            tip.style.left = x + 'px';
+            tip.style.top = y + 'px';
+        });
+        chart.addEventListener('pointerleave', function () { tip.hidden = true; });
+    })();
+</script>
 {% endblock %}

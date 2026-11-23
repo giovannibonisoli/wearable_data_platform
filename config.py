@@ -168,6 +168,14 @@ except ValueError:
 
 
 # =============================================================================
+# Display
+# Timezone used to show timestamps stored in UTC (e.g. sleep sessions).
+# Must be an IANA name such as "Europe/Rome".
+# =============================================================================
+DISPLAY_TIMEZONE = get_optional_env("DISPLAY_TIMEZONE", "Europe/Rome")
+
+
+# =============================================================================
 # Validation (Optional - uncomment to validate on import)
 # =============================================================================
 def validate_config():

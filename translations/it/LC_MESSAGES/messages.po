@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-23 15:00+0100\n"
+"POT-Creation-Date: 2026-11-23 17:50+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -49,7 +49,7 @@ msgstr "Modifica della password non riuscita."
 msgid "The new password must be at least 8 characters."
 msgstr "La nuova password deve contenere almeno 8 caratteri."
 
-#: app.py:404 app.py:854 app.py:883
+#: app.py:404 app.py:904 app.py:933
 msgid "Passwords do not match."
 msgstr "Le password non corrispondono."
 
@@ -61,136 +61,136 @@ msgstr "Errore durante l'aggiunta del dispositivo."
 msgid "Video not found."
 msgstr "Video non trovato."
 
-#: app.py:594
+#: app.py:644
 msgid "This device is already registered."
 msgstr "Questo dispositivo è già registrato."
 
-#: app.py:596
+#: app.py:646
 msgid "Device added successfully."
 msgstr "Dispositivo aggiunto con successo."
 
-#: app.py:598
+#: app.py:648
 msgid "Error adding device."
 msgstr "Errore durante l'aggiunta del dispositivo."
 
-#: app.py:602 app.py:766
+#: app.py:652 app.py:816
 msgid "An error occurred."
 msgstr "Si è verificato un errore."
 
-#: app.py:628
+#: app.py:678
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Errore nell'aggiornamento delle informazioni per: %(devices)s"
 
-#: app.py:631
+#: app.py:681
 msgid "Device information updated successfully for all devices."
 msgstr "Informazioni dispositivo aggiornate con successo per tutti i dispositivi."
 
-#: app.py:654
+#: app.py:704
 msgid "Error sending device. Please try again."
 msgstr "Errore nell'invio del dispositivo. Riprova."
 
-#: app.py:657
+#: app.py:707
 msgid "Error storing authorization request."
 msgstr "Errore nel salvataggio della richiesta di autorizzazione."
 
-#: app.py:676 app.py:686
+#: app.py:726 app.py:736
 msgid "Error: Missing authorization information."
 msgstr "Errore: Informazioni di autorizzazione mancanti."
 
-#: app.py:691
+#: app.py:741
 msgid "Email not found."
 msgstr "Email non trovata."
 
-#: app.py:696 app.py:701 app.py:706
+#: app.py:746 app.py:751 app.py:756
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr "Errore: Il link di autorizzazione è scaduto. Richiedine uno nuovo."
 
-#: app.py:749
+#: app.py:799
 msgid "Email address is required."
 msgstr "Indirizzo mail richiesto."
 
-#: app.py:759
+#: app.py:809
 msgid "Email address updated successfully."
 msgstr "Dispositivo aggiunto con successo."
 
-#: app.py:762
+#: app.py:812
 msgid "Error updating email address."
 msgstr "Errore nella modifica dell'indirizzo mail."
 
-#: app.py:794
+#: app.py:844
 msgid "Care provider created."
 msgstr "ASP creata."
 
-#: app.py:796
+#: app.py:846
 msgid "Could not create care provider."
 msgstr "Non è stato possibile creare questa ASP."
 
-#: app.py:809
+#: app.py:859
 msgid "Full name is required."
 msgstr "Username richiesto."
 
-#: app.py:817
+#: app.py:867
 msgid "Care provider renamed."
 msgstr "ASP rinominata."
 
-#: app.py:819
+#: app.py:869
 msgid "A care provider with that name already exists."
 msgstr "Esiste già una ASP con questo nome."
 
-#: app.py:821
+#: app.py:871
 msgid "Could not rename care provider."
 msgstr "Non è stato possibile rinominare l'ASP'."
 
-#: app.py:851
+#: app.py:901
 msgid "Username is required."
 msgstr "Username richiesto."
 
-#: app.py:857 app.py:886
+#: app.py:907 app.py:936
 msgid "The password must be at least 8 characters."
 msgstr "La nuova password deve contenere almeno 8 caratteri."
 
-#: app.py:865
+#: app.py:915
 msgid "Staff user created."
 msgstr "Utente staff creato"
 
-#: app.py:867
+#: app.py:917
 msgid "That username is already taken."
 msgstr "Questo username è già stato preso"
 
-#: app.py:869
+#: app.py:919
 msgid "Could not create staff user."
 msgstr "Non è stato possibile creare l'utente staff."
 
-#: app.py:895
+#: app.py:945
 msgid "Password updated."
 msgstr "Password aggiornata."
 
-#: app.py:897
+#: app.py:947
 msgid "User not found."
 msgstr "Utente non trovato."
 
-#: app.py:899
+#: app.py:949
 msgid "You cannot change that password."
 msgstr "Non puoi modificare quella password."
 
-#: app.py:901
+#: app.py:951
 msgid "Password update failed."
 msgstr "Modifica della password non riuscita."
 
-#: app.py:917
+#: app.py:967
 msgid "Staff user deactivated."
 msgstr "Utente staff disattivato."
 
-#: app.py:919
+#: app.py:969
 msgid "Staff user not found."
 msgstr "Utente staff non trovato."
 
-#: app.py:921
+#: app.py:971
 msgid "You cannot deactivate this staff user."
 msgstr "Non puoi disattivare questo utente staff."
 
-#: app.py:923
+#: app.py:973
 msgid "Deactivation failed."
 msgstr "Disattivazione non riuscita."
 
@@ -479,7 +479,8 @@ msgstr "Termini di Servizio"
 msgid "Sign In"
 msgstr "Accedi"
 
-#: templates/device_details.html:4 templates/device_list.html:307
+#: templates/device_detail/_layout.html:3 templates/device_details.html:4
+#: templates/device_list.html:307
 msgid "Device Details"
 msgstr "Dettagli dispositivo"
 
@@ -557,7 +558,9 @@ msgstr "Non autorizzato"
 msgid ""
 "The authorization has expired or was revoked. Request a new authorization"
 " to resume data collection"
-msgstr "L'autorizzazione è stata revocata. Richiedi una nuova autorizzazione per ripristinare la raccolta dei dati"
+msgstr ""
+"L'autorizzazione è stata revocata. Richiedi una nuova autorizzazione per "
+"ripristinare la raccolta dei dati"
 
 #: templates/device_list.html:144
 msgid "Authorization expired"
@@ -1723,6 +1726,180 @@ msgstr "Nessun video tutorial disponibile."
 #: templates/video_tutorials.html:52
 msgid "Back to home"
 msgstr "Torna alla home"
+
+#: templates/device_detail/_layout.html:12
+msgid "Back to devices"
+msgstr "Aggiorna dispositivi"
+
+#: templates/device_detail/_layout.html:21
+msgid "Data collection"
+msgstr ""
+
+#: templates/device_detail/_layout.html:22
+msgid "Vital signs"
+msgstr "Italiano"
+
+#: templates/device_detail/_layout.html:23
+msgid "Sleep"
+msgstr "Sonno"
+
+#: templates/device_detail/_layout.html:40
+msgid ""
+"This device is not currently authorized: data may be missing or out of "
+"date."
+msgstr ""
+"Questo dispositivo non è attualmente autorizzato: i dati potrebbero essere "
+"assenti o non aggiornati"
+
+#: templates/device_detail/data_collection.html:13
+msgid "Unknown device"
+msgstr "Dispositivi sconosciuti"
+
+#: templates/device_detail/data_collection.html:17
+#, fuzzy
+msgid "Last sync"
+msgstr "Ultima sincronizzazione"
+
+#: templates/device_detail/data_collection.html:20
+msgid "Last data updates"
+msgstr "Ultimi aggiornamenti sui dati"
+
+#: templates/device_detail/data_collection.html:20
+#: templates/device_detail/data_collection.html:33
+#: templates/device_detail/sleep.html:109
+#: templates/device_detail/sleep.html:121
+#: templates/device_detail/vitals.html:13
+#: templates/device_detail/vitals.html:23
+#: templates/device_detail/vitals.html:35
+msgid "Coming soon"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:30
+#: templates/device_detail/sleep.html:118
+#: templates/device_detail/vitals.html:32
+msgid "Alerts"
+msgstr "Alert"
+
+#: templates/device_detail/data_collection.html:42
+msgid "Data collection heatmap"
+msgstr "Mappa di calore sulla ricezione dei dati"
+
+#: templates/device_detail/data_collection.html:43
+msgid "Time range"
+msgstr "Lasso di tempo"
+
+#: templates/device_detail/data_collection.html:48
+#, python-format
+msgid "%(n)s days"
+msgstr "%(n)s giorni"
+
+#: templates/device_detail/data_collection.html:55
+#: templates/device_detail/data_collection.html:65
+msgid "Minutes of data received in each hour (out of 60)."
+msgstr "Minuti di dati ricevuti ogni ora"
+
+#: templates/device_detail/data_collection.html:73
+msgid "Day"
+msgstr "giorni"
+
+#: templates/device_detail/data_collection.html:79
+msgid "Total"
+msgstr "Totale"
+
+#: templates/device_detail/data_collection.html:91
+#: templates/device_detail/data_collection.html:92
+msgid "Not yet"
+msgstr "Nessun dato disponibile"
+
+#: templates/device_detail/data_collection.html:97
+#: templates/device_detail/data_collection.html:113
+msgid "No data"
+msgstr "Nessun dato disponibile"
+
+#: templates/device_detail/sleep.html:10
+msgid "Last sleep session"
+msgstr "Ultima sessione di sonno"
+
+#: templates/device_detail/sleep.html:17
+msgid "Awake"
+msgstr "Veglia"
+
+#: templates/device_detail/sleep.html:17
+#, fuzzy
+msgid "REM"
+msgstr "REM"
+
+#: templates/device_detail/sleep.html:17
+msgid "Light"
+msgstr "Sonno Leggero"
+
+#: templates/device_detail/sleep.html:17
+msgid "Deep"
+msgstr "Sonno Profondo"
+
+#: templates/device_detail/sleep.html:18
+msgid "Restless"
+msgstr "Agitato"
+
+#: templates/device_detail/sleep.html:18
+msgid "Asleep"
+msgstr "Addormentato"
+
+#: templates/device_detail/sleep.html:28
+msgid "Nap"
+msgstr "Riposo secondario"
+
+#: templates/device_detail/sleep.html:34
+msgid "Time asleep"
+msgstr "Tempo di sonno"
+
+#: templates/device_detail/sleep.html:38
+msgid "Time in bed"
+msgstr "Tempo a letto"
+
+#: templates/device_detail/sleep.html:42
+msgid "Time awake"
+msgstr "Tempo da sveglio"
+
+#: templates/device_detail/sleep.html:80
+msgid "Sleep stages of the last sleep session"
+msgstr "Fasi del sonno dell'ultima sessione"
+
+#: templates/device_detail/sleep.html:81
+msgid "Stage"
+msgstr "Fase"
+
+#: templates/device_detail/sleep.html:81
+msgid "From"
+msgstr "Dalle"
+
+#: templates/device_detail/sleep.html:81
+msgid "To"
+msgstr "Alle"
+
+#: templates/device_detail/sleep.html:81
+msgid "Minutes"
+msgstr "Minuti"
+
+#: templates/device_detail/sleep.html:94
+msgid "No sleep stage details for this session."
+msgstr "Nessun dettaglio sulle fasi del sonno per questa sessione."
+
+#: templates/device_detail/sleep.html:98
+msgid "No sleep sessions recorded yet."
+msgstr "Nessuna sessione di sonno registrata."
+
+#: templates/device_detail/sleep.html:106
+msgid "Sleep trend"
+msgstr "Andamento del sonno"
+
+#: templates/device_detail/vitals.html:10
+msgid "Summary"
+msgstr "Riepilogo"
+
+#: templates/device_detail/vitals.html:20
+msgid "Trend"
+msgstr "Andamento"
 
 #~ msgid "Monitored Indicators"
 #~ msgstr ""

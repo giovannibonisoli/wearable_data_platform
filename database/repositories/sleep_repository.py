@@ -41,6 +41,17 @@ class SleepRepository:
 
         return query.order_by(SleepLogModel.start_time.desc()).all()
 
+    def get_last_sleep_log(self, device_id: int, main_only: bool = False) -> Optional[SleepLogModel]:
+        """Most recent sleep log of a device (optionally only main sleeps, i.e. no naps)."""
+        query = self.db.session.query(SleepLogModel).join(
+            SleepSessionModel, SleepLogModel.sleep_session_id == SleepSessionModel.id
+        ).filter(SleepSessionModel.device_id == device_id)
+
+        if main_only:
+            query = query.filter(SleepLogModel.is_main_sleep.is_(True))
+
+        return query.order_by(SleepLogModel.start_time.desc()).first()
+
     def insert_sleep_log(self, sleep_session_id: int, data: Dict[str, Any]) -> bool:
         start_time = data['startTime']
         existing = self.db.session.query(SleepLogModel).filter(

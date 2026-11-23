@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-23 15:00+0100\n"
+"POT-Creation-Date: 2026-11-23 17:50+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -49,7 +49,7 @@ msgstr "Password change failed."
 msgid "The new password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:404 app.py:854 app.py:883
+#: app.py:404 app.py:904 app.py:933
 msgid "Passwords do not match."
 msgstr "Passwords do not match."
 
@@ -63,140 +63,140 @@ msgstr "Error adding device."
 msgid "Video not found."
 msgstr "Email not found."
 
-#: app.py:594
+#: app.py:644
 msgid "This device is already registered."
 msgstr "This device is already registered."
 
-#: app.py:596
+#: app.py:646
 msgid "Device added successfully."
 msgstr "Device added successfully."
 
-#: app.py:598
+#: app.py:648
 msgid "Error adding device."
 msgstr "Error adding device."
 
-#: app.py:602 app.py:766
+#: app.py:652 app.py:816
 msgid "An error occurred."
 msgstr "An error occurred."
 
-#: app.py:628
+#: app.py:678
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Error updating device info for: %(devices)s"
 
-#: app.py:631
+#: app.py:681
 msgid "Device information updated successfully for all devices."
 msgstr "Device information updated successfully for all devices."
 
-#: app.py:654
+#: app.py:704
 msgid "Error sending device. Please try again."
 msgstr "Error sending device. Please try again."
 
-#: app.py:657
+#: app.py:707
 msgid "Error storing authorization request."
 msgstr "Error storing authorization request."
 
-#: app.py:676 app.py:686
+#: app.py:726 app.py:736
 msgid "Error: Missing authorization information."
 msgstr "Error: Missing authorization information."
 
-#: app.py:691
+#: app.py:741
 msgid "Email not found."
 msgstr "Email not found."
 
-#: app.py:696 app.py:701 app.py:706
+#: app.py:746 app.py:751 app.py:756
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr "Error: Authorization link expired. Please request a new one."
 
-#: app.py:749
+#: app.py:799
 #, fuzzy
 msgid "Email address is required."
 msgstr "Email Address"
 
-#: app.py:759
+#: app.py:809
 #, fuzzy
 msgid "Email address updated successfully."
 msgstr "Device added successfully."
 
-#: app.py:762
+#: app.py:812
 #, fuzzy
 msgid "Error updating email address."
 msgstr "Enter email address"
 
-#: app.py:794
+#: app.py:844
 msgid "Care provider created."
 msgstr ""
 
-#: app.py:796
+#: app.py:846
 msgid "Could not create care provider."
 msgstr ""
 
-#: app.py:809
+#: app.py:859
 msgid "Full name is required."
 msgstr ""
 
-#: app.py:817
+#: app.py:867
 msgid "Care provider renamed."
 msgstr ""
 
-#: app.py:819
+#: app.py:869
 msgid "A care provider with that name already exists."
 msgstr ""
 
-#: app.py:821
+#: app.py:871
 msgid "Could not rename care provider."
 msgstr ""
 
-#: app.py:851
+#: app.py:901
 msgid "Username is required."
 msgstr ""
 
-#: app.py:857 app.py:886
+#: app.py:907 app.py:936
 #, fuzzy
 msgid "The password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:865
+#: app.py:915
 msgid "Staff user created."
 msgstr ""
 
-#: app.py:867
+#: app.py:917
 msgid "That username is already taken."
 msgstr ""
 
-#: app.py:869
+#: app.py:919
 msgid "Could not create staff user."
 msgstr ""
 
-#: app.py:895
+#: app.py:945
 msgid "Password updated."
 msgstr "Password updated."
 
-#: app.py:897
+#: app.py:947
 msgid "User not found."
 msgstr "User not found."
 
-#: app.py:899
+#: app.py:949
 msgid "You cannot change that password."
 msgstr "You cannot change that password."
 
-#: app.py:901
+#: app.py:951
 msgid "Password update failed."
 msgstr "Password update failed."
 
-#: app.py:917
+#: app.py:967
 msgid "Staff user deactivated."
 msgstr ""
 
-#: app.py:919
+#: app.py:969
 msgid "Staff user not found."
 msgstr "Staff user not found."
 
-#: app.py:921
+#: app.py:971
 msgid "You cannot deactivate this staff user."
 msgstr "You cannot deactivate this staff user."
 
-#: app.py:923
+#: app.py:973
 msgid "Deactivation failed."
 msgstr "Deactivation failed."
 
@@ -497,7 +497,8 @@ msgstr "Terms of Service"
 msgid "Sign In"
 msgstr "Sign In"
 
-#: templates/device_details.html:4 templates/device_list.html:307
+#: templates/device_detail/_layout.html:3 templates/device_details.html:4
+#: templates/device_list.html:307
 msgid "Device Details"
 msgstr "Device Details"
 
@@ -1553,6 +1554,185 @@ msgstr ""
 #, fuzzy
 msgid "Back to home"
 msgstr "Back to Home"
+
+#: templates/device_detail/_layout.html:12
+#, fuzzy
+msgid "Back to devices"
+msgstr "Update Devices"
+
+#: templates/device_detail/_layout.html:21
+msgid "Data collection"
+msgstr ""
+
+#: templates/device_detail/_layout.html:22
+#, fuzzy
+msgid "Vital signs"
+msgstr "Italian"
+
+#: templates/device_detail/_layout.html:23
+msgid "Sleep"
+msgstr ""
+
+#: templates/device_detail/_layout.html:40
+msgid ""
+"This device is not currently authorized: data may be missing or out of "
+"date."
+msgstr ""
+
+#: templates/device_detail/data_collection.html:13
+msgid "Unknown device"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:17
+#, fuzzy
+msgid "Last sync"
+msgstr "Last sync"
+
+#: templates/device_detail/data_collection.html:20
+msgid "Last data updates"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:20
+#: templates/device_detail/data_collection.html:33
+#: templates/device_detail/sleep.html:109
+#: templates/device_detail/sleep.html:121
+#: templates/device_detail/vitals.html:13
+#: templates/device_detail/vitals.html:23
+#: templates/device_detail/vitals.html:35
+msgid "Coming soon"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:30
+#: templates/device_detail/sleep.html:118
+#: templates/device_detail/vitals.html:32
+msgid "Alerts"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:42
+msgid "Data collection heatmap"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:43
+msgid "Time range"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:48
+#, python-format
+msgid "%(n)s days"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:55
+#: templates/device_detail/data_collection.html:65
+msgid "Minutes of data received in each hour (out of 60)."
+msgstr ""
+
+#: templates/device_detail/data_collection.html:73
+#, fuzzy
+msgid "Day"
+msgstr "days"
+
+#: templates/device_detail/data_collection.html:79
+msgid "Total"
+msgstr ""
+
+#: templates/device_detail/data_collection.html:91
+#: templates/device_detail/data_collection.html:92
+#, fuzzy
+msgid "Not yet"
+msgstr "No data yet"
+
+#: templates/device_detail/data_collection.html:97
+#: templates/device_detail/data_collection.html:113
+#, fuzzy
+msgid "No data"
+msgstr "No data yet"
+
+#: templates/device_detail/sleep.html:10
+msgid "Last sleep session"
+msgstr ""
+
+#: templates/device_detail/sleep.html:17
+msgid "Awake"
+msgstr ""
+
+#: templates/device_detail/sleep.html:17
+#, fuzzy
+msgid "REM"
+msgstr "Username"
+
+#: templates/device_detail/sleep.html:17
+msgid "Light"
+msgstr ""
+
+#: templates/device_detail/sleep.html:17
+msgid "Deep"
+msgstr ""
+
+#: templates/device_detail/sleep.html:18
+msgid "Restless"
+msgstr ""
+
+#: templates/device_detail/sleep.html:18
+msgid "Asleep"
+msgstr ""
+
+#: templates/device_detail/sleep.html:28
+msgid "Nap"
+msgstr ""
+
+#: templates/device_detail/sleep.html:34
+msgid "Time asleep"
+msgstr ""
+
+#: templates/device_detail/sleep.html:38
+msgid "Time in bed"
+msgstr ""
+
+#: templates/device_detail/sleep.html:42
+msgid "Time awake"
+msgstr ""
+
+#: templates/device_detail/sleep.html:80
+msgid "Sleep stages of the last sleep session"
+msgstr ""
+
+#: templates/device_detail/sleep.html:81
+#, fuzzy
+msgid "Stage"
+msgstr "Usage"
+
+#: templates/device_detail/sleep.html:81
+msgid "From"
+msgstr ""
+
+#: templates/device_detail/sleep.html:81
+msgid "To"
+msgstr ""
+
+#: templates/device_detail/sleep.html:81
+#, fuzzy
+msgid "Minutes"
+msgstr "minutes ago"
+
+#: templates/device_detail/sleep.html:94
+msgid "No sleep stage details for this session."
+msgstr ""
+
+#: templates/device_detail/sleep.html:98
+msgid "No sleep sessions recorded yet."
+msgstr ""
+
+#: templates/device_detail/sleep.html:106
+msgid "Sleep trend"
+msgstr ""
+
+#: templates/device_detail/vitals.html:10
+msgid "Summary"
+msgstr ""
+
+#: templates/device_detail/vitals.html:20
+msgid "Trend"
+msgstr ""
 
 #~ msgid ""
 #~ "The platform enables authorized care and"

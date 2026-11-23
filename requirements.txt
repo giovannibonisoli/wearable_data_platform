@@ -2,6 +2,7 @@
 requests==2.31.0
 psycopg2-binary==2.9.9
 qrcode[pil]==7.4.2
+tzdata==2025.2  # IANA timezones for zoneinfo on systems without them (e.g. Windows)
 
 # Google dependencies
 google-auth==2.23.0

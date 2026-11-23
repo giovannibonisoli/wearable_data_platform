@@ -11,12 +11,31 @@ Services should:
 - NOT contain SQL queries
 """
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from typing import Dict, List, Any, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from database import DeviceRepository, MetricsRepository
+from config import DISPLAY_TIMEZONE
+from database import DeviceRepository, MetricsRepository, SleepRepository
 from database.connection import SqlalchemyConnection
+
+logger = logging.getLogger(__name__)
+
+try:
+    _DISPLAY_TZ = ZoneInfo(DISPLAY_TIMEZONE)
+except (ZoneInfoNotFoundError, ValueError):
+    logger.warning(f"Unknown DISPLAY_TIMEZONE '{DISPLAY_TIMEZONE}', showing times in UTC")
+    _DISPLAY_TZ = timezone.utc
+
+# Hypnogram rows, top to bottom (lightest to deepest sleep).
+# "stages" logs use wake/rem/light/deep, "classic" logs use wake/restless/asleep.
+SLEEP_STAGE_ORDER = ("wake", "restless", "rem", "light", "asleep", "deep")
+SLEEP_DEFAULT_STAGES = {
+    "stages": ("wake", "rem", "light", "deep"),
+    "classic": ("wake", "restless", "asleep"),
+}
 
 
 class DeviceStatisticsService:
@@ -37,6 +56,7 @@ class DeviceStatisticsService:
         self.conn = connection_manager
         self.device_repo = DeviceRepository(connection_manager)
         self.metrics_repo = MetricsRepository(connection_manager)
+        self.sleep_repo = SleepRepository(connection_manager)
     
     def calculate_usage_statistics(
         self, 
@@ -322,4 +342,97 @@ class DeviceStatisticsService:
         
         print("=" * 50)
 
+    def get_last_sleep_session(self, device_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Last sleep session of a device, shaped for the hypnogram.
 
+        The most recent main sleep is used; if the device has never recorded
+        one, the most recent sleep of any kind (e.g. a nap). Sleep timestamps
+        are stored in UTC and returned in DISPLAY_TIMEZONE.
+
+        Returns None when there is no usable session, otherwise:
+            {'start', 'end': datetime, 'is_main_sleep': bool,
+             'minutes_asleep', 'minutes_awake', 'minutes_in_bed': int,
+             'rows': [stage, ...] top to bottom,
+             'stages': [{'key', 'minutes', 'percent'}] in row order,
+             'segments': [{'stage', 'start', 'end', 'minutes', 'left', 'width'}],
+             'ticks': [{'label', 'left'}]}
+        'left' and 'width' are percentages of the session duration.
+        """
+        log = (
+            self.sleep_repo.get_last_sleep_log(device_id, main_only=True)
+            or self.sleep_repo.get_last_sleep_log(device_id)
+        )
+        if not log:
+            return None
+
+        start = self._utc_to_display(log.start_time)
+        end = self._utc_to_display(log.end_time)
+        total_seconds = (end - start).total_seconds()
+        if total_seconds <= 0:
+            return None
+
+        def percent(dt: datetime) -> float:
+            return round((dt - start).total_seconds() / total_seconds * 100, 3)
+
+        segments = []
+        seconds_by_stage = defaultdict(float)
+        for level in self.sleep_repo.get_sleep_levels(log.sleep_session_id):
+            if level.level not in SLEEP_STAGE_ORDER or level.seconds <= 0:
+                continue
+            level_start = self._utc_to_display(level.time)
+            seg_start = max(level_start, start)
+            seg_end = min(level_start + timedelta(seconds=level.seconds), end)
+            if seg_end <= seg_start:
+                continue
+            seconds = (seg_end - seg_start).total_seconds()
+            seconds_by_stage[level.level] += seconds
+            segments.append({
+                "stage": level.level,
+                "start": seg_start,
+                "end": seg_end,
+                "minutes": round(seconds / 60),
+                "left": percent(seg_start),
+                "width": round(seconds / total_seconds * 100, 3),
+            })
+
+        present = set(SLEEP_DEFAULT_STAGES.get(log.type, ())) | set(seconds_by_stage)
+        rows = [stage for stage in SLEEP_STAGE_ORDER if stage in present]
+
+        staged_seconds = sum(seconds_by_stage.values())
+        stages = [
+            {
+                "key": stage,
+                "minutes": round(seconds_by_stage[stage] / 60),
+                "percent": round(seconds_by_stage[stage] / staged_seconds * 100) if staged_seconds else 0,
+            }
+            for stage in rows
+        ]
+
+        # Axis ticks on full hours (every 2 hours for sessions longer than 10h)
+        step = timedelta(hours=1 if total_seconds <= 10 * 3600 else 2)
+        tick = start.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        ticks = []
+        while tick < end:
+            ticks.append({"label": tick.strftime("%H:%M"), "left": percent(tick)})
+            tick += step
+
+        return {
+            "start": start,
+            "end": end,
+            "is_main_sleep": log.is_main_sleep,
+            "minutes_asleep": log.minutes_asleep,
+            "minutes_awake": log.minutes_awake,
+            "minutes_in_bed": log.minutes_in_the_bed,
+            "rows": rows,
+            "stages": stages,
+            "segments": segments,
+            "ticks": ticks,
+        }
+
+    @staticmethod
+    def _utc_to_display(dt: datetime) -> datetime:
+        """Naive UTC (or aware) datetime -> naive wall-clock time in DISPLAY_TIMEZONE."""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(_DISPLAY_TZ).replace(tzinfo=None)

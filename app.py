@@ -594,6 +594,10 @@ def _render_device_detail(device_id, section):
             context['coverage_days'] = days
             context['coverage_range_options'] = HEATMAP_RANGE_DAYS
 
+        elif section == 'sleep':
+            stats_service = DeviceStatisticsService(conn)
+            context['last_sleep'] = stats_service.get_last_sleep_session(device_id)
+
     return render_template(f'device_detail/{section}.html', device=device, active_section=section, **context)
 
 
