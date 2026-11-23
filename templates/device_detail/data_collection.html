@@ -1,0 +1,51 @@
+{% extends "device_detail/_layout.html" %}
+
+{% block section_content %}
+<div class="row g-4">
+
+    <!-- Device card: identity, last sync and last update per data stream -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-wrap gap-3">
+                <i class="bi bi-smartwatch fs-1" style="color: var(--primary);"></i>
+                <div class="flex-grow-1">
+                    <h4 class="mb-1" style="color: var(--primary); font-weight: 600;">
+                        {{ device.device_type or _('Unknown device') }}
+                    </h4>
+                    <div class="text-muted small mb-3 text-break">{{ device.email_address }}</div>
+                    <div class="small">
+                        <i class="bi bi-arrow-repeat me-1"></i>{{ _('Last sync') }}:
+                        {% if device.last_synch %}{{ device.last_synch.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">{{ _('Last data updates') }}: {{ _('Coming soon') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection alerts -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ _('Alerts') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hourly coverage heatmap -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-grid-3x3 me-2"></i>{{ _('Data collection heatmap') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

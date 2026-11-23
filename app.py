@@ -11,7 +11,7 @@ from config import (
 
 from logging.handlers import RotatingFileHandler
 from functools import wraps
-from flask import Flask, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
+from flask import Flask, abort, logging, render_template, request, redirect, session, url_for, flash, g, jsonify, Response
 
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_login import LoginManager, UserMixin
@@ -565,6 +565,40 @@ def device_list():
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
 
+
+
+DEVICE_DETAIL_SECTIONS = ('data_collection', 'vitals', 'sleep')
+
+
+def _render_device_detail(device_id, section):
+    """Load a device owned by the current staff user's care provider and render one detail section."""
+    with ConnectionManager() as conn:
+        staff_user_service = StaffUserService(conn)
+        device_service = DeviceService(conn)
+
+        user_info = staff_user_service.get_user_info(int(current_user.id))
+        device = device_service.get_device_for_care_provider(device_id, user_info['care_provider_id'])
+
+    if device is None:
+        abort(404)
+
+    return render_template(f'device_detail/{section}.html', device=device, active_section=section)
+
+
+@app.route('/devices/<int:device_id>')
+@login_required
+@staff_user_required
+def device_detail(device_id):
+    return redirect(url_for('device_detail_section', device_id=device_id, section=DEVICE_DETAIL_SECTIONS[0]))
+
+
+@app.route('/devices/<int:device_id>/<section>')
+@login_required
+@staff_user_required
+def device_detail_section(device_id, section):
+    if section not in DEVICE_DETAIL_SECTIONS:
+        abort(404)
+    return _render_device_detail(device_id, section)
 
 
 @app.route('/add_device', methods=['POST'])

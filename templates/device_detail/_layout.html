@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Device Details') }}{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container py-4">
+
+        <!-- Header -->
+        <div class="mb-3 d-flex flex-wrap justify-content-between gap-2 small">
+            <a href="{{ url_for('device_list') }}" class="text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>{{ _('Back to devices') }}
+            </a>
+            <span class="text-muted text-break">
+                <i class="bi bi-smartwatch me-1"></i>{{ device.email_address }}
+            </span>
+        </div>
+
+        <!-- Section navigation -->
+        {% set sections = [
+            ('data_collection', 'bi-cloud-check', _('Data collection')),
+            ('vitals', 'bi-heart-pulse', _('Vital signs')),
+            ('sleep', 'bi-moon-stars', _('Sleep')),
+        ] %}
+        <ul class="nav nav-tabs mb-4">
+            {% for key, icon, label in sections %}
+            <li class="nav-item">
+                <a class="nav-link {% if active_section == key %}active{% endif %}"
+                   {% if active_section == key %}aria-current="page"{% endif %}
+                   href="{{ url_for('device_detail_section', device_id=device.id, section=key) }}">
+                    <i class="bi {{ icon }} me-2"></i>{{ label }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% if device.auth_status != 'AUTHORIZED' %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ _('This device is not currently authorized: data may be missing or out of date.') }}
+        </div>
+        {% endif %}
+
+        {% block section_content %}{% endblock %}
+
+    </div>
+</div>
+{% endblock %}

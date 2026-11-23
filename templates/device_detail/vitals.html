@@ -1,0 +1,41 @@
+{% extends "device_detail/_layout.html" %}
+
+{% block section_content %}
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <!-- Summary of the selected metric -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-activity me-2"></i>{{ _('Summary') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+
+        <!-- Time series with date range and Day/Week/Month zoom -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-graph-up me-2"></i>{{ _('Trend') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anomaly alerts -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ _('Alerts') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

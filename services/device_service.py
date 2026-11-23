@@ -187,6 +187,20 @@ class DeviceService:
 
         return (AuthGrantResult.SUCCESS, email_address) if all(results) else (AuthGrantResult.ERROR_STATE_UPDATE, email_address)
 
+    def get_device_for_care_provider(self, device_id: int, care_provider_id: int) -> Optional[dict]:
+        """Return basic info for a device, or None if it does not belong to the care provider."""
+        device = self.device_repo.get_by_id(device_id)
+        if device is None or device.care_provider_id != care_provider_id:
+            return None
+
+        return {
+            "id": device.id,
+            "email_address": device.email_address,
+            "device_type": device.device_type or "",
+            "auth_status": device.authorization_status.value,
+            "last_synch": device.last_synch,
+        }
+
     def deactivate_device(self, device_id: int) -> None:
         self.device_repo.update_status(device_id, "NON_ACTIVE")
 

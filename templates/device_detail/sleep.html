@@ -1,0 +1,41 @@
+{% extends "device_detail/_layout.html" %}
+
+{% block section_content %}
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <!-- Last sleep session: duration and stage timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-moon me-2"></i>{{ _('Last sleep session') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+
+        <!-- Sleep trend over days/weeks -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-line me-2"></i>{{ _('Sleep trend') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sleep score and alerts -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ _('Alerts') }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
