@@ -569,6 +569,7 @@ def device_list():
 
 DEVICE_DETAIL_SECTIONS = ('data_collection', 'vitals', 'sleep')
 HEATMAP_RANGE_DAYS = (7, 14, 30)
+SLEEP_TREND_RANGE_DAYS = (7, 14, 30)
 
 
 def _render_device_detail(device_id, section):
@@ -595,8 +596,14 @@ def _render_device_detail(device_id, section):
             context['coverage_range_options'] = HEATMAP_RANGE_DAYS
 
         elif section == 'sleep':
+            days = request.args.get('days', type=int)
+            if days not in SLEEP_TREND_RANGE_DAYS:
+                days = SLEEP_TREND_RANGE_DAYS[0]
             stats_service = DeviceStatisticsService(conn)
             context['last_sleep'] = stats_service.get_last_sleep_session(device_id)
+            context['sleep_trend'] = stats_service.get_sleep_trend(device_id, days)
+            context['trend_days'] = days
+            context['trend_range_options'] = SLEEP_TREND_RANGE_DAYS
 
     return render_template(f'device_detail/{section}.html', device=device, active_section=section, **context)
 

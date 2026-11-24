@@ -430,6 +430,87 @@ class DeviceStatisticsService:
             "ticks": ticks,
         }
 
+    def get_sleep_trend(
+        self,
+        device_id: int,
+        num_days: int,
+        now: Optional[datetime] = None
+    ) -> Dict[str, Any]:
+        """
+        Time asleep per day over the last `num_days` days (today included).
+
+        Each sleep is assigned to the day it ENDS on (in DISPLAY_TIMEZONE), so
+        the night between Monday and Tuesday counts for Tuesday. Naps ending the
+        same day are added to the total and reported separately. Logs sharing
+        the same start time are counted once.
+
+        Returns:
+            {'days': [{'date', 'minutes', 'main_minutes', 'nap_minutes',
+                       'bed_time', 'wake_time', 'height'}],   # oldest first
+             'axis_hours': [0, 2, ...],    # y gridlines, top value = 100% height
+             'average_minutes': int | None,  # over days with data
+             'days_with_data': int}
+        'height' is a percentage of the y-axis maximum; bed/wake times refer
+        to the main sleep and are None if there is none.
+        """
+        today = (now or self._utc_to_display(datetime.now(timezone.utc))).date()
+        first_day = today - timedelta(days=num_days - 1)
+
+        # Logs are filtered on start time (UTC): reach back one extra day for
+        # sleeps that started the evening before the first day.
+        query_start = datetime.combine(first_day - timedelta(days=1), datetime.min.time())
+        logs = self.sleep_repo.get_sleep_logs(device_id, start_date=query_start)
+
+        per_day = defaultdict(lambda: {"main": [], "naps": []})
+        seen_starts = set()
+        for log in logs:
+            if log.start_time in seen_starts:
+                continue
+            seen_starts.add(log.start_time)
+            start = self._utc_to_display(log.start_time)
+            end = self._utc_to_display(log.end_time)
+            if not (first_day <= end.date() <= today):
+                continue
+            per_day[end.date()]["main" if log.is_main_sleep else "naps"].append((start, end, log.minutes_asleep or 0))
+
+        days = []
+        for offset in range(num_days):
+            day = first_day + timedelta(days=offset)
+            entry = per_day.get(day)
+            if not entry:
+                days.append({"date": day, "minutes": None, "main_minutes": 0, "nap_minutes": 0,
+                             "bed_time": None, "wake_time": None, "height": 0})
+                continue
+            main_minutes = sum(m for _, _, m in entry["main"])
+            nap_minutes = sum(m for _, _, m in entry["naps"])
+            main = max(entry["main"], key=lambda s: s[2]) if entry["main"] else None
+            days.append({
+                "date": day,
+                "minutes": main_minutes + nap_minutes,
+                "main_minutes": main_minutes,
+                "nap_minutes": nap_minutes,
+                "bed_time": main[0] if main else None,
+                "wake_time": main[1] if main else None,
+                "height": 0,
+            })
+
+        # Y axis in whole hours, at least 0-10h; gridline step grows with the
+        # scale so an outlier never produces more than ~6 gridlines.
+        with_data = [d["minutes"] for d in days if d["minutes"] is not None]
+        max_hours = -(-max(with_data, default=0) // 60)
+        step = 2 if max_hours <= 12 else (4 if max_hours <= 24 else 6)
+        top_hours = max(10, -(-max_hours // step) * step)
+        for d in days:
+            if d["minutes"]:
+                d["height"] = round(d["minutes"] / (top_hours * 60) * 100, 2)
+
+        return {
+            "days": days,
+            "axis_hours": list(range(0, top_hours + 1, step)),
+            "average_minutes": round(sum(with_data) / len(with_data)) if with_data else None,
+            "days_with_data": len(with_data),
+        }
+
     @staticmethod
     def _utc_to_display(dt: datetime) -> datetime:
         """Naive UTC (or aware) datetime -> naive wall-clock time in DISPLAY_TIMEZONE."""

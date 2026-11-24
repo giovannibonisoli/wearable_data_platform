@@ -43,7 +43,7 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Time range') }}">
                     {% for n in coverage_range_options %}
                     <a href="{{ url_for('device_detail_section', device_id=device.id, section='data_collection', days=n) }}"
-                       class="btn btn-outline-primary {% if n == coverage_days %}active{% endif %}"
+                       class="btn btn-range {% if n == coverage_days %}active{% endif %}"
                        {% if n == coverage_days %}aria-current="true"{% endif %}>
                         {{ _('%(n)s days', n=n) }}
                     </a>

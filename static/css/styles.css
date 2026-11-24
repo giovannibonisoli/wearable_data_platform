@@ -162,6 +162,34 @@ body {
     color: var(--white);
 }
 
+/* Range toggles (7 / 14 / 30 days) sitting on the blue card header */
+.btn-range {
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: transparent;
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+}
+
+.btn-range:hover,
+.btn-range:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: var(--white);
+    color: var(--white);
+}
+
+.btn-range:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+}
+
+.btn-range.active,
+.btn-range.active:hover {
+    background: var(--white);
+    border-color: var(--white);
+    color: var(--primary);
+    font-weight: 600;
+}
+
 /* Tables */
 .table {
     background: var(--white);

@@ -84,10 +84,6 @@
                     </tbody>
                 </table>
 
-                <div class="chart-tooltip" id="hypnogramTooltip" role="presentation" hidden>
-                    <strong class="d-block"></strong>
-                    <span class="small"></span>
-                </div>
                 {% else %}
                 <p class="text-muted small mb-0">{{ _('No sleep stage details for this session.') }}</p>
                 {% endif %}
@@ -100,13 +96,91 @@
 
         <!-- Sleep trend over days/weeks -->
         <div class="card">
-            <div class="card-header">
-                <i class="bi bi-bar-chart-line me-2"></i>{{ _('Sleep trend') }}
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sleep trend') }}</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Time range') }}">
+                    {% for n in trend_range_options %}
+                    <a href="{{ url_for('device_detail_section', device_id=device.id, section='sleep', days=n) }}"
+                       class="btn btn-range {% if n == trend_days %}active{% endif %}"
+                       {% if n == trend_days %}aria-current="true"{% endif %}>
+                        {{ _('%(n)s days', n=n) }}
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-0">{{ _('Coming soon') }}</p>
+                {% set trend = sleep_trend %}
+                {% if trend.days_with_data %}
+
+                <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+                    <span class="sleep-figure-label">{{ _('Average time asleep') }}</span>
+                    <span class="sleep-figure-value">{{ hm(trend.average_minutes) }}</span>
+                    <span class="small text-muted">
+                        {{ _('%(n)s of %(total)s days with data', n=trend.days_with_data, total=trend.days|length) }}
+                    </span>
+                </div>
+
+                {% set n_days = trend.days|length %}
+                {% set label_step = 1 if n_days <= 7 else (2 if n_days <= 14 else 5) %}
+                {% set top_hours = trend.axis_hours[-1] %}
+
+                <div class="trend-chart" id="sleepTrend" aria-hidden="true">
+                    <div class="trend-plot">
+                        {% for h in trend.axis_hours %}
+                        <div class="trend-grid" style="bottom: {{ (h / top_hours * 100)|round(2) }}%">
+                            <span class="trend-ylabel">{{ h }}h</span>
+                        </div>
+                        {% endfor %}
+                        <div class="trend-bars">
+                            {% for d in trend.days %}
+                            {% set day_label = d.date|dateformat('EEE d MMM') %}
+                            <div class="trend-col">
+                                {% if d.minutes is none %}
+                                <span class="trend-nodata" data-v="{{ _('No data') }}" data-t="{{ day_label }}"></span>
+                                {% else %}
+                                <span class="trend-bar" style="height: {{ d.height }}%"
+                                      data-v="{{ hm(d.minutes) }} {{ _('asleep') }}"
+                                      data-t="{{ day_label }}{% if d.bed_time %} · {{ d.bed_time.strftime('%H:%M') }} → {{ d.wake_time.strftime('%H:%M') }}{% endif %}{% if d.nap_minutes %} · {{ _('naps') }} {{ hm(d.nap_minutes) }}{% endif %}"></span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="trend-xaxis">
+                        {% for d in trend.days %}
+                        <span>{% if (n_days - 1 - loop.index0) % label_step == 0 %}{{ d.date|dateformat('d MMM') }}{% endif %}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <table class="visually-hidden">
+                    <caption>{{ _('Time asleep per day') }}</caption>
+                    <thead><tr><th scope="col">{{ _('Day') }}</th><th scope="col">{{ _('Time asleep') }}</th><th scope="col">{{ _('Naps') }}</th></tr></thead>
+                    <tbody>
+                        {% for d in trend.days %}
+                        <tr>
+                            <td>{{ d.date|dateformat('EEE d MMM') }}</td>
+                            <td>{% if d.minutes is none %}{{ _('No data') }}{% else %}{{ hm(d.minutes) }}{% endif %}</td>
+                            <td>{% if d.nap_minutes %}{{ hm(d.nap_minutes) }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <p class="small text-muted mt-3 mb-0">
+                    {{ _('Each bar is the sleep that ended on that day (the night before plus any naps).') }}
+                </p>
+
+                {% else %}
+                <p class="text-muted mb-0">{{ _('No sleep recorded in this period.') }}</p>
+                {% endif %}
             </div>
         </div>
+    </div>
+
+    <div class="chart-tooltip" id="sleepTooltip" role="presentation" hidden>
+        <strong class="d-block"></strong>
+        <span class="small"></span>
     </div>
 
     <!-- Sleep score and alerts -->
@@ -189,6 +263,75 @@
     }
     .sleep-legend-name { color: var(--text); margin-right: 0.25rem; }
 
+    .trend-chart { --ylabel-w: 2.25rem; }
+    .trend-plot {
+        position: relative;
+        height: 200px;
+        margin-left: var(--ylabel-w);
+        border-bottom: 1px solid #c9c8c1;
+    }
+    .trend-grid {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #eceef1;
+    }
+    .trend-ylabel {
+        position: absolute;
+        right: 100%;
+        transform: translateY(-50%);
+        padding-right: 0.4rem;
+        font-size: 0.7rem;
+        color: var(--text-light);
+        white-space: nowrap;
+    }
+    .trend-bars {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+    }
+    .trend-col {
+        flex: 1 1 0;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .trend-bar,
+    .trend-nodata {
+        width: 100%;
+        max-width: 36px;
+        cursor: default;
+    }
+    .trend-bar {
+        background: #2a78d6;
+        border-radius: 4px 4px 0 0;
+        min-height: 2px;
+    }
+    .trend-bar:hover { outline: 2px solid var(--dark); outline-offset: 0; }
+    .trend-nodata {
+        height: 100%;
+        background: repeating-linear-gradient(135deg, transparent 0 4px, #eceef1 4px 6px);
+        border-radius: 4px 4px 0 0;
+    }
+    .trend-xaxis {
+        display: flex;
+        gap: 2px;
+        margin-left: var(--ylabel-w);
+        padding-top: 0.3rem;
+        font-size: 0.7rem;
+        color: var(--text-light);
+    }
+    .trend-xaxis span {
+        flex: 1 1 0;
+        text-align: center;
+        white-space: nowrap;
+        overflow: visible;
+        min-width: 0;
+    }
+
     .chart-tooltip {
         position: fixed;
         z-index: 1080;
@@ -208,27 +351,34 @@
 {% block extra_js %}
 <script>
     (function () {
-        const chart = document.getElementById('hypnogram');
-        const tip = document.getElementById('hypnogramTooltip');
-        if (!chart || !tip) return;
+        // One shared tooltip; every chart mark carries data-v (value) and data-t (label).
+        const tip = document.getElementById('sleepTooltip');
+        if (!tip) return;
         const value = tip.querySelector('strong');
         const label = tip.querySelector('span');
 
-        chart.addEventListener('pointermove', function (e) {
-            const seg = e.target.closest('.hyp-seg');
-            if (!seg) { tip.hidden = true; return; }
-            value.textContent = seg.dataset.v;
-            label.textContent = seg.dataset.t;
-            tip.hidden = false;
-            const pad = 12;
-            let x = e.clientX + pad;
-            let y = e.clientY + pad;
-            if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - pad;
-            if (y + tip.offsetHeight > window.innerHeight) y = e.clientY - tip.offsetHeight - pad;
-            tip.style.left = x + 'px';
-            tip.style.top = y + 'px';
-        });
-        chart.addEventListener('pointerleave', function () { tip.hidden = true; });
+        function bind(chartId, markSelector) {
+            const chart = document.getElementById(chartId);
+            if (!chart) return;
+            chart.addEventListener('pointermove', function (e) {
+                const mark = e.target.closest(markSelector);
+                if (!mark) { tip.hidden = true; return; }
+                value.textContent = mark.dataset.v;
+                label.textContent = mark.dataset.t;
+                tip.hidden = false;
+                const pad = 12;
+                let x = e.clientX + pad;
+                let y = e.clientY + pad;
+                if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - pad;
+                if (y + tip.offsetHeight > window.innerHeight) y = e.clientY - tip.offsetHeight - pad;
+                tip.style.left = x + 'px';
+                tip.style.top = y + 'px';
+            });
+            chart.addEventListener('pointerleave', function () { tip.hidden = true; });
+        }
+
+        bind('hypnogram', '.hyp-seg');
+        bind('sleepTrend', '.trend-col > span');
     })();
 </script>
 {% endblock %}
