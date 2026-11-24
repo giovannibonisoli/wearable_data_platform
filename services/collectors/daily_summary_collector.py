@@ -120,13 +120,13 @@ class DailySummaryCollectorService(BaseCollector):
             if temp_data:
                 data["temperature"] = temp_data.get("value", 0)
 
-            # Skip empty/invalid days
-            if (
-                data["steps"] == 0
-                and data["heart_rate"] == 0
-                and data["distance"] == 0
-                and data["sedentary_minutes"] == 1440
+            # Skip empty days: every value is 0 or null. A full day of sedentary
+            # minutes (1440) with nothing else means the device wasn't worn.
+            if all(
+                not value or (key == "sedentary_minutes" and value == 1440)
+                for key, value in data.items()
             ):
+                logger.info(f"No daily summary data for device {device_id} ({email_address}) on {date_str}; skipped")
                 return True, False
 
             self.metrics_repo.insert_daily_summary(
