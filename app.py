@@ -22,6 +22,7 @@ from database import ConnectionManager
 from extensions import db, migrate
 from services import DeviceService, DeviceStatisticsService, StaffUserService, CareProviderService
 from services.audit_service import AuditService
+from services.device_statistics_service import VITAL_METRICS, VITAL_PERIOD_DAYS
 from services.result_enums import (
     ChangePasswordResult,
     AddDeviceResult,
@@ -594,6 +595,30 @@ def _render_device_detail(device_id, section):
             context['coverage'] = stats_service.get_hourly_coverage(device_id, days)
             context['coverage_days'] = days
             context['coverage_range_options'] = HEATMAP_RANGE_DAYS
+
+        elif section == 'vitals':
+            metric = request.args.get('metric')
+            if metric not in VITAL_METRICS:
+                metric = VITAL_METRICS[0]
+            period = request.args.get('period')
+            if period not in VITAL_PERIOD_DAYS:
+                period = 'week'
+
+            today = DeviceStatisticsService.today()
+            try:
+                end_date = datetime.strptime(request.args.get('end', ''), '%Y-%m-%d').date()
+            except ValueError:
+                end_date = today
+            end_date = min(end_date, today)
+
+            step = timedelta(days=VITAL_PERIOD_DAYS[period])
+            stats_service = DeviceStatisticsService(conn)
+            context['series'] = stats_service.get_vital_series(device_id, metric, period, end_date)
+            context['vital_metrics'] = VITAL_METRICS
+            context['vital_periods'] = tuple(VITAL_PERIOD_DAYS)
+            context['prev_end'] = end_date - step
+            context['next_end'] = min(end_date + step, today) if end_date < today else None
+            context['today'] = today
 
         elif section == 'sleep':
             days = request.args.get('days', type=int)

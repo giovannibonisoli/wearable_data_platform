@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
 from database.connection import SqlalchemyConnection
 from database.orm_models import (
@@ -156,6 +156,23 @@ class SleepRepository:
                 self.insert_sleep_short_level(session_id, short_data)
 
         return session_id
+
+    def get_spo2_samples(
+        self, device_id: int, start_time: datetime, end_time: datetime
+    ) -> List[Tuple[datetime, float]]:
+        """SpO2 samples of a device within [start_time, end_time) (UTC), oldest first."""
+        rows = (
+            self.db.session.query(SpO2IntradayModel.time, SpO2IntradayModel.spo2_value)
+            .join(SleepSessionModel, SpO2IntradayModel.sleep_session_id == SleepSessionModel.id)
+            .filter(
+                SleepSessionModel.device_id == device_id,
+                SpO2IntradayModel.time >= start_time,
+                SpO2IntradayModel.time < end_time,
+            )
+            .order_by(SpO2IntradayModel.time.asc())
+            .all()
+        )
+        return [(r[0], float(r[1])) for r in rows]
 
     def insert_spo2(self, sleep_session_id: int, data: Dict[str, Any]) -> bool:
         spo2 = SpO2IntradayModel(

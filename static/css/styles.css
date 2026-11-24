@@ -163,11 +163,13 @@ body {
 }
 
 /* Range toggles (7 / 14 / 30 days) sitting on the blue card header */
-.btn-range {
+/* .btn.btn-range: wins over the mobile `.btn` padding rule further down */
+.btn.btn-range {
     border: 1px solid rgba(255, 255, 255, 0.85);
     background: transparent;
     color: var(--white);
     padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
 }
 
 .btn-range:hover,

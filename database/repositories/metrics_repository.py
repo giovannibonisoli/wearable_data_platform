@@ -1,5 +1,6 @@
 from typing import Optional, List, Tuple
 from datetime import datetime, date
+from sqlalchemy import func
 from database.connection import SqlalchemyConnection
 from database.orm_models import DailySummaryModel, IntradayMetricModel
 
@@ -106,6 +107,52 @@ class MetricsRepository:
         self.db.session.commit()
         print(f"Intraday {data_type} data for device {device_id} successfully {'updated' if is_update else 'inserted'}.")
         return True
+
+    def get_intraday_buckets(
+        self,
+        device_id: int,
+        metric_type: str,
+        start_time: datetime,
+        end_time: datetime,
+        bucket: str,
+    ) -> List[Tuple[datetime, float, float, float, float, int]]:
+        """
+        Aggregate one intraday metric into time buckets within [start_time, end_time).
+
+        `bucket` is a date_trunc unit: 'minute', 'hour' or 'day'. Only non-null
+        values are aggregated, so buckets with no data are simply absent.
+
+        Returns (bucket_start, avg, min, max, sum, count) tuples, oldest first.
+        """
+        if metric_type not in _INTRADAY_METRIC_COLUMNS or bucket not in ("minute", "hour", "day"):
+            return []
+
+        column = getattr(IntradayMetricModel, metric_type)
+        bucket_start = func.date_trunc(bucket, IntradayMetricModel.time).label("bucket_start")
+
+        rows = (
+            self.db.session.query(
+                bucket_start,
+                func.avg(column),
+                func.min(column),
+                func.max(column),
+                func.sum(column),
+                func.count(column),
+            )
+            .filter(
+                IntradayMetricModel.device_id == device_id,
+                IntradayMetricModel.time >= start_time,
+                IntradayMetricModel.time < end_time,
+                column.isnot(None),
+            )
+            .group_by(bucket_start)
+            .order_by(bucket_start)
+            .all()
+        )
+        return [
+            (r[0], float(r[1]), float(r[2]), float(r[3]), float(r[4]), int(r[5]))
+            for r in rows
+        ]
 
     def get_intraday_timestamps_by_range(
         self,
