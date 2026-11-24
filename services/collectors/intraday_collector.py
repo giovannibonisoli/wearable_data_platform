@@ -36,22 +36,23 @@ class IntradayCollectorService(BaseCollector):
     ) -> tuple[bool, bool]:
         """Fetch and store intraday data for one date. Returns (success, rate_limited)."""
         metrics_config = [
-            # (internal data type, Google Health dataType, value field, kind)
+            # (internal data type, Google Health dataType, value field, scale, kind)
+            # scale: API unit -> stored unit (distance/elevation: mm -> m)
             # kind: "sample"    -> filtered on the sample's civil time
             #       "interval"  -> filtered on the interval's civil start time
             #       "reconcile" -> reconciled endpoint (no `list` action), interval type
-            ("heart_rate", "heart-rate", "beatsPerMinute", "sample"),
-            ("steps", "steps", "count", "interval"),
-            ("calories", "active-energy-burned", "kilocalories", "interval"),
-            ("distance", "distance", "meters", "interval"),
-            ("floors", "floors", "count", "reconcile"),
-            ("elevation", "altitude", "meters", "interval"),
+            ("heart_rate", "heart-rate", "beatsPerMinute", 1, "sample"),
+            ("steps", "steps", "count", 1, "interval"),
+            ("calories", "active-energy-burned", "kcal", 1, "interval"),
+            ("distance", "distance", "millimeters", 0.001, "interval"),
+            ("floors", "floors", "count", 1, "reconcile"),
+            ("elevation", "altitude", "gainMillimeters", 0.001, "interval"),
         ]
 
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
         data_points: dict = {}
-        for data_type, gtype, value_field, kind in metrics_config:
+        for data_type, gtype, value_field, scale, kind in metrics_config:
             resp, rate_limited = client._list_data_points(
                 gtype,
                 date_str,
@@ -64,7 +65,7 @@ class IntradayCollectorService(BaseCollector):
                 logger.warning(f"Rate limit hit for {device.email_address} on {data_type}")
                 return False, True
 
-            dataset = client._to_intraday_dataset(resp, gtype, value_field)
+            dataset = client._to_intraday_dataset(resp, gtype, value_field, scale)
             for point in dataset:
                 timestamp = point.get("datetime")
                 value = point.get("value")

@@ -560,20 +560,20 @@ class GoogleHealthClient:
             val = self._extract_rollup_int(resp, "steps", "countSum")
             data["summary"]["steps"] = val
 
-        # active energy burned (caloriesOut)
+        # active energy burned (fallback for caloriesOut if total calories is unavailable)
         resp, limited = self._daily_rollup("active-energy-burned", date_str, optional=True)
         if limited:
             return None, True
         if resp:
-            val = self._extract_rollup_float(resp, "active-energy-burned", "kilocaloriesSum")
+            val = self._extract_rollup_float(resp, "active-energy-burned", "kcalSum")
             data["summary"]["caloriesOut"] = val
 
-        # total calories
+        # total calories (overrides active energy: caloriesOut is the total burn)
         resp, limited = self._daily_rollup("total-calories", date_str, optional=True)
         if limited:
             return None, True
         if resp:
-            val = self._extract_rollup_float(resp, "total-calories", "kilocaloriesSum")
+            val = self._extract_rollup_float(resp, "total-calories", "kcalSum")
             data["summary"]["caloriesOut"] = val
 
         # floors
@@ -589,7 +589,8 @@ class GoogleHealthClient:
         if limited:
             return None, True
         if resp:
-            val = self._extract_rollup_float(resp, "altitude", "metersSum")
+            # API reports millimeters; stored in meters.
+            val = self._extract_rollup_float(resp, "altitude", "gainMillimetersSum") / 1000
             data["summary"]["elevation"] = val
 
         # distance
@@ -597,7 +598,8 @@ class GoogleHealthClient:
         if limited:
             return None, True
         if resp:
-            val = self._extract_rollup_float(resp, "distance", "metersSum")
+            # API reports millimeters; daily summaries store kilometers.
+            val = self._extract_rollup_float(resp, "distance", "millimetersSum") / 1_000_000
             data["summary"]["distances"] = [{"distance": val}]
 
         # activity level → active / sedentary minutes
@@ -634,21 +636,22 @@ class GoogleHealthClient:
     def _translate_intraday_metric(
         self, metric: str, date_str: str, optional: bool
     ) -> tuple[dict | None, bool]:
+        # (Google data type, value field, scale to our unit)
         dt_map = {
-            "steps": ("steps", "count"),
-            "calories": ("active-energy-burned", "kilocalories"),
-            "distance": ("distance", "meters"),
-            "floors": ("floors", "count"),
-            "elevation": ("altitude", "meters"),
+            "steps": ("steps", "count", 1),
+            "calories": ("active-energy-burned", "kcal", 1),
+            "distance": ("distance", "millimeters", 0.001),     # -> meters
+            "floors": ("floors", "count", 1),
+            "elevation": ("altitude", "gainMillimeters", 0.001),  # -> meters
         }
-        gtype, field = dt_map.get(metric, (metric, "floatVal"))
+        gtype, field, scale = dt_map.get(metric, (metric, "floatVal", 1))
         # Google does not support the `list` action for all data types
         # (e.g. `floors` only supports reconcile / rollup / dailyRollUp).
         action = "reconcile" if gtype == "floors" else "list"
         resp, limited = self._list_data_points(gtype, date_str, optional=True, action=action)
         if limited:
             return None, True
-        dataset = self._to_intraday_dataset(resp, gtype, field)
+        dataset = self._to_intraday_dataset(resp, gtype, field, scale)
         key = f"activities-{metric}-intraday"
         return {key: {"dataset": dataset}}, False
 
@@ -851,12 +854,24 @@ class GoogleHealthClient:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _data_type_value(dp: dict, data_type: str):
+        """Value of the data-type key in a data point, whatever its spelling.
+
+        The API uses camelCase union keys (``activeEnergyBurned``) while we
+        name data types in kebab-case (``active-energy-burned``).
+        """
+        target = data_type.replace("-", "").replace("_", "").lower()
+        for key, val in dp.items():
+            if key.replace("_", "").lower() == target:
+                return val
+        return None
+
+    @staticmethod
     def _extract_rollup_int(resp: dict, data_type: str, field: str) -> int:
         dps = resp.get("rollupDataPoints", [])
         if not dps:
             return 0
-        dp = dps[0]
-        obj = dp.get(data_type.replace("-", "_"), dp.get(data_type, {}))
+        obj = GoogleHealthClient._data_type_value(dps[0], data_type)
         if isinstance(obj, dict):
             return int(obj.get(field, 0))
         return int(obj or 0)
@@ -866,9 +881,7 @@ class GoogleHealthClient:
         dps = resp.get("rollupDataPoints", [])
         if not dps:
             return 0.0
-        dp = dps[0]
-        key = data_type.replace("-", "_")
-        obj = dp.get(key, dp.get(data_type, {}))
+        obj = GoogleHealthClient._data_type_value(dps[0], data_type)
         if isinstance(obj, dict):
             return float(obj.get(field, 0))
         return float(obj or 0)
@@ -886,17 +899,22 @@ class GoogleHealthClient:
 
     @staticmethod
     def _to_intraday_dataset(
-        resp: dict | None, data_type: str, value_field: str
+        resp: dict | None, data_type: str, value_field: str, scale: float = 1
     ) -> list[dict]:
         """Convert Google Health API list response → intraday dataset.
 
         Google data points nest the measurement under a camelCase data-type
         key (e.g. ``steps``, ``heartRate``) which wraps either an ``interval``
         (interval types) or a ``sampleTime`` (sample types).
+
+        ``scale`` converts the API unit to ours (e.g. 0.001 for mm -> m).
+        Points missing ``value_field`` are skipped rather than stored as 0, so
+        a wrong field name shows up as missing data instead of fake zeros.
         """
         dataset = []
         if not resp:
             return dataset
+        missing_keys = None
         for dp in resp.get("dataPoints", []):
             obj = None
             target = data_type.replace("-", "").lower()
@@ -911,17 +929,26 @@ class GoogleHealthClient:
             if dt is None:
                 continue
 
-            val = obj.get(value_field)
+            raw = obj.get(value_field)
+            if raw is None:
+                if missing_keys is None:
+                    missing_keys = sorted(obj.keys())
+                continue
             try:
-                val = float(str(val)) if val is not None else 0.0
+                val = round(float(str(raw)) * scale, 6)
             except (TypeError, ValueError):
-                val = 0.0
+                continue
 
             dataset.append({
                 "datetime": dt,
                 "time": dt.strftime("%H:%M:%S"),
                 "value": int(val) if val.is_integer() else val,
             })
+        if missing_keys is not None:
+            logger.warning(
+                "Some %s data points have no '%s' field and were skipped (fields present: %s)",
+                data_type, value_field, missing_keys,
+            )
         return dataset
 
     @staticmethod

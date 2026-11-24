@@ -22,16 +22,17 @@ from database import ConnectionManager, DeviceRepository
 from services.integrations.oauth_provider import create_api_client
 
 
-# (label, google dataType, valueField, translated key, kind)
+# (label, google dataType, valueField, scale, kind)
+# scale: API unit -> stored unit (distance/elevation: mm -> m)
 # kind: "interval" -> filtered via interval civil start time
 #       "sample"  -> filtered via sample civil time
 INTRADAY_METRICS = [
-    ("heart_rate", "heart-rate", "beatsPerMinute", "activities-heart-intraday", "sample"),
-    ("steps", "steps", "count", "activities-steps-intraday", "interval"),
-    # ("calories", "active-energy-burned", "kilocalories", "activities-calories-intraday", "interval"),
-    # ("distance", "distance", "meters", "activities-distance-intraday", "interval"),
-    # ("floors", "floors", "count", "activities-floors-intraday", "interval"),
-    # ("elevation", "altitude", "meters", "activities-elevation-intraday", "interval"),
+    ("heart_rate", "heart-rate", "beatsPerMinute", 1, "sample"),
+    ("steps", "steps", "count", 1, "interval"),
+    ("calories", "active-energy-burned", "kcal", 1, "interval"),
+    ("distance", "distance", "millimeters", 0.001, "interval"),
+    # ("floors", "floors", "count", 1, "interval"),
+    # ("elevation", "altitude", "gainMillimeters", 0.001, "interval"),
 ]
 
 
@@ -63,7 +64,7 @@ def main() -> None:
         device_info = client.get_device_info()
         print(f"Device info: {device_info}")
 
-        for data_type, gtype, value_field, key, kind in INTRADAY_METRICS:
+        for data_type, gtype, value_field, scale, kind in INTRADAY_METRICS:
             url = f"{HEALTH_API_BASE}/users/me/dataTypes/{gtype}/dataPoints"
             try:
                 action = "reconcile" if gtype == "floors" else "list"
@@ -71,7 +72,7 @@ def main() -> None:
                     gtype, date_str, optional=False, sample=(kind == "sample"), action=action
                 )
 
-                dataset = client._to_intraday_dataset(resp, gtype, value_field)
+                dataset = client._to_intraday_dataset(resp, gtype, value_field, scale)
 
                 print(f"\n=== {data_type} ===")
                 print(f"Endpoint: {url}")
