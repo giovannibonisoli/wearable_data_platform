@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-25 15:06+0100\n"
+"POT-Creation-Date: 2026-11-25 16:48+0100\n"
 "PO-Revision-Date: 2026-02-21 16:35+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -16,187 +16,187 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:147
+#: app.py:148
 msgid "Access denied."
 msgstr ""
 
-#: app.py:159
+#: app.py:160
 msgid "This area is only available to staff user accounts."
 msgstr ""
 
-#: app.py:244 templates/home.html:195
+#: app.py:245 templates/home.html:195
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "Welcome, %(name)s!"
 
-#: app.py:261
+#: app.py:262
 msgid "Incorrect username or password."
 msgstr "Incorrect username or password."
 
-#: app.py:382
+#: app.py:383
 msgid "Password changed successfully."
 msgstr "Password changed successfully."
 
-#: app.py:385
+#: app.py:386
 msgid "The current password is wrong."
 msgstr "The current password is wrong."
 
-#: app.py:388
+#: app.py:389
 msgid "Password change failed."
 msgstr "Password change failed."
 
-#: app.py:403
+#: app.py:404
 msgid "The new password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:405 app.py:946 app.py:975
+#: app.py:406 app.py:989 app.py:1018
 msgid "Passwords do not match."
 msgstr "Passwords do not match."
 
-#: app.py:437
+#: app.py:438
 #, fuzzy
 msgid "Error loading the home page."
 msgstr "Error adding device."
 
-#: app.py:505
+#: app.py:506
 #, fuzzy
 msgid "Video not found."
 msgstr "Email not found."
 
-#: app.py:686
+#: app.py:729
 msgid "This device is already registered."
 msgstr "This device is already registered."
 
-#: app.py:688
+#: app.py:731
 msgid "Device added successfully."
 msgstr "Device added successfully."
 
-#: app.py:690
+#: app.py:733
 msgid "Error adding device."
 msgstr "Error adding device."
 
-#: app.py:694 app.py:858
+#: app.py:737 app.py:901
 msgid "An error occurred."
 msgstr "An error occurred."
 
-#: app.py:720
+#: app.py:763
 #, python-format
 msgid "Error updating device info for: %(devices)s"
 msgstr "Error updating device info for: %(devices)s"
 
-#: app.py:723
+#: app.py:766
 msgid "Device information updated successfully for all devices."
 msgstr "Device information updated successfully for all devices."
 
-#: app.py:746
+#: app.py:789
 msgid "Error sending device. Please try again."
 msgstr "Error sending device. Please try again."
 
-#: app.py:749
+#: app.py:792
 msgid "Error storing authorization request."
 msgstr "Error storing authorization request."
 
-#: app.py:768 app.py:778
+#: app.py:811 app.py:821
 msgid "Error: Missing authorization information."
 msgstr "Error: Missing authorization information."
 
-#: app.py:783
+#: app.py:826
 msgid "Email not found."
 msgstr "Email not found."
 
-#: app.py:788 app.py:793 app.py:798
+#: app.py:831 app.py:836 app.py:841
 msgid "Error: Authorization link expired. Please request a new one."
 msgstr "Error: Authorization link expired. Please request a new one."
 
-#: app.py:841
+#: app.py:884
 #, fuzzy
 msgid "Email address is required."
 msgstr "Email Address"
 
-#: app.py:851
+#: app.py:894
 #, fuzzy
 msgid "Email address updated successfully."
 msgstr "Device added successfully."
 
-#: app.py:854
+#: app.py:897
 #, fuzzy
 msgid "Error updating email address."
 msgstr "Enter email address"
 
-#: app.py:886
+#: app.py:929
 msgid "Care provider created."
 msgstr ""
 
-#: app.py:888
+#: app.py:931
 msgid "Could not create care provider."
 msgstr ""
 
-#: app.py:901
+#: app.py:944
 msgid "Full name is required."
 msgstr ""
 
-#: app.py:909
+#: app.py:952
 msgid "Care provider renamed."
 msgstr ""
 
-#: app.py:911
+#: app.py:954
 msgid "A care provider with that name already exists."
 msgstr ""
 
-#: app.py:913
+#: app.py:956
 msgid "Could not rename care provider."
 msgstr ""
 
-#: app.py:943
+#: app.py:986
 msgid "Username is required."
 msgstr ""
 
-#: app.py:949 app.py:978
+#: app.py:992 app.py:1021
 #, fuzzy
 msgid "The password must be at least 8 characters."
 msgstr "The new password must be at least 8 characters."
 
-#: app.py:957
+#: app.py:1000
 msgid "Staff user created."
 msgstr ""
 
-#: app.py:959
+#: app.py:1002
 msgid "That username is already taken."
 msgstr ""
 
-#: app.py:961
+#: app.py:1004
 msgid "Could not create staff user."
 msgstr ""
 
-#: app.py:987
+#: app.py:1030
 msgid "Password updated."
 msgstr "Password updated."
 
-#: app.py:989
+#: app.py:1032
 msgid "User not found."
 msgstr "User not found."
 
-#: app.py:991
+#: app.py:1034
 msgid "You cannot change that password."
 msgstr "You cannot change that password."
 
-#: app.py:993
+#: app.py:1036
 msgid "Password update failed."
 msgstr "Password update failed."
 
-#: app.py:1009
+#: app.py:1052
 msgid "Staff user deactivated."
 msgstr ""
 
-#: app.py:1011
+#: app.py:1054
 msgid "Staff user not found."
 msgstr "Staff user not found."
 
-#: app.py:1013
+#: app.py:1056
 msgid "You cannot deactivate this staff user."
 msgstr "You cannot deactivate this staff user."
 
-#: app.py:1015
+#: app.py:1058
 msgid "Deactivation failed."
 msgstr "Deactivation failed."
 
@@ -1602,13 +1602,13 @@ msgstr ""
 
 #: templates/device_detail/data_collection.html:44
 #: templates/device_detail/sleep.html:256
-#: templates/device_detail/vitals.html:164
+#: templates/device_detail/vitals.html:178
 msgid "Alerts"
 msgstr ""
 
 #: templates/device_detail/data_collection.html:47
 #: templates/device_detail/sleep.html:259
-#: templates/device_detail/vitals.html:167
+#: templates/device_detail/vitals.html:181
 msgid "Coming soon"
 msgstr ""
 
@@ -1617,164 +1617,174 @@ msgid "Data collection heatmap"
 msgstr ""
 
 #: templates/device_detail/data_collection.html:57
-#: templates/device_detail/sleep.html:149
-#: templates/device_detail/vitals.html:107
 msgid "Time range"
 msgstr ""
 
 #: templates/device_detail/data_collection.html:62
-#: templates/device_detail/sleep.html:154
 #, python-format
 msgid "%(n)s days"
 msgstr ""
 
-#: templates/device_detail/data_collection.html:69
-#: templates/device_detail/data_collection.html:79
+#: templates/device_detail/data_collection.html:76
 msgid "Minutes of data received in each hour (out of 60)."
 msgstr ""
 
-#: templates/device_detail/data_collection.html:87
-#: templates/device_detail/sleep.html:224
-#: templates/device_detail/vitals.html:11
+#: templates/device_detail/data_collection.html:84
+#: templates/device_detail/sleep.html:228
 #, fuzzy
 msgid "Day"
 msgstr "days"
 
-#: templates/device_detail/data_collection.html:93
-#: templates/device_detail/vitals.html:73
+#: templates/device_detail/data_collection.html:90
+#: templates/device_detail/vitals.html:75
 msgid "Total"
 msgstr ""
 
-#: templates/device_detail/data_collection.html:105
-#: templates/device_detail/data_collection.html:106
+#: templates/device_detail/data_collection.html:102
+#: templates/device_detail/data_collection.html:103
 #, fuzzy
 msgid "Not yet"
 msgstr "No data yet"
 
-#: templates/device_detail/data_collection.html:111
-#: templates/device_detail/data_collection.html:127
-#: templates/device_detail/sleep.html:190
-#: templates/device_detail/sleep.html:229
-#: templates/device_detail/vitals.html:144
+#: templates/device_detail/data_collection.html:108
+#: templates/device_detail/data_collection.html:124
+#: templates/device_detail/sleep.html:187
+#: templates/device_detail/sleep.html:233
+#: templates/device_detail/vitals.html:158
 #, fuzzy
 msgid "No data"
 msgstr "No data yet"
 
-#: templates/device_detail/sleep.html:18
-msgid "Sleep session detail"
+#: templates/device_detail/sleep.html:16
+msgid "Selected sleep session"
 msgstr ""
 
-#: templates/device_detail/sleep.html:27
-msgid "Previous night"
+#: templates/device_detail/sleep.html:16
+msgid "Last sleep session"
 msgstr ""
 
-#: templates/device_detail/sleep.html:33
-msgid "Night ending on"
+#: templates/device_detail/sleep.html:22
+msgid "Back to last session"
 msgstr ""
 
-#: templates/device_detail/sleep.html:36
-msgid "Next night"
-msgstr ""
-
-#: templates/device_detail/sleep.html:40
-#: templates/device_detail/vitals.html:104
-msgid "Go"
-msgstr ""
-
-#: templates/device_detail/sleep.html:46
+#: templates/device_detail/sleep.html:28
 msgid "Awake"
 msgstr ""
 
-#: templates/device_detail/sleep.html:46
+#: templates/device_detail/sleep.html:28
 #, fuzzy
 msgid "REM"
 msgstr "Username"
 
-#: templates/device_detail/sleep.html:46
+#: templates/device_detail/sleep.html:28
 msgid "Light"
 msgstr ""
 
-#: templates/device_detail/sleep.html:46
+#: templates/device_detail/sleep.html:28
 msgid "Deep"
 msgstr ""
 
-#: templates/device_detail/sleep.html:47
+#: templates/device_detail/sleep.html:29
 msgid "Restless"
 msgstr ""
 
-#: templates/device_detail/sleep.html:47
+#: templates/device_detail/sleep.html:29
 msgid "Asleep"
 msgstr ""
 
-#: templates/device_detail/sleep.html:61
+#: templates/device_detail/sleep.html:43
 msgid "Nap"
 msgstr ""
 
-#: templates/device_detail/sleep.html:67 templates/device_detail/sleep.html:224
+#: templates/device_detail/sleep.html:49 templates/device_detail/sleep.html:228
 msgid "Time asleep"
 msgstr ""
 
-#: templates/device_detail/sleep.html:71
+#: templates/device_detail/sleep.html:53
 msgid "Time in bed"
 msgstr ""
 
-#: templates/device_detail/sleep.html:75
+#: templates/device_detail/sleep.html:57
 msgid "Time awake"
 msgstr ""
 
-#: templates/device_detail/sleep.html:111
+#: templates/device_detail/sleep.html:93
 msgid "Sleep stages of the session"
 msgstr ""
 
-#: templates/device_detail/sleep.html:112
+#: templates/device_detail/sleep.html:94
 #, fuzzy
 msgid "Stage"
 msgstr "Usage"
 
-#: templates/device_detail/sleep.html:112
+#: templates/device_detail/sleep.html:94 templates/device_detail/sleep.html:139
+#: templates/device_detail/vitals.html:97
 msgid "From"
 msgstr ""
 
-#: templates/device_detail/sleep.html:112
+#: templates/device_detail/sleep.html:94 templates/device_detail/sleep.html:142
+#: templates/device_detail/vitals.html:100
 msgid "To"
 msgstr ""
 
-#: templates/device_detail/sleep.html:112
+#: templates/device_detail/sleep.html:94
 #, fuzzy
 msgid "Minutes"
 msgstr "minutes ago"
 
-#: templates/device_detail/sleep.html:122
+#: templates/device_detail/sleep.html:104
 msgid ""
 "The device did not record sleep stages for this session (usually sleeps "
 "shorter than about 3 hours, or a weak heart rate signal)."
 msgstr ""
 
-#: templates/device_detail/sleep.html:128
+#: templates/device_detail/sleep.html:110
 msgid "Other sleeps ending this day:"
 msgstr ""
 
-#: templates/device_detail/sleep.html:137
+#: templates/device_detail/sleep.html:119
 #, python-format
 msgid "No sleep recorded for the night ending on %(day)s."
 msgstr ""
 
-#: templates/device_detail/sleep.html:140
+#: templates/device_detail/sleep.html:122
 msgid "No sleep sessions recorded yet."
 msgstr ""
 
-#: templates/device_detail/sleep.html:148
+#: templates/device_detail/sleep.html:130
 msgid "Sleep trend"
 msgstr ""
 
-#: templates/device_detail/sleep.html:167
+#: templates/device_detail/sleep.html:145
+#: templates/device_detail/vitals.html:103
+msgid "Apply"
+msgstr ""
+
+#: templates/device_detail/sleep.html:153
+#: templates/device_detail/vitals.html:111
+#, python-format
+msgid "maximum range: %(n)s months"
+msgstr ""
+
+#: templates/device_detail/sleep.html:156
+#: templates/device_detail/vitals.html:114
+#, python-format
+msgid "The date you entered was adjusted to keep the range within %(n)s months."
+msgstr ""
+
+#: templates/device_detail/sleep.html:163
 msgid "Average time asleep"
 msgstr ""
 
-#: templates/device_detail/sleep.html:170
-#: templates/device_detail/vitals.html:74
+#: templates/device_detail/sleep.html:166
+#: templates/device_detail/vitals.html:76
 #, python-format
 msgid "%(n)s of %(total)s days with data"
+msgstr ""
+
+#: templates/device_detail/sleep.html:193
+#, python-format
+msgid "Show the night of %(day)s"
 msgstr ""
 
 #: templates/device_detail/sleep.html:194
@@ -1786,17 +1796,17 @@ msgid "naps"
 msgstr ""
 
 #: templates/device_detail/sleep.html:223
-msgid "Time asleep per day"
-msgstr ""
-
-#: templates/device_detail/sleep.html:224
-msgid "Naps"
-msgstr ""
-
-#: templates/device_detail/sleep.html:237
 msgid ""
 "Each bar is the sleep that ended on that day (the night before plus any "
 "naps). Click a bar to see that night above."
+msgstr ""
+
+#: templates/device_detail/sleep.html:227
+msgid "Time asleep per day"
+msgstr ""
+
+#: templates/device_detail/sleep.html:228
+msgid "Naps"
 msgstr ""
 
 #: templates/device_detail/sleep.html:241
@@ -1814,7 +1824,7 @@ msgid "Steps"
 msgstr "Next Steps:"
 
 #: templates/device_detail/vitals.html:7
-#: templates/device_detail/vitals.html:213
+#: templates/device_detail/vitals.html:237
 #, fuzzy
 msgid "steps"
 msgstr "Next Steps:"
@@ -1827,84 +1837,108 @@ msgstr ""
 msgid "Oxygen saturation"
 msgstr ""
 
-#: templates/device_detail/vitals.html:11
-msgid "Week"
+#: templates/device_detail/vitals.html:19
+#, fuzzy
+msgid "Per minute"
+msgstr "minutes ago"
+
+#: templates/device_detail/vitals.html:19
+msgid "Per hour"
 msgstr ""
 
-#: templates/device_detail/vitals.html:11
-msgid "Month"
+#: templates/device_detail/vitals.html:19
+#, fuzzy
+msgid "Per day"
+msgstr "days"
+
+#: templates/device_detail/vitals.html:19
+msgid "Per sample"
 msgstr ""
 
-#: templates/device_detail/vitals.html:53
-#: templates/device_detail/vitals.html:154
+#: templates/device_detail/vitals.html:56
+#, fuzzy
+msgid "last 7 days up to the last sync"
+msgstr "Updating data to the last synchronization"
+
+#: templates/device_detail/vitals.html:61
+#: templates/device_detail/vitals.html:168
 msgid "No data in this period."
 msgstr ""
 
-#: templates/device_detail/vitals.html:58
+#: templates/device_detail/vitals.html:66
 msgid "average"
 msgstr ""
 
-#: templates/device_detail/vitals.html:64
-msgid "total"
-msgstr ""
-
-#: templates/device_detail/vitals.html:70
+#: templates/device_detail/vitals.html:72
 msgid "per day on average"
 msgstr ""
 
-#: templates/device_detail/vitals.html:94
-msgid "Previous period"
-msgstr ""
-
-#: templates/device_detail/vitals.html:97
-#, fuzzy
-msgid "End date"
-msgstr "No data yet"
-
-#: templates/device_detail/vitals.html:100
-msgid "Next period"
-msgstr ""
-
 #: templates/device_detail/vitals.html:121
-msgid "see the table below for the values"
-msgstr ""
-
-#: templates/device_detail/vitals.html:126
-msgid "Line: daily average. Shaded area: daily minimum and maximum."
-msgstr ""
-
-#: templates/device_detail/vitals.html:129
-msgid "Average per minute. Gaps are periods without data."
-msgstr ""
-
-#: templates/device_detail/vitals.html:131
-msgid "Total per hour."
+msgid "Resolution"
 msgstr ""
 
 #: templates/device_detail/vitals.html:133
-msgid "Measured during sleep."
+msgid "see the table below for the values"
 msgstr ""
 
 #: templates/device_detail/vitals.html:139
+#, fuzzy
+msgid "Line"
+msgstr "Last Login"
+
+#: templates/device_detail/vitals.html:139
+#, fuzzy
+msgid "hourly average"
+msgstr "hours ago"
+
+#: templates/device_detail/vitals.html:139
+msgid "daily average"
+msgstr ""
+
+#: templates/device_detail/vitals.html:140
+msgid "Shaded area"
+msgstr ""
+
+#: templates/device_detail/vitals.html:140
+msgid "hourly minimum and maximum"
+msgstr ""
+
+#: templates/device_detail/vitals.html:140
+msgid "daily minimum and maximum"
+msgstr ""
+
+#: templates/device_detail/vitals.html:143
+msgid "Average per minute. Gaps are periods without data."
+msgstr ""
+
+#: templates/device_detail/vitals.html:145
+msgid "Total per hour."
+msgstr ""
+
+#: templates/device_detail/vitals.html:147
+msgid "Measured during sleep."
+msgstr ""
+
+#: templates/device_detail/vitals.html:153
 #, fuzzy
 msgid "Time"
 msgstr "Not Active"
 
-#: templates/device_detail/vitals.html:139
+#: templates/device_detail/vitals.html:153
 msgid "Value"
 msgstr ""
 
-#: templates/device_detail/vitals.html:139
-#: templates/device_detail/vitals.html:228
+#: templates/device_detail/vitals.html:153
+#: templates/device_detail/vitals.html:258
 msgid "Minimum"
 msgstr ""
 
-#: templates/device_detail/vitals.html:139
-#: templates/device_detail/vitals.html:229
+#: templates/device_detail/vitals.html:153
+#: templates/device_detail/vitals.html:259
 msgid "Maximum"
 msgstr ""
 
-#: templates/device_detail/vitals.html:230
+#: templates/device_detail/vitals.html:260
 #, fuzzy
 msgid "Range"
 msgstr "Usage"
@@ -2032,4 +2066,40 @@ msgstr "Usage"
 
 #~ msgid "Last sync sleep data"
 #~ msgstr "Last sync"
+
+#~ msgid "Sleep session detail"
+#~ msgstr ""
+
+#~ msgid "Previous night"
+#~ msgstr ""
+
+#~ msgid "Night ending on"
+#~ msgstr ""
+
+#~ msgid "Next night"
+#~ msgstr ""
+
+#~ msgid "Go"
+#~ msgstr ""
+
+#~ msgid "Week"
+#~ msgstr ""
+
+#~ msgid "Month"
+#~ msgstr ""
+
+#~ msgid "total"
+#~ msgstr ""
+
+#~ msgid "Previous period"
+#~ msgstr ""
+
+#~ msgid "End date"
+#~ msgstr "No data yet"
+
+#~ msgid "Next period"
+#~ msgstr ""
+
+#~ msgid "Line: daily average. Shaded area: daily minimum and maximum."
+#~ msgstr ""
 
