@@ -571,9 +571,9 @@ def device_list():
 
 DEVICE_DETAIL_SECTIONS = ('data_collection', 'vitals', 'sleep')
 HEATMAP_RANGE_DAYS = (7, 14, 30)
-SLEEP_TREND_RANGE_DAYS = (7, 14, 30)
-VITALS_DEFAULT_RANGE_DAYS = 7   # default chart range: from 7 days before today, to today
-VITALS_MAX_RANGE_MONTHS = 2     # longest selectable chart range
+# Date range of the vital signs chart and of the sleep trend
+CHART_DEFAULT_RANGE_DAYS = 7   # default: from 7 days before today, to today
+CHART_MAX_RANGE_MONTHS = 2     # longest selectable range
 
 
 def _shift_months(day, months):
@@ -584,14 +584,15 @@ def _shift_months(day, months):
     return day.replace(year=year, month=month, day=min(day.day, calendar.monthrange(year, month)[1]))
 
 
-def _vitals_date_range(start_arg, end_arg, today):
+def _chart_date_range(start_arg, end_arg, today):
     """
-    Validated (start, end, adjusted) for the vital signs chart.
+    Validated (start, end, adjusted) for a chart's From/To filter.
 
-    Defaults: end = today, start = 7 days earlier. Dates after today are
-    moved back to today and a start after the end is moved to the end. The
-    range is at most VITALS_MAX_RANGE_MONTHS: the page corrects the date the
-    user edited last; here, as a fallback, the start date is corrected.
+    Defaults: end = today, start = CHART_DEFAULT_RANGE_DAYS earlier. Dates
+    after today are moved back to today and a start after the end is moved to
+    the end. The range is at most CHART_MAX_RANGE_MONTHS: the page corrects the
+    date the user edited last (static/js/date_range_form.js); here, as a
+    fallback, the start date is corrected.
     `adjusted` tells whether a date given by the user had to be changed.
     """
     def parse(value):
@@ -602,9 +603,9 @@ def _vitals_date_range(start_arg, end_arg, today):
 
     end_given, start_given = parse(end_arg), parse(start_arg)
     end = min(end_given or today, today)
-    start = start_given or (end - timedelta(days=VITALS_DEFAULT_RANGE_DAYS))
+    start = start_given or (end - timedelta(days=CHART_DEFAULT_RANGE_DAYS))
     start = min(start, end)
-    start = max(start, _shift_months(end, -VITALS_MAX_RANGE_MONTHS))
+    start = max(start, _shift_months(end, -CHART_MAX_RANGE_MONTHS))
     adjusted = (end_given is not None and end != end_given) or (start_given is not None and start != start_given)
     return start, end, adjusted
 
@@ -637,7 +638,7 @@ def _render_device_detail(device_id, section):
             if metric not in VITAL_METRICS:
                 metric = VITAL_METRICS[0]
             today = DeviceStatisticsService.today()
-            start_date, end_date, adjusted = _vitals_date_range(request.args.get('start'), request.args.get('end'), today)
+            start_date, end_date, adjusted = _chart_date_range(request.args.get('start'), request.args.get('end'), today)
             # Corrected here, or already corrected in the browser before submitting.
             context['range_adjusted'] = adjusted or request.args.get('adjusted') == '1'
 
@@ -658,27 +659,29 @@ def _render_device_detail(device_id, section):
             )
             context['vital_metrics'] = VITAL_METRICS
             context['today'] = today
-            context['max_range_months'] = VITALS_MAX_RANGE_MONTHS
+            context['max_range_months'] = CHART_MAX_RANGE_MONTHS
 
         elif section == 'sleep':
-            days = request.args.get('days', type=int)
-            if days not in SLEEP_TREND_RANGE_DAYS:
-                days = SLEEP_TREND_RANGE_DAYS[0]
             today = DeviceStatisticsService.today()
+            start_date, end_date, adjusted = _chart_date_range(request.args.get('start'), request.args.get('end'), today)
+            context['range_adjusted'] = adjusted or request.args.get('adjusted') == '1'
+
+            # Top card: the night clicked in the trend (?night=YYYY-MM-DD), otherwise
+            # the last sleep session (most recent night with stage data)
             try:
                 night = min(datetime.strptime(request.args.get('night', ''), '%Y-%m-%d').date(), today)
             except ValueError:
-                night = None  # most recent night with data
+                night = None
 
             stats_service = DeviceStatisticsService(conn)
             context['sleep_night'] = stats_service.get_sleep_night(device_id, night)
-            context['night_param'] = night.isoformat() if night else None
+            context['night_selected'] = night is not None
+            # Trend: the From/To range chosen by the user
+            context['sleep_trend'] = stats_service.get_sleep_trend(
+                device_id, (end_date - start_date).days + 1, end_day=end_date
+            )
             context['today'] = today
-            # The trend ends on the night shown above, so both charts cover the same period.
-            shown_night = context['sleep_night']['night'] if context['sleep_night'] else None
-            context['sleep_trend'] = stats_service.get_sleep_trend(device_id, days, end_day=shown_night)
-            context['trend_days'] = days
-            context['trend_range_options'] = SLEEP_TREND_RANGE_DAYS
+            context['max_range_months'] = CHART_MAX_RANGE_MONTHS
 
     return render_template(f'device_detail/{section}.html', device=device, active_section=section, **context)
 

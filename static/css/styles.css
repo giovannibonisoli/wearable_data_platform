@@ -192,6 +192,33 @@ body {
     font-weight: 600;
 }
 
+/* Chart resolution toggle on white (Per day / Per hour ...): compact, primary colour.
+   `.chart-res .btn` beats the global and mobile `.btn` padding rules. */
+.chart-res .btn {
+    padding: 0.2rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--primary);
+    background: var(--white);
+    border: 1px solid var(--primary);
+    box-shadow: none;
+    transform: none;
+}
+.chart-res .btn:hover,
+.chart-res .btn:focus-visible { background: rgba(44, 90, 160, 0.08); color: var(--primary); }
+.chart-res .btn.active { background: var(--primary); color: var(--white); }
+
+/* From/To date range form on a blue card header (static/js/date_range_form.js) */
+.date-range-form .btn-range { padding: 0.2rem 0.5rem; }
+.date-range-label { font-size: 0.85rem; color: var(--white); margin: 0; }
+.date-range-form .date-range-input {
+    width: auto;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.85rem;
+    border-width: 1px;
+    border-radius: 0.5rem;
+}
+
 /* Tables */
 .table {
     background: var(--white);

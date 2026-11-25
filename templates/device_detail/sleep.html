@@ -6,39 +6,21 @@
     {% macro hm(minutes) -%}
         {{ minutes // 60 }}h {{ '%02d'|format(minutes % 60) }}m
     {%- endmacro %}
-    {% macro sleep_url(night, days) -%}
-        {{ url_for('device_detail_section', device_id=device.id, section='sleep', night=night, days=days) }}
-    {%- endmacro %}
-
     <div class="col-lg-8">
-        <!-- One night's sleep: duration and stage timeline, browsable night by night -->
+        <!-- Sleep session: duration and stage timeline. By default the last session (most
+             recent night with stage data); the night clicked in the trend below otherwise. -->
         {% set sn = sleep_night %}
         <div class="card mb-4">
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <span><i class="bi bi-moon me-2"></i>{{ _('Sleep session detail') }}</span>
-
-                {% if sn %}
-                <!-- Night navigation: arrows jump to the nearest night with sleep data -->
-                <form method="get" class="d-flex align-items-center gap-1 sleep-night-form"
-                      action="{{ url_for('device_detail_section', device_id=device.id, section='sleep') }}">
-                    <input type="hidden" name="days" value="{{ trend_days }}">
-                    {% if sn.prev_night %}
-                    <a class="btn btn-range" href="{{ sleep_url(sn.prev_night.isoformat(), trend_days) }}"
-                       aria-label="{{ _('Previous night') }}"><i class="bi bi-chevron-left"></i></a>
-                    {% else %}
-                    <span class="btn btn-range disabled" aria-disabled="true"><i class="bi bi-chevron-left"></i></span>
-                    {% endif %}
-                    <input type="date" name="night" class="form-control form-control-sm sleep-night-date"
-                           value="{{ sn.night.isoformat() }}" max="{{ today.isoformat() }}"
-                           aria-label="{{ _('Night ending on') }}" onchange="this.form.submit()">
-                    {% if sn.next_night %}
-                    <a class="btn btn-range" href="{{ sleep_url(sn.next_night.isoformat(), trend_days) }}"
-                       aria-label="{{ _('Next night') }}"><i class="bi bi-chevron-right"></i></a>
-                    {% else %}
-                    <span class="btn btn-range disabled" aria-disabled="true"><i class="bi bi-chevron-right"></i></span>
-                    {% endif %}
-                    <noscript><button type="submit" class="btn btn-range">{{ _('Go') }}</button></noscript>
-                </form>
+                <span>
+                    <i class="bi bi-moon me-2"></i>{{ _('Selected sleep session') if night_selected else _('Last sleep session') }}
+                </span>
+                {% if night_selected %}
+                <a class="btn btn-range"
+                   href="{{ url_for('device_detail_section', device_id=device.id, section='sleep',
+                                    start=sleep_trend.days[0].date.isoformat(), end=sleep_trend.days[-1].date.isoformat()) }}">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _('Back to last session') }}
+                </a>
                 {% endif %}
             </div>
             <div class="card-body">
@@ -97,7 +79,7 @@
                 </div>
 
                 <!-- Legend with totals per stage (also the text alternative to the chart) -->
-                <ul class="sleep-legend list-unstyled d-flex flex-wrap gap-3 mt-3 mb-0 small">
+                <ul class="sleep-legend list-unstyled d-inline-flex flex-wrap gap-3 mt-3 mb-0 small">
                     {% for st in s.stages %}
                     <li>
                         <span class="swatch stage-{{ st.key }}"></span>
@@ -146,21 +128,35 @@
         <div class="card">
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-bar-chart-line me-2"></i>{{ _('Sleep trend') }}</span>
-                <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Time range') }}">
-                    {% for n in trend_range_options %}
-                    <a href="{{ sleep_url(night_param, n) }}"
-                       class="btn btn-range {% if n == trend_days %}active{% endif %}"
-                       {% if n == trend_days %}aria-current="true"{% endif %}>
-                        {{ _('%(n)s days', n=n) }}
-                    </a>
-                    {% endfor %}
-                </div>
+
+                {% set trend = sleep_trend %}
+                <!-- Date range (max {{ max_range_months }} months), same behaviour as the vital
+                     signs chart (static/js/date_range_form.js) -->
+                <form method="get" data-date-range class="d-flex flex-wrap align-items-center gap-2 date-range-form"
+                      action="{{ url_for('device_detail_section', device_id=device.id, section='sleep') }}"
+                      data-today="{{ today.isoformat() }}" data-max-months="{{ max_range_months }}" novalidate>
+                    <input type="hidden" name="adjusted" value="">
+                    <label class="date-range-label" for="sleepStart">{{ _('From') }}</label>
+                    <input type="date" id="sleepStart" name="start" class="form-control form-control-sm date-range-input"
+                           value="{{ trend.days[0].date.isoformat() }}" max="{{ today.isoformat() }}">
+                    <label class="date-range-label" for="sleepEnd">{{ _('To') }}</label>
+                    <input type="date" id="sleepEnd" name="end" class="form-control form-control-sm date-range-input"
+                           value="{{ trend.days[-1].date.isoformat() }}" max="{{ today.isoformat() }}">
+                    <button type="submit" class="btn btn-range">{{ _('Apply') }}</button>
+                </form>
             </div>
             <div class="card-body">
-                {% set trend = sleep_trend %}
-                <div class="small text-muted mb-2">
-                    <i class="bi bi-calendar3 me-1"></i>{{ trend.days[0].date|dateformat('d MMM') }} &ndash; {{ trend.days[-1].date|dateformat('d MMM yyyy') }}
-                </div>
+                {% set start_iso = trend.days[0].date.isoformat() %}
+                {% set end_iso = trend.days[-1].date.isoformat() %}
+                <p class="small text-muted mb-3">
+                    {{ trend.days[0].date|dateformat('d MMM yyyy') }} – {{ trend.days[-1].date|dateformat('d MMM yyyy') }}
+                    &middot; {{ _('maximum range: %(n)s months', n=max_range_months) }}
+                    {% if range_adjusted %}
+                    <span class="d-block text-warning-emphasis mt-1">
+                        <i class="bi bi-info-circle me-1"></i>{{ _('The date you entered was adjusted to keep the range within %(n)s months.', n=max_range_months) }}
+                    </span>
+                    {% endif %}
+                </p>
                 {% if trend.days_with_data %}
 
                 <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
@@ -172,7 +168,8 @@
                 </div>
 
                 {% set n_days = trend.days|length %}
-                {% set label_step = 1 if n_days <= 7 else (2 if n_days <= 14 else 5) %}
+                {# x-axis: at most ~8-12 date labels, counted back from the last day #}
+                {% set label_step = 1 if n_days <= 10 else (2 if n_days <= 20 else (5 if n_days <= 40 else 7)) %}
                 {% set top_hours = trend.axis_hours[-1] %}
 
                 <div class="trend-chart" id="sleepTrend" aria-hidden="true">
@@ -189,8 +186,11 @@
                                 {% if d.minutes is none %}
                                 <span class="trend-nodata" data-v="{{ _('No data') }}" data-t="{{ day_label }}"></span>
                                 {% else %}
+                                {# Click: show this night in the card above (keeping the range).
+                                   The night shown there is highlighted. #}
                                 <a class="trend-bar{% if sn and d.date == sn.night %} selected{% endif %}" style="height: {{ d.height }}%"
-                                   href="{{ sleep_url(d.date.isoformat(), trend_days) }}" tabindex="-1"
+                                   href="{{ url_for('device_detail_section', device_id=device.id, section='sleep', start=start_iso, end=end_iso, night=d.date.isoformat()) }}"
+                                   aria-label="{{ _('Show the night of %(day)s', day=day_label) }}"
                                    data-v="{{ hm(d.minutes) }} {{ _('asleep') }}"
                                    data-t="{{ day_label }}{% if d.bed_time %} · {{ d.bed_time.strftime('%H:%M') }} → {{ d.wake_time.strftime('%H:%M') }}{% endif %}{% if d.nap_minutes %} · {{ _('naps') }} {{ hm(d.nap_minutes) }}{% endif %}"></a>
                                 <i class="trend-dot" style="bottom: {{ d.height }}%"></i>
@@ -219,6 +219,10 @@
                     </div>
                 </div>
 
+                <p class="small text-muted mt-3 mb-0">
+                    {{ _('Each bar is the sleep that ended on that day (the night before plus any naps). Click a bar to see that night above.') }}
+                </p>
+
                 <table class="visually-hidden">
                     <caption>{{ _('Time asleep per day') }}</caption>
                     <thead><tr><th scope="col">{{ _('Day') }}</th><th scope="col">{{ _('Time asleep') }}</th><th scope="col">{{ _('Naps') }}</th></tr></thead>
@@ -232,10 +236,6 @@
                         {% endfor %}
                     </tbody>
                 </table>
-
-                <p class="small text-muted mt-3 mb-0">
-                    {{ _('Each bar is the sleep that ended on that day (the night before plus any naps). Click a bar to see that night above.') }}
-                </p>
 
                 {% else %}
                 <p class="text-muted mb-0">{{ _('No sleep recorded in this period.') }}</p>
@@ -318,6 +318,9 @@
     .stage-light { background: #2a78d6; }
     .stage-asleep,
     .stage-deep { background: #104281; }
+    /* Sleep without stage data: neutral grey, outside the blue stage ramp */
+    .stage-nostage { background: #a9b4c2; }
+
 
     .sleep-legend .swatch {
         display: inline-block;
@@ -327,9 +330,17 @@
         margin-right: 0.35rem;
         vertical-align: -1px;
     }
-    .sleep-legend-name { color: var(--text); margin-right: 0.25rem; }
+    .sleep-legend-name { color: var(--text); font-weight: 600; margin-right: 0.25rem; }
+    /* Legend box: same style as the heatmap and vital signs legends */
+    .sleep-legend {
+        background: #f5f7fa;
+        border: 1px solid #e3e7ec;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.75rem;
+    }
 
-    .trend-chart { --ylabel-w: 2.25rem; }
+    /* right padding: room for the last centred date label when columns are narrow */
+    .trend-chart { --ylabel-w: 2.25rem; padding-right: 1rem; }
     .trend-plot {
         position: relative;
         height: 200px;
@@ -403,6 +414,7 @@
         min-height: 2px;
     }
     a.trend-bar { display: block; cursor: pointer; }
+    a.trend-bar:focus-visible { outline: 2px solid var(--dark); outline-offset: 1px; }
     .trend-bar.selected { background: #86b6ef; }
     .trend-bar:hover { outline: 2px solid var(--dark); outline-offset: 0; }
     .trend-nodata {
@@ -427,14 +439,6 @@
     }
 
     .sleep-when { font-size: 1.05rem; font-weight: 500; color: var(--dark); }
-    .sleep-night-form .btn-range { padding: 0.2rem 0.5rem; }
-    .sleep-night-form .sleep-night-date {
-        width: auto;
-        padding: 0.15rem 0.5rem;
-        font-size: 0.85rem;
-        border-width: 1px;
-        border-radius: 0.5rem;
-    }
 
     .chart-tooltip {
         position: fixed;
@@ -453,6 +457,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/date_range_form.js') }}"></script>
 <script>
     (function () {
         // One shared tooltip; every chart mark carries data-v (value) and data-t (label).

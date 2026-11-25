@@ -87,18 +87,18 @@
                 <span><i class="bi bi-graph-up me-2"></i>{{ m_label }}</span>
 
                 <!-- Date range (max {{ max_range_months }} months). On Apply, the date edited
-                     last is corrected if the range is invalid (see script below). -->
-                <form method="get" id="vitalsRange" class="d-flex flex-wrap align-items-center gap-2 vitals-date-form"
+                     last is corrected if the range is invalid (static/js/date_range_form.js). -->
+                <form method="get" id="vitalsRange" data-date-range class="d-flex flex-wrap align-items-center gap-2 date-range-form"
                       action="{{ url_for('device_detail_section', device_id=device.id, section='vitals') }}"
                       data-today="{{ today.isoformat() }}" data-max-months="{{ max_range_months }}" novalidate>
                     <input type="hidden" name="metric" value="{{ m }}">
                     <input type="hidden" name="adjusted" value="">
                     <input type="hidden" name="res" value="{{ res }}">
-                    <label class="vitals-date-label" for="vitalsStart">{{ _('From') }}</label>
-                    <input type="date" id="vitalsStart" name="start" class="form-control form-control-sm vitals-date"
+                    <label class="date-range-label" for="vitalsStart">{{ _('From') }}</label>
+                    <input type="date" id="vitalsStart" name="start" class="form-control form-control-sm date-range-input"
                            value="{{ start_iso }}" max="{{ today.isoformat() }}">
-                    <label class="vitals-date-label" for="vitalsEnd">{{ _('To') }}</label>
-                    <input type="date" id="vitalsEnd" name="end" class="form-control form-control-sm vitals-date"
+                    <label class="date-range-label" for="vitalsEnd">{{ _('To') }}</label>
+                    <input type="date" id="vitalsEnd" name="end" class="form-control form-control-sm date-range-input"
                            value="{{ end_iso }}" max="{{ today.isoformat() }}">
                     <button type="submit" class="btn btn-range">{{ _('Apply') }}</button>
                 </form>
@@ -118,7 +118,7 @@
 
                     {% if series.resolutions|length > 1 %}
                     <!-- Chart resolution -->
-                    <div class="btn-group vitals-res" role="group" aria-label="{{ _('Resolution') }}">
+                    <div class="btn-group chart-res" role="group" aria-label="{{ _('Resolution') }}">
                         {% for r in series.resolutions %}
                         <a href="{{ vitals_url(m, start_iso, end_iso, r) }}"
                            class="btn {% if r == res %}active{% endif %}"
@@ -197,33 +197,8 @@
     .vitals-summary-unit { font-size: 1rem; font-weight: 500; }
     .vitals-summary-range { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 0.25rem; }
 
-    .vitals-date-form .btn-range { padding: 0.2rem 0.5rem; }
-    .vitals-date-label { font-size: 0.85rem; color: var(--white); margin: 0; }
-    .vitals-date-form .vitals-date {
-        width: auto;
-        padding: 0.15rem 0.5rem;
-        font-size: 0.85rem;
-        border-width: 1px;
-        border-radius: 0.5rem;
-    }
 
     .vitals-chart { position: relative; height: 300px; }
-
-    /* Resolution toggle (on white): compact, in the platform's primary colour.
-       `.vitals-res .btn` beats the global and mobile `.btn` padding rules. */
-    .vitals-res .btn {
-        padding: 0.2rem 0.7rem;
-        font-size: 0.8rem;
-        font-weight: 500;
-        color: var(--primary);
-        background: var(--white);
-        border: 1px solid var(--primary);
-        box-shadow: none;
-        transform: none;
-    }
-    .vitals-res .btn:hover,
-    .vitals-res .btn:focus-visible { background: rgba(44, 90, 160, 0.08); color: var(--primary); }
-    .vitals-res .btn.active { background: var(--primary); color: var(--white); }
 
     /* Legend box: same style as the heatmap legend */
     .vitals-legend {
@@ -260,63 +235,7 @@
 {# Variables set in section_content are not visible here: derive what the script needs #}
 {% set m = series.metric %}
 {% set m_unit = {'heart_rate': 'bpm', 'steps': _('steps'), 'calories': 'kcal', 'spo2': '%'}[m] %}
-<script>
-    // Date range: on submit, keep start <= end <= today and the range within the
-    // maximum number of months, correcting the date the user edited last.
-    (function () {
-        const form = document.getElementById('vitalsRange');
-        if (!form) return;
-        const startInput = form.elements.start;
-        const endInput = form.elements.end;
-        const today = form.dataset.today;
-        const maxMonths = parseInt(form.dataset.maxMonths, 10);
-        const initial = { start: startInput.value, end: endInput.value };
-        let lastEdited = 'start';
-
-        // ISO dates (YYYY-MM-DD) compare correctly as strings.
-        function shiftMonths(iso, months) {
-            const [y, m, d] = iso.split('-').map(Number);
-            const index = y * 12 + (m - 1) + months;
-            const year = Math.floor(index / 12);
-            const month = index % 12;                                   // 0-based
-            const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-            const date = new Date(Date.UTC(year, month, Math.min(d, lastDay)));
-            return date.toISOString().slice(0, 10);
-        }
-
-        startInput.addEventListener('input', function () { lastEdited = 'start'; });
-        endInput.addEventListener('input', function () { lastEdited = 'end'; });
-
-        form.addEventListener('submit', function () {
-            // An empty or incomplete date falls back to the current value.
-            let start = startInput.value || initial.start;
-            let end = endInput.value || initial.end;
-            let adjusted = false;
-
-            // The other date only has to be valid on its own (not in the future).
-            if (lastEdited === 'start' && end > today) { end = today; adjusted = true; }
-            if (lastEdited === 'end' && start > today) { start = today; adjusted = true; }
-
-            if (lastEdited === 'start') {
-                let fixed = start > end ? end : start;
-                const earliest = shiftMonths(end, -maxMonths);
-                if (fixed < earliest) fixed = earliest;
-                if (fixed !== start) { start = fixed; adjusted = true; }
-            } else {
-                let fixed = end > today ? today : end;
-                if (fixed < start) fixed = start;
-                let latest = shiftMonths(start, maxMonths);
-                if (latest > today) latest = today;
-                if (fixed > latest) fixed = latest;
-                if (fixed !== end) { end = fixed; adjusted = true; }
-            }
-
-            startInput.value = start;
-            endInput.value = end;
-            form.elements.adjusted.value = adjusted ? '1' : '';
-        });
-    })();
-</script>
+<script src="{{ url_for('static', filename='js/date_range_form.js') }}"></script>
 
 {% if series.summary %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
