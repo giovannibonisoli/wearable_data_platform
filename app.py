@@ -22,7 +22,7 @@ from database import ConnectionManager
 from extensions import db, migrate
 from services import DeviceService, DeviceStatisticsService, StaffUserService, CareProviderService
 from services.audit_service import AuditService
-from services.device_statistics_service import VITAL_METRICS, VITAL_PERIOD_DAYS
+from services.device_statistics_service import VITAL_METRICS
 from services.result_enums import (
     ChangePasswordResult,
     AddDeviceResult,
@@ -36,6 +36,7 @@ from services.result_enums import (
 )
 
 import os
+import calendar
 import logging
 
 class PrefixMiddleware:
@@ -571,6 +572,41 @@ def device_list():
 DEVICE_DETAIL_SECTIONS = ('data_collection', 'vitals', 'sleep')
 HEATMAP_RANGE_DAYS = (7, 14, 30)
 SLEEP_TREND_RANGE_DAYS = (7, 14, 30)
+VITALS_DEFAULT_RANGE_DAYS = 7   # default chart range: from 7 days before today, to today
+VITALS_MAX_RANGE_MONTHS = 2     # longest selectable chart range
+
+
+def _shift_months(day, months):
+    """Same day `months` calendar months later (negative: earlier), clamped to the month's length."""
+    month_index = day.year * 12 + day.month - 1 + months
+    year, month = divmod(month_index, 12)
+    month += 1
+    return day.replace(year=year, month=month, day=min(day.day, calendar.monthrange(year, month)[1]))
+
+
+def _vitals_date_range(start_arg, end_arg, today):
+    """
+    Validated (start, end, adjusted) for the vital signs chart.
+
+    Defaults: end = today, start = 7 days earlier. Dates after today are
+    moved back to today and a start after the end is moved to the end. The
+    range is at most VITALS_MAX_RANGE_MONTHS: the page corrects the date the
+    user edited last; here, as a fallback, the start date is corrected.
+    `adjusted` tells whether a date given by the user had to be changed.
+    """
+    def parse(value):
+        try:
+            return datetime.strptime(value or '', '%Y-%m-%d').date()
+        except ValueError:
+            return None
+
+    end_given, start_given = parse(end_arg), parse(start_arg)
+    end = min(end_given or today, today)
+    start = start_given or (end - timedelta(days=VITALS_DEFAULT_RANGE_DAYS))
+    start = min(start, end)
+    start = max(start, _shift_months(end, -VITALS_MAX_RANGE_MONTHS))
+    adjusted = (end_given is not None and end != end_given) or (start_given is not None and start != start_given)
+    return start, end, adjusted
 
 
 def _render_device_detail(device_id, section):
@@ -600,25 +636,29 @@ def _render_device_detail(device_id, section):
             metric = request.args.get('metric')
             if metric not in VITAL_METRICS:
                 metric = VITAL_METRICS[0]
-            period = request.args.get('period')
-            if period not in VITAL_PERIOD_DAYS:
-                period = 'week'
-
             today = DeviceStatisticsService.today()
-            try:
-                end_date = datetime.strptime(request.args.get('end', ''), '%Y-%m-%d').date()
-            except ValueError:
-                end_date = today
-            end_date = min(end_date, today)
+            start_date, end_date, adjusted = _vitals_date_range(request.args.get('start'), request.args.get('end'), today)
+            # Corrected here, or already corrected in the browser before submitting.
+            context['range_adjusted'] = adjusted or request.args.get('adjusted') == '1'
 
-            step = timedelta(days=VITAL_PERIOD_DAYS[period])
             stats_service = DeviceStatisticsService(conn)
-            context['series'] = stats_service.get_vital_series(device_id, metric, period, end_date)
+            # res: chart resolution (validated by the service; invalid -> default)
+            context['series'] = stats_service.get_vital_series(
+                device_id, metric, start_date, end_date, resolution=request.args.get('res')
+            )
+
+            # Summary card: fixed to the 7 days ending on the last sync day, independent
+            # of the chart's date controls.
+            if device['last_synch']:
+                summary_end = min(DeviceStatisticsService._utc_to_display(device['last_synch']).date(), today)
+            else:
+                summary_end = today
+            context['summary_series'] = stats_service.get_vital_series(
+                device_id, metric, summary_end - timedelta(days=6), summary_end
+            )
             context['vital_metrics'] = VITAL_METRICS
-            context['vital_periods'] = tuple(VITAL_PERIOD_DAYS)
-            context['prev_end'] = end_date - step
-            context['next_end'] = min(end_date + step, today) if end_date < today else None
             context['today'] = today
+            context['max_range_months'] = VITALS_MAX_RANGE_MONTHS
 
         elif section == 'sleep':
             days = request.args.get('days', type=int)

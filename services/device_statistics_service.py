@@ -38,9 +38,8 @@ SLEEP_DEFAULT_STAGES = {
 }
 
 
-# Vital signs section: selectable metrics and periods (number of days)
+# Vital signs section: selectable metrics
 VITAL_METRICS = ("heart_rate", "steps", "calories", "spo2")
-VITAL_PERIOD_DAYS = {"day": 1, "week": 7, "month": 30}
 
 
 class DeviceStatisticsService:
@@ -578,47 +577,47 @@ class DeviceStatisticsService:
         self,
         device_id: int,
         metric: str,
-        period: str,
+        start_date: date,
         end_date: date,
+        resolution: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Time series and summary of one vital sign over a period ending on `end_date`.
+        Time series and summary of one vital sign from `start_date` to
+        `end_date` (both included; callers validate the range).
 
         metric: 'heart_rate' | 'steps' | 'calories' (intraday, wearer's local
                 time) or 'spo2' (sleep SpO2 samples, stored in UTC).
-        period: 'day' | 'week' | 'month' (1, 7 or 30 days, end_date included).
-
-        Resolution: one day -> per minute (heart rate), per hour (steps,
-        calories) or per sample (SpO2); several days -> per day.
+        resolution: one of vital_resolutions(metric, single_day); anything
+                else falls back to the first (default) one.
 
         Returns:
-            {'metric', 'period', 'start_date', 'end_date',
+            {'metric', 'start_date', 'end_date',
+             'resolutions': [...],  # the options for this metric and range
              'granularity': 'minute' | 'hour' | 'sample' | 'day',
              'points': [{'label': str | None, 'date': date | None,
                          'value': float | None, 'low': float | None, 'high': float | None}],
              'summary': None (no data) or
                  heart_rate/spo2: {'average', 'min', 'max'}
                  steps/calories:  {'total', 'daily_average', 'days_with_data'}}
-        Day points carry 'date' (label None); the others carry an 'HH:MM' label.
-        'low'/'high' (daily min/max) are set only for heart_rate and spo2 per day.
-        Points without data have value None, so gaps stay visible.
+        Day points carry 'date' and no label; the others carry an 'HH:MM'
+        label, plus 'date' for hourly points over several days.
+        'low'/'high' (min/max per day or hour) are set only for heart_rate and
+        spo2. Points without data have value None, so gaps stay visible.
         """
-        num_days = VITAL_PERIOD_DAYS[period]
-        start_date = end_date - timedelta(days=num_days - 1)
+        num_days = (end_date - start_date).days + 1
         start = datetime.combine(start_date, datetime.min.time())
         end = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
-        single_day = num_days == 1
+        resolutions = self.vital_resolutions(metric, num_days == 1)
+        granularity = resolution if resolution in resolutions else resolutions[0]
 
         if metric == "spo2":
-            granularity, points, summary = self._spo2_series(device_id, start, end, single_day)
+            points, summary = self._spo2_series(device_id, start, end, granularity, num_days)
         else:
-            granularity, points, summary = self._intraday_series(
-                device_id, metric, start, end, num_days, single_day
-            )
+            points, summary = self._intraday_series(device_id, metric, start, end, num_days, granularity)
 
         return {
             "metric": metric,
-            "period": period,
+            "resolutions": resolutions,
             "start_date": start_date,
             "end_date": end_date,
             "granularity": granularity,
@@ -626,40 +625,47 @@ class DeviceStatisticsService:
             "summary": summary,
         }
 
-    def _intraday_series(self, device_id, metric, start, end, num_days, single_day):
-        if single_day:
-            granularity = "minute" if metric == "heart_rate" else "hour"
-        else:
-            granularity = "day"
+    @staticmethod
+    def vital_resolutions(metric: str, single_day: bool) -> List[str]:
+        """Chart resolutions available for a metric; the first one is the default."""
+        if not single_day:
+            return ["day", "hour"]
+        return {"heart_rate": ["minute", "hour"], "spo2": ["sample", "hour"]}.get(metric, ["hour"])
 
+    @staticmethod
+    def _empty_point(bucket_start: datetime, granularity: str, num_days: int) -> Dict[str, Any]:
+        """Chart point for a bucket: day -> date; minute/hour -> 'HH:MM' (+ date over several days)."""
+        return {
+            "label": None if granularity == "day" else bucket_start.strftime("%H:%M"),
+            "date": bucket_start.date() if granularity == "day" or num_days > 1 else None,
+            "value": None,
+            "low": None,
+            "high": None,
+        }
+
+    def _intraday_series(self, device_id, metric, start, end, num_days, granularity):
         rows = self.metrics_repo.get_intraday_buckets(device_id, metric, start, end, granularity)
         # Intraday times are the wearer's wall-clock time: drop any tzinfo
         by_bucket = {r[0].replace(tzinfo=None): r for r in rows}
 
         step = {"minute": timedelta(minutes=1), "hour": timedelta(hours=1), "day": timedelta(days=1)}[granularity]
-        count = {"minute": 1440, "hour": 24, "day": num_days}[granularity]
+        count = {"minute": 1440 * num_days, "hour": 24 * num_days, "day": num_days}[granularity]
         is_average = metric == "heart_rate"
 
         points = []
         for i in range(count):
             bucket_start = start + i * step
             row = by_bucket.get(bucket_start)
-            point = {
-                "label": None if granularity == "day" else bucket_start.strftime("%H:%M"),
-                "date": bucket_start.date() if granularity == "day" else None,
-                "value": None,
-                "low": None,
-                "high": None,
-            }
+            point = self._empty_point(bucket_start, granularity, num_days)
             if row:
                 _, avg, low, high, total, _ = row
                 point["value"] = round(avg if is_average else total, 1)
-                if is_average and granularity == "day":
+                if is_average and granularity in ("day", "hour"):
                     point["low"], point["high"] = round(low), round(high)
             points.append(point)
 
         if not rows:
-            return granularity, points, None
+            return points, None
 
         if is_average:
             samples = sum(r[5] for r in rows)
@@ -676,9 +682,9 @@ class DeviceStatisticsService:
                 "daily_average": round(total / days_with_data),
                 "days_with_data": days_with_data,
             }
-        return granularity, points, summary
+        return points, summary
 
-    def _spo2_series(self, device_id, start, end, single_day):
+    def _spo2_series(self, device_id, start, end, granularity, num_days):
         samples = []
         seen = set()
         for time_utc, value in self.sleep_repo.get_spo2_samples(
@@ -689,32 +695,32 @@ class DeviceStatisticsService:
             seen.add(time_utc)
             samples.append((self._utc_to_display(time_utc), value))
 
-        if single_day:
-            granularity = "sample"
+        if granularity == "sample":
             points = [
                 {"label": t.strftime("%H:%M"), "date": None, "value": round(v, 1), "low": None, "high": None}
                 for t, v in samples
             ]
         else:
-            granularity = "day"
-            by_day = defaultdict(list)
+            # Average, min and max per day or per hour
+            step = timedelta(days=1) if granularity == "day" else timedelta(hours=1)
+            by_bucket = defaultdict(list)
             for t, v in samples:
-                by_day[t.date()].append(v)
+                key = t.replace(hour=0 if granularity == "day" else t.hour, minute=0, second=0, microsecond=0)
+                by_bucket[key].append(v)
             points = []
-            day = start.date()
-            while day < end.date():
-                values = by_day.get(day)
-                points.append({
-                    "label": None,
-                    "date": day,
-                    "value": round(sum(values) / len(values), 1) if values else None,
-                    "low": round(min(values), 1) if values else None,
-                    "high": round(max(values), 1) if values else None,
-                })
-                day += timedelta(days=1)
+            bucket_start = start
+            while bucket_start < end:
+                point = self._empty_point(bucket_start, granularity, num_days)
+                values = by_bucket.get(bucket_start)
+                if values:
+                    point["value"] = round(sum(values) / len(values), 1)
+                    point["low"] = round(min(values), 1)
+                    point["high"] = round(max(values), 1)
+                points.append(point)
+                bucket_start += step
 
         if not samples:
-            return granularity, points, None
+            return points, None
 
         values = [v for _, v in samples]
         summary = {
@@ -722,7 +728,7 @@ class DeviceStatisticsService:
             "min": round(min(values), 1),
             "max": round(max(values), 1),
         }
-        return granularity, points, summary
+        return points, summary
 
     @staticmethod
     def _display_to_utc(dt: datetime) -> datetime:

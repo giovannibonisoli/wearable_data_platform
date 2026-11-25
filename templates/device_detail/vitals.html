@@ -8,14 +8,25 @@
     'calories': (_('Active calories'), 'bi-fire', 'kcal'),
     'spo2': (_('Oxygen saturation'), 'bi-droplet', '%'),
 } %}
-{% set period_labels = {'day': _('Day'), 'week': _('Week'), 'month': _('Month')} %}
 {% set m = series.metric %}
 {% set m_label, m_icon, m_unit = metric_info[m] %}
-{% set s = series.summary %}
+{% set ss = summary_series %}
+{% set s = ss.summary %}
+{% set start_iso = series.start_date.isoformat() %}
 {% set end_iso = series.end_date.isoformat() %}
 
-{% macro vitals_url(metric, period, end) -%}
-    {{ url_for('device_detail_section', device_id=device.id, section='vitals', metric=metric, period=period, end=end) }}
+{% set res = series.granularity %}
+{% set res_labels = {'minute': _('Per minute'), 'hour': _('Per hour'), 'day': _('Per day'), 'sample': _('Per sample')} %}
+
+{% macro vitals_url(metric, start, end, res) -%}
+    {{ url_for('device_detail_section', device_id=device.id, section='vitals', metric=metric, start=start, end=end, res=res) }}
+{%- endmacro %}
+
+{# Point label: date and/or time, e.g. "Tue 24 Nov", "14:00", "Tue 24 Nov 14:00" #}
+{% macro point_label(p) -%}
+    {%- if p.date and p.label -%}{{ p.date|dateformat('EEE d MMM') }} {{ p.label }}
+    {%- elif p.date -%}{{ p.date|dateformat('EEE d MMM') }}
+    {%- else -%}{{ p.label }}{%- endif -%}
 {%- endmacro %}
 
 <!-- Metric selector -->
@@ -24,7 +35,7 @@
     {% set label, icon, _unit = metric_info[key] %}
     <li class="nav-item">
         <a class="nav-link {% if key == m %}active{% endif %}" {% if key == m %}aria-current="page"{% endif %}
-           href="{{ vitals_url(key, series.period, end_iso) }}">
+           href="{{ vitals_url(key, start_iso, end_iso, res) }}">
             <i class="bi {{ icon }} me-1"></i>{{ label }}
         </a>
     </li>
@@ -34,19 +45,16 @@
 <div class="row g-4">
 
     <div class="col-lg-8">
-        <!-- Summary of the selected metric over the selected period -->
+        <!-- Summary of the selected metric over the last week up to the last sync
+             (fixed: not affected by the chart's date and period controls) -->
         <div class="card mb-4">
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <i class="bi {{ m_icon }} vitals-summary-icon"></i>
                     <div class="flex-grow-1">
                         <div class="small text-muted">
-                            {{ m_label }} &middot;
-                            {% if series.start_date == series.end_date %}
-                                {{ series.end_date|dateformat('EEE d MMM yyyy') }}
-                            {% else %}
-                                {{ series.start_date|dateformat('d MMM') }} – {{ series.end_date|dateformat('d MMM yyyy') }}
-                            {% endif %}
+                            {{ m_label }} &middot; {{ _('last 7 days up to the last sync') }}
+                            ({{ ss.start_date|dateformat('d MMM') }} – {{ ss.end_date|dateformat('d MMM yyyy') }})
                         </div>
 
                         {% if not s %}
@@ -58,12 +66,6 @@
                             <span class="vitals-summary-range">{{ _('average') }} ({{ s.min }}–{{ s.max }} {{ m_unit }})</span>
                         </div>
 
-                        {% elif series.start_date == series.end_date %}
-                        <div class="vitals-summary-value">
-                            {{ s.total|numberformat }} <span class="vitals-summary-unit">{{ m_unit }}</span>
-                            <span class="vitals-summary-range">{{ _('total') }}</span>
-                        </div>
-
                         {% else %}
                         <div class="vitals-summary-value">
                             {{ s.daily_average|numberformat }} <span class="vitals-summary-unit">{{ m_unit }}</span>
@@ -71,7 +73,7 @@
                         </div>
                         <div class="small text-muted">
                             {{ _('Total') }}: {{ s.total|numberformat }} {{ m_unit }} &middot;
-                            {{ _('%(n)s of %(total)s days with data', n=s.days_with_data, total=series.points|length) }}
+                            {{ _('%(n)s of %(total)s days with data', n=s.days_with_data, total=ss.points|length) }}
                         </div>
                         {% endif %}
                     </div>
@@ -84,53 +86,65 @@
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span><i class="bi bi-graph-up me-2"></i>{{ m_label }}</span>
 
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <!-- Date navigation: the period ends on the selected date -->
-                    <form method="get" class="d-flex align-items-center gap-1 vitals-date-form"
-                          action="{{ url_for('device_detail_section', device_id=device.id, section='vitals') }}">
-                        <input type="hidden" name="metric" value="{{ m }}">
-                        <input type="hidden" name="period" value="{{ series.period }}">
-                        <a class="btn btn-range" href="{{ vitals_url(m, series.period, prev_end.isoformat()) }}"
-                           aria-label="{{ _('Previous period') }}"><i class="bi bi-chevron-left"></i></a>
-                        <input type="date" name="end" class="form-control form-control-sm vitals-date"
-                               value="{{ end_iso }}" max="{{ today.isoformat() }}"
-                               aria-label="{{ _('End date') }}" onchange="this.form.submit()">
-                        {% if next_end %}
-                        <a class="btn btn-range" href="{{ vitals_url(m, series.period, next_end.isoformat()) }}"
-                           aria-label="{{ _('Next period') }}"><i class="bi bi-chevron-right"></i></a>
-                        {% else %}
-                        <span class="btn btn-range disabled" aria-disabled="true"><i class="bi bi-chevron-right"></i></span>
-                        {% endif %}
-                        <noscript><button type="submit" class="btn btn-range">{{ _('Go') }}</button></noscript>
-                    </form>
-
-                    <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Time range') }}">
-                        {% for p in vital_periods %}
-                        <a href="{{ vitals_url(m, p, end_iso) }}"
-                           class="btn btn-range {% if p == series.period %}active{% endif %}"
-                           {% if p == series.period %}aria-current="true"{% endif %}>{{ period_labels[p] }}</a>
-                        {% endfor %}
-                    </div>
-                </div>
+                <!-- Date range (max {{ max_range_months }} months). On Apply, the date edited
+                     last is corrected if the range is invalid (see script below). -->
+                <form method="get" id="vitalsRange" class="d-flex flex-wrap align-items-center gap-2 vitals-date-form"
+                      action="{{ url_for('device_detail_section', device_id=device.id, section='vitals') }}"
+                      data-today="{{ today.isoformat() }}" data-max-months="{{ max_range_months }}" novalidate>
+                    <input type="hidden" name="metric" value="{{ m }}">
+                    <input type="hidden" name="adjusted" value="">
+                    <input type="hidden" name="res" value="{{ res }}">
+                    <label class="vitals-date-label" for="vitalsStart">{{ _('From') }}</label>
+                    <input type="date" id="vitalsStart" name="start" class="form-control form-control-sm vitals-date"
+                           value="{{ start_iso }}" max="{{ today.isoformat() }}">
+                    <label class="vitals-date-label" for="vitalsEnd">{{ _('To') }}</label>
+                    <input type="date" id="vitalsEnd" name="end" class="form-control form-control-sm vitals-date"
+                           value="{{ end_iso }}" max="{{ today.isoformat() }}">
+                    <button type="submit" class="btn btn-range">{{ _('Apply') }}</button>
+                </form>
             </div>
 
             <div class="card-body">
-                {% if s %}
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <p class="small text-muted mb-0">
+                        {{ series.start_date|dateformat('d MMM yyyy') }} – {{ series.end_date|dateformat('d MMM yyyy') }}
+                        &middot; {{ _('maximum range: %(n)s months', n=max_range_months) }}
+                        {% if range_adjusted %}
+                        <span class="d-block text-warning-emphasis mt-1">
+                            <i class="bi bi-info-circle me-1"></i>{{ _('The date you entered was adjusted to keep the range within %(n)s months.', n=max_range_months) }}
+                        </span>
+                        {% endif %}
+                    </p>
+
+                    {% if series.resolutions|length > 1 %}
+                    <!-- Chart resolution -->
+                    <div class="btn-group vitals-res" role="group" aria-label="{{ _('Resolution') }}">
+                        {% for r in series.resolutions %}
+                        <a href="{{ vitals_url(m, start_iso, end_iso, r) }}"
+                           class="btn {% if r == res %}active{% endif %}"
+                           {% if r == res %}aria-current="true"{% endif %}>{{ res_labels[r] }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% if series.summary %}
                 <div class="vitals-chart">
                     <canvas id="vitalsChart" role="img"
                             aria-label="{{ m_label }}: {{ _('see the table below for the values') if series.granularity in ('hour', 'day') else m_label }}"></canvas>
                 </div>
 
-                {% if series.granularity == 'day' and m in ('heart_rate', 'spo2') %}
-                <p class="small text-muted mt-2 mb-0">
-                    <span class="vitals-band-swatch"></span>{{ _('Line: daily average. Shaded area: daily minimum and maximum.') }}
-                </p>
+                {% if series.granularity in ('day', 'hour') and m in ('heart_rate', 'spo2') %}
+                {% set per_hour = series.granularity == 'hour' %}
+                <div class="vitals-legend d-inline-flex flex-wrap align-items-center gap-3 mt-3 small text-muted">
+                    <span><span class="vitals-line-swatch"></span><strong>{{ _('Line') }}</strong>: {{ _('hourly average') if per_hour else _('daily average') }}</span>
+                    <span><span class="vitals-band-swatch"></span><strong>{{ _('Shaded area') }}</strong>: {{ _('hourly minimum and maximum') if per_hour else _('daily minimum and maximum') }}</span>
+                </div>
                 {% elif series.granularity == 'minute' %}
-                <p class="small text-muted mt-2 mb-0">{{ _('Average per minute. Gaps are periods without data.') }}</p>
+                <div class="vitals-legend d-inline-flex mt-3 small text-muted">{{ _('Average per minute. Gaps are periods without data.') }}</div>
                 {% elif series.granularity == 'hour' %}
-                <p class="small text-muted mt-2 mb-0">{{ _('Total per hour.') }}</p>
+                <div class="vitals-legend d-inline-flex mt-3 small text-muted">{{ _('Total per hour.') }}</div>
                 {% elif series.granularity == 'sample' %}
-                <p class="small text-muted mt-2 mb-0">{{ _('Measured during sleep.') }}</p>
+                <div class="vitals-legend d-inline-flex mt-3 small text-muted">{{ _('Measured during sleep.') }}</div>
                 {% endif %}
 
                 {% if series.granularity in ('hour', 'day') %}
@@ -140,7 +154,7 @@
                     <tbody>
                         {% for p in series.points %}
                         <tr>
-                            <td>{{ p.date|dateformat('EEE d MMM') if p.date else p.label }}</td>
+                            <td>{{ point_label(p) }}</td>
                             <td>{{ p.value if p.value is not none else _('No data') }}</td>
                             <td>{{ p.low if p.low is not none }}</td>
                             <td>{{ p.high if p.high is not none }}</td>
@@ -184,6 +198,7 @@
     .vitals-summary-range { font-size: 0.85rem; font-weight: 400; color: var(--text-light); margin-left: 0.25rem; }
 
     .vitals-date-form .btn-range { padding: 0.2rem 0.5rem; }
+    .vitals-date-label { font-size: 0.85rem; color: var(--white); margin: 0; }
     .vitals-date-form .vitals-date {
         width: auto;
         padding: 0.15rem 0.5rem;
@@ -194,15 +209,49 @@
 
     .vitals-chart { position: relative; height: 300px; }
 
-    .vitals-band-swatch {
+    /* Resolution toggle (on white): compact, in the platform's primary colour.
+       `.vitals-res .btn` beats the global and mobile `.btn` padding rules. */
+    .vitals-res .btn {
+        padding: 0.2rem 0.7rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--primary);
+        background: var(--white);
+        border: 1px solid var(--primary);
+        box-shadow: none;
+        transform: none;
+    }
+    .vitals-res .btn:hover,
+    .vitals-res .btn:focus-visible { background: rgba(44, 90, 160, 0.08); color: var(--primary); }
+    .vitals-res .btn.active { background: var(--primary); color: var(--white); }
+
+    /* Legend box: same style as the heatmap legend */
+    .vitals-legend {
+        background: #f5f7fa;
+        border: 1px solid #e3e7ec;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.75rem;
+    }
+    .vitals-legend strong { color: var(--text); font-weight: 600; }
+    .vitals-band-swatch,
+    .vitals-line-swatch {
         display: inline-block;
+        margin-right: 0.35rem;
+    }
+    .vitals-band-swatch {
         width: 12px;
         height: 12px;
-        margin-right: 0.35rem;
         vertical-align: -1px;
         border-radius: 3px;
         background: rgba(42, 120, 214, 0.18);
-        border-top: 2px solid #2a78d6;
+        box-shadow: inset 0 0 0 1px rgba(42, 120, 214, 0.25);
+    }
+    .vitals-line-swatch {
+        width: 16px;
+        height: 2px;
+        vertical-align: 3px;
+        background: #2a78d6;
+        border-radius: 1px;
     }
 </style>
 {% endblock %}
@@ -211,6 +260,64 @@
 {# Variables set in section_content are not visible here: derive what the script needs #}
 {% set m = series.metric %}
 {% set m_unit = {'heart_rate': 'bpm', 'steps': _('steps'), 'calories': 'kcal', 'spo2': '%'}[m] %}
+<script>
+    // Date range: on submit, keep start <= end <= today and the range within the
+    // maximum number of months, correcting the date the user edited last.
+    (function () {
+        const form = document.getElementById('vitalsRange');
+        if (!form) return;
+        const startInput = form.elements.start;
+        const endInput = form.elements.end;
+        const today = form.dataset.today;
+        const maxMonths = parseInt(form.dataset.maxMonths, 10);
+        const initial = { start: startInput.value, end: endInput.value };
+        let lastEdited = 'start';
+
+        // ISO dates (YYYY-MM-DD) compare correctly as strings.
+        function shiftMonths(iso, months) {
+            const [y, m, d] = iso.split('-').map(Number);
+            const index = y * 12 + (m - 1) + months;
+            const year = Math.floor(index / 12);
+            const month = index % 12;                                   // 0-based
+            const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+            const date = new Date(Date.UTC(year, month, Math.min(d, lastDay)));
+            return date.toISOString().slice(0, 10);
+        }
+
+        startInput.addEventListener('input', function () { lastEdited = 'start'; });
+        endInput.addEventListener('input', function () { lastEdited = 'end'; });
+
+        form.addEventListener('submit', function () {
+            // An empty or incomplete date falls back to the current value.
+            let start = startInput.value || initial.start;
+            let end = endInput.value || initial.end;
+            let adjusted = false;
+
+            // The other date only has to be valid on its own (not in the future).
+            if (lastEdited === 'start' && end > today) { end = today; adjusted = true; }
+            if (lastEdited === 'end' && start > today) { start = today; adjusted = true; }
+
+            if (lastEdited === 'start') {
+                let fixed = start > end ? end : start;
+                const earliest = shiftMonths(end, -maxMonths);
+                if (fixed < earliest) fixed = earliest;
+                if (fixed !== start) { start = fixed; adjusted = true; }
+            } else {
+                let fixed = end > today ? today : end;
+                if (fixed < start) fixed = start;
+                let latest = shiftMonths(start, maxMonths);
+                if (latest > today) latest = today;
+                if (fixed > latest) fixed = latest;
+                if (fixed !== end) { end = fixed; adjusted = true; }
+            }
+
+            startInput.value = start;
+            endInput.value = end;
+            form.elements.adjusted.value = adjusted ? '1' : '';
+        });
+    })();
+</script>
+
 {% if series.summary %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script>
@@ -221,7 +328,11 @@
         const metric = {{ m|tojson }};
         const granularity = {{ series.granularity|tojson }};
         const unit = {{ m_unit|tojson }};
-        const labels = [{% for p in series.points %}{{ (p.date|dateformat('EEE d MMM') if p.date else p.label)|tojson }},{% endfor %}];
+        // Tooltip titles ("Tue 24 Nov", "14:00" or "Tue 24 Nov 14:00") and, for hourly
+        // points over several days, the date alone (used for the x-axis ticks).
+        const labels = [{% for p in series.points %}{{ ((p.date|dateformat('EEE d MMM') ~ ' ' ~ p.label) if p.date and p.label else (p.date|dateformat('EEE d MMM') if p.date else p.label))|tojson }},{% endfor %}];
+        const dayLabels = [{% for p in series.points %}{{ (p.date|dateformat('d MMM') if p.date and p.label == '00:00' else none)|tojson }},{% endfor %}];
+        const multiDayHours = granularity === 'hour' && dayLabels.some((d) => d !== null);
         const values = {{ series.points|map(attribute='value')|list|tojson }};
         const lows = {{ series.points|map(attribute='low')|list|tojson }};
         const highs = {{ series.points|map(attribute='high')|list|tojson }};
@@ -232,7 +343,9 @@
         const BLUE = '#2a78d6';
         const BAND = 'rgba(42, 120, 214, 0.18)';
         const isBar = metric === 'steps' || metric === 'calories';
-        const hasBand = granularity === 'day' && (metric === 'heart_rate' || metric === 'spo2');
+        const hasBand = (granularity === 'day' || granularity === 'hour') && (metric === 'heart_rate' || metric === 'spo2');
+        const dense = granularity === 'minute' || multiDayHours;   // too many points to draw markers
+        const dayStep = Math.max(1, Math.ceil(values.length / 24 / 8));
         const fmt = (v) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 });
 
         const datasets = [];
@@ -245,7 +358,7 @@
             borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: 'bottom', maxBarThickness: 36,
         } : {
             type: 'line', label: unit, data: values, borderColor: BLUE, backgroundColor: BLUE, borderWidth: 2,
-            pointRadius: granularity === 'minute' ? 0 : 3, pointHoverRadius: 5, tension: 0,
+            pointRadius: dense ? 0 : 3, pointHoverRadius: dense ? 3 : 5, tension: 0,
             spanGaps: granularity === 'sample',
         });
 
@@ -270,6 +383,9 @@
                         ticks: granularity === 'minute'
                             // per-minute day view: one label every 2 hours, on the hour
                             ? { maxRotation: 0, autoSkip: false, callback: (v, i) => (i % 120 === 0 ? labels[i] : null) }
+                            : multiDayHours
+                            // hourly view over several days: a date at midnight, about 8 of them at most
+                            ? { maxRotation: 0, autoSkip: false, callback: (v, i) => (dayLabels[i] && (i / 24) % dayStep === 0 ? dayLabels[i] : null) }
                             : { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
                     },
                     y: yScale,
