@@ -347,15 +347,71 @@ class DeviceStatisticsService:
         
         print("=" * 50)
 
-    def get_last_sleep_session(self, device_id: int) -> Optional[Dict[str, Any]]:
+    def get_sleep_night(self, device_id: int, night: Optional[date] = None) -> Optional[Dict[str, Any]]:
         """
-        Last sleep session of a device, shaped for the hypnogram.
+        Sleep of one night, shaped for the hypnogram, with links to the
+        neighbouring nights.
 
-        The most recent main sleep is used; if the device has never recorded
-        one, the most recent sleep of any kind (e.g. a nap). Sleep timestamps
-        are stored in UTC and returned in DISPLAY_TIMEZONE.
+        A night is identified by the day its sleep ENDS on (DISPLAY_TIMEZONE),
+        as in the sleep trend: the night between Monday and Tuesday is Tuesday.
+        The longest main sleep ending that day is shown; if there is none, the
+        longest nap. Other sleeps ending that day are listed as naps.
 
-        Returns None when there is no usable session, otherwise:
+        Without `night`, the most recent night that has sleep stage data is
+        used (or the most recent night at all, if none has stages).
+
+        Returns None when the device has no sleep at all, otherwise:
+            {'night': date,
+             'session': <see _sleep_session_view> | None,  # None: nothing that night
+             'naps': [{'start', 'end', 'minutes_asleep'}],
+             'prev_night', 'next_night': date | None}   # nearest nights with sleep
+        """
+        if night is None:
+            latest = (
+                self.sleep_repo.get_nearest_sleep_log(device_id, with_levels=True)
+                or self.sleep_repo.get_nearest_sleep_log(device_id)
+            )
+            if not latest:
+                return None
+            night = self._utc_to_display(latest.end_time).date()
+
+        day_start = self._display_to_utc(datetime.combine(night, datetime.min.time()))
+        day_end = self._display_to_utc(datetime.combine(night + timedelta(days=1), datetime.min.time()))
+
+        # Logs sharing a start time are duplicates: keep the first of each.
+        logs, seen_starts = [], set()
+        for log in self.sleep_repo.get_sleep_logs_ending_between(device_id, day_start, day_end):
+            if log.start_time not in seen_starts:
+                seen_starts.add(log.start_time)
+                logs.append(log)
+
+        mains = [log for log in logs if log.is_main_sleep]
+        shown = max(mains or logs, key=lambda log: log.minutes_asleep or 0, default=None)
+
+        prev_log = self.sleep_repo.get_nearest_sleep_log(device_id, ending_before=day_start)
+        next_log = self.sleep_repo.get_nearest_sleep_log(device_id, ending_from=day_end)
+
+        return {
+            "night": night,
+            "session": self._sleep_session_view(shown) if shown else None,
+            "naps": [
+                {
+                    "start": self._utc_to_display(log.start_time),
+                    "end": self._utc_to_display(log.end_time),
+                    "minutes_asleep": log.minutes_asleep or 0,
+                }
+                for log in logs if log is not shown
+            ],
+            "prev_night": self._utc_to_display(prev_log.end_time).date() if prev_log else None,
+            "next_night": self._utc_to_display(next_log.end_time).date() if next_log else None,
+        }
+
+    def _sleep_session_view(self, log) -> Optional[Dict[str, Any]]:
+        """
+        One sleep log shaped for the hypnogram. Sleep timestamps are stored in
+        UTC and returned in DISPLAY_TIMEZONE.
+
+        Returns None when the log has no duration, otherwise:
             {'start', 'end': datetime, 'is_main_sleep': bool,
              'minutes_asleep', 'minutes_awake', 'minutes_in_bed': int,
              'rows': [stage, ...] top to bottom,
@@ -364,13 +420,6 @@ class DeviceStatisticsService:
              'ticks': [{'label', 'left'}]}
         'left' and 'width' are percentages of the session duration.
         """
-        log = (
-            self.sleep_repo.get_last_sleep_log(device_id, main_only=True)
-            or self.sleep_repo.get_last_sleep_log(device_id)
-        )
-        if not log:
-            return None
-
         start = self._utc_to_display(log.start_time)
         end = self._utc_to_display(log.end_time)
         total_seconds = (end - start).total_seconds()
@@ -439,10 +488,12 @@ class DeviceStatisticsService:
         self,
         device_id: int,
         num_days: int,
-        now: Optional[datetime] = None
+        now: Optional[datetime] = None,
+        end_day: Optional[date] = None,
     ) -> Dict[str, Any]:
         """
-        Time asleep per day over the last `num_days` days (today included).
+        Time asleep per day over `num_days` days ending on `end_day` (included;
+        default today).
 
         Each sleep is assigned to the day it ENDS on (in DISPLAY_TIMEZONE), so
         the night between Monday and Tuesday counts for Tuesday. Naps ending the
@@ -458,13 +509,15 @@ class DeviceStatisticsService:
         'height' is a percentage of the y-axis maximum; bed/wake times refer
         to the main sleep and are None if there is none.
         """
-        today = (now or self._utc_to_display(datetime.now(timezone.utc))).date()
+        today = end_day or (now or self._utc_to_display(datetime.now(timezone.utc))).date()
         first_day = today - timedelta(days=num_days - 1)
 
         # Logs are filtered on start time (UTC): reach back one extra day for
-        # sleeps that started the evening before the first day.
+        # sleeps that started the evening before the first day (and stop one
+        # day after the last one; end dates are checked again below).
         query_start = datetime.combine(first_day - timedelta(days=1), datetime.min.time())
-        logs = self.sleep_repo.get_sleep_logs(device_id, start_date=query_start)
+        query_end = datetime.combine(today + timedelta(days=1), datetime.min.time())
+        logs = self.sleep_repo.get_sleep_logs(device_id, start_date=query_start, end_date=query_end)
 
         per_day = defaultdict(lambda: {"main": [], "naps": []})
         seen_starts = set()

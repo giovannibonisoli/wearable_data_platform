@@ -624,9 +624,19 @@ def _render_device_detail(device_id, section):
             days = request.args.get('days', type=int)
             if days not in SLEEP_TREND_RANGE_DAYS:
                 days = SLEEP_TREND_RANGE_DAYS[0]
+            today = DeviceStatisticsService.today()
+            try:
+                night = min(datetime.strptime(request.args.get('night', ''), '%Y-%m-%d').date(), today)
+            except ValueError:
+                night = None  # most recent night with data
+
             stats_service = DeviceStatisticsService(conn)
-            context['last_sleep'] = stats_service.get_last_sleep_session(device_id)
-            context['sleep_trend'] = stats_service.get_sleep_trend(device_id, days)
+            context['sleep_night'] = stats_service.get_sleep_night(device_id, night)
+            context['night_param'] = night.isoformat() if night else None
+            context['today'] = today
+            # The trend ends on the night shown above, so both charts cover the same period.
+            shown_night = context['sleep_night']['night'] if context['sleep_night'] else None
+            context['sleep_trend'] = stats_service.get_sleep_trend(device_id, days, end_day=shown_night)
             context['trend_days'] = days
             context['trend_range_options'] = SLEEP_TREND_RANGE_DAYS
 

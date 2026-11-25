@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
+from sqlalchemy import exists
 from database.connection import SqlalchemyConnection
 from database.orm_models import (
     SleepSessionModel,
@@ -51,6 +52,52 @@ class SleepRepository:
             query = query.filter(SleepLogModel.is_main_sleep.is_(True))
 
         return query.order_by(SleepLogModel.start_time.desc()).first()
+
+    def get_sleep_logs_ending_between(
+        self, device_id: int, start_time: datetime, end_time: datetime
+    ) -> List[SleepLogModel]:
+        """Sleep logs of a device that end within [start_time, end_time) (UTC), oldest first."""
+        return (
+            self.db.session.query(SleepLogModel)
+            .join(SleepSessionModel, SleepLogModel.sleep_session_id == SleepSessionModel.id)
+            .filter(
+                SleepSessionModel.device_id == device_id,
+                SleepLogModel.end_time >= start_time,
+                SleepLogModel.end_time < end_time,
+            )
+            .order_by(SleepLogModel.start_time.asc())
+            .all()
+        )
+
+    def get_nearest_sleep_log(
+        self,
+        device_id: int,
+        ending_before: Optional[datetime] = None,
+        ending_from: Optional[datetime] = None,
+        with_levels: bool = False,
+    ) -> Optional[SleepLogModel]:
+        """
+        Sleep log closest to a point in time (UTC), by end time:
+        - ending_before: the latest log ending strictly before it;
+        - ending_from: the earliest log ending at or after it;
+        - neither: the latest log overall.
+        with_levels restricts the search to logs that have sleep stage data.
+        """
+        query = self.db.session.query(SleepLogModel).join(
+            SleepSessionModel, SleepLogModel.sleep_session_id == SleepSessionModel.id
+        ).filter(SleepSessionModel.device_id == device_id)
+
+        if with_levels:
+            query = query.filter(
+                exists().where(SleepLevelModel.sleep_session_id == SleepLogModel.sleep_session_id)
+            )
+
+        if ending_from is not None:
+            query = query.filter(SleepLogModel.end_time >= ending_from)
+            return query.order_by(SleepLogModel.end_time.asc()).first()
+        if ending_before is not None:
+            query = query.filter(SleepLogModel.end_time < ending_before)
+        return query.order_by(SleepLogModel.end_time.desc()).first()
 
     def insert_sleep_log(self, sleep_session_id: int, data: Dict[str, Any]) -> bool:
         start_time = data['startTime']
