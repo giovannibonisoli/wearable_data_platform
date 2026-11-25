@@ -13,11 +13,25 @@
                         {{ device.device_type or _('Unknown device') }}
                     </h4>
                     <div class="text-muted small mb-3 text-break">{{ device.email_address }}</div>
+                    {# Weekday + date, plus the time when the value has one (checkpoints may be plain dates) #}
+                    {% macro sync_date(value) -%}
+                        {%- if value -%}
+                            {%- set day = value.date() if value.hour is defined else value -%}
+                            {{ day|dateformat('EEEE dd/MM/yyyy')|capitalize }}{% if value.hour is defined %} - {{ value.strftime('%H:%M') }}{% endif %}
+                        {%- else -%}&mdash;{%- endif -%}
+                    {%- endmacro %}
                     <div class="small">
-                        <i class="bi bi-arrow-repeat me-1"></i>{{ _('Last sync') }}:
-                        {% if device.last_synch %}{{ device.last_synch.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                        <i class="bi bi-arrow-repeat me-1"></i>{{ _('Last sync') }}: {{ sync_date(device.last_synch) }}
                     </div>
-                    <p class="text-muted small mt-2 mb-0">{{ _('Last data updates') }}: {{ _('Coming soon') }}</p>
+                    <div class="small mt-1">
+                        <i class="bi bi-calendar-check me-1"></i>{{ _('Daily summaries updated to') }}: {{ sync_date(device.daily_summaries_checkpoint) }}
+                    </div>
+                    <div class="small mt-1">
+                        <i class="bi bi-activity me-1"></i>{{ _('Intraday data updated to') }}: {{ sync_date(device.intraday_checkpoint) }}
+                    </div>
+                    <div class="small mt-1">
+                        <i class="bi bi-moon me-1"></i>{{ _('Sleep data updated to') }}: {{ sync_date(device.sleep_checkpoint) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -51,9 +65,6 @@
                 </div>
             </div>
             <div class="card-body">
-                <p class="text-muted small mb-3">
-                    {{ _('Minutes of data received in each hour (out of 60).') }}
-                </p>
 
                 {# level 0 = no data; 1..5 = increasing minutes received #}
                 {% macro level(m) -%}
@@ -213,6 +224,10 @@
         const table = document.getElementById('coverageHeatmap');
         const tip = document.getElementById('coverageTooltip');
         if (!table || !tip) return;
+        // A position:fixed element is placed relative to the nearest ancestor with a
+        // transform (e.g. `.card:hover` lifts the card), not the viewport: keep the
+        // tooltip directly under <body> so it always follows the pointer.
+        document.body.appendChild(tip);
         const value = tip.querySelector('strong');
         const label = tip.querySelector('span');
 

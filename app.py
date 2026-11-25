@@ -719,7 +719,7 @@ def update_devices_info():
             app.logger.error(f"Error while updating info for devices linked to {', '.join(errors)}")
             flash(gettext('Error updating device info for: %(devices)s', devices=', '.join(errors)), 'danger')
         else:
-            app.logger.error(f"Info regarding all the devices have been successfully updated")
+            app.logger.info(f"Info regarding all the devices have been successfully updated")
             flash(gettext('Device information updated successfully for all devices.'), 'success')
 
     return redirect(url_for('device_list'))

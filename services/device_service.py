@@ -199,6 +199,9 @@ class DeviceService:
             "device_type": device.device_type or "",
             "auth_status": device.authorization_status.value,
             "last_synch": device.last_synch,
+            "daily_summaries_checkpoint": device.daily_summaries_checkpoint,
+            "intraday_checkpoint": device.intraday_checkpoint,
+            "sleep_checkpoint": device.sleep_checkpoint,
         }
 
     def deactivate_device(self, device_id: int) -> None:

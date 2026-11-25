@@ -458,6 +458,8 @@
         // One shared tooltip; every chart mark carries data-v (value) and data-t (label).
         const tip = document.getElementById('sleepTooltip');
         if (!tip) return;
+        // Keep the fixed-position tooltip out of any transformed ancestor (see .card:hover).
+        document.body.appendChild(tip);
         const value = tip.querySelector('strong');
         const label = tip.querySelector('span');
 
